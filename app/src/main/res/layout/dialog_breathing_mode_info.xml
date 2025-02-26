@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@drawable/dialog_background">
+
+    <TextView
+        android:id="@+id/modeTitleText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="#4A90E2"
+        android:gravity="center"
+        android:layout_marginBottom="16dp"/>
+
+    <TextView
+        android:id="@+id/modeRhythmText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:textColor="#333333"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/rhythm_text_background"
+        android:padding="12dp"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="主要功效"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="#4A90E2"
+        android:layout_marginBottom="8dp"/>
+
+    <TextView
+        android:id="@+id/modeBenefitText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="15sp"
+        android:textColor="#666666"
+        android:lineSpacingExtra="4dp"
+        android:layout_marginBottom="16dp"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="练习指导"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="#4A90E2"
+        android:layout_marginBottom="8dp"/>
+
+    <TextView
+        android:id="@+id/modeGuideText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="15sp"
+        android:textColor="#666666"
+        android:lineSpacingExtra="4dp"/>
+
+</LinearLayout> 

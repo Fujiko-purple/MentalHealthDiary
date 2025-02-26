@@ -460,19 +460,66 @@ public class BreathingActivity extends AppCompatActivity {
 
     // 显示模式详细信息
     private void showModeInfoDialog(BreathingMode mode) {
-        new AlertDialog.Builder(this)
-            .setTitle(mode.description)
-            .setMessage("呼吸节奏: 吸气" + mode.inhaleSeconds + "秒，呼气" + mode.exhaleSeconds + "秒\n\n" +
-                       "适用场景: " + mode.benefit + "\n\n" +
-                       "练习建议: 找到舒适的姿势，保持背部挺直。随着圆圈的变化调整呼吸节奏，" +
-                       "吸气时圆圈扩大，呼气时圆圈收缩。")
-            .setPositiveButton("开始练习", (dialog, which) -> {
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_breathing_mode_info, null);
+        
+        TextView titleText = dialogView.findViewById(R.id.modeTitleText);
+        TextView rhythmText = dialogView.findViewById(R.id.modeRhythmText);
+        TextView benefitText = dialogView.findViewById(R.id.modeBenefitText);
+        TextView guideText = dialogView.findViewById(R.id.modeGuideText);
+        
+        titleText.setText(mode.description);
+        rhythmText.setText(String.format("呼吸节奏：吸气 %d 秒，呼气 %d 秒", 
+            mode.inhaleSeconds, mode.exhaleSeconds));
+        
+        // 设置不同模式的具体效果说明
+        String benefitDetail;
+        String guideDetail;
+        switch (mode) {
+            case NORMAL:
+                benefitDetail = "• 帮助平衡身心\n• 缓解日常压力\n• 提升专注力\n• 改善睡眠质量";
+                guideDetail = "找到舒适的坐姿，保持背部挺直。跟随圆圈的节奏，" +
+                            "通过鼻子缓慢吸气，感受气息充满胸腹，然后轻柔地呼出。";
+                break;
+            case RELAXING:
+                benefitDetail = "• 快速缓解焦虑\n• 降低心率\n• 放松身心\n• 舒缓紧张情绪";
+                guideDetail = "采用更长的呼气时间，帮助身体进入放松状态。" +
+                            "想象吸气时接收平静能量，呼气时释放所有压力。";
+                break;
+            case ENERGIZING:
+                benefitDetail = "• 提升能量水平\n• 增强清醒度\n• 改善注意力\n• 提高工作效率";
+                guideDetail = "较长的吸气和短促的呼气能激活身体系统。" +
+                            "保持正确的呼吸节奏，感受能量在体内流动。";
+                break;
+            case CALMING:
+                benefitDetail = "• 帮助入睡\n• 减轻失眠\n• 平静心绪\n• 改善睡眠质量";
+                guideDetail = "可以采用躺姿，放松全身肌肉。" +
+                            "将注意力集中在呼吸上，让思绪随着呼吸渐渐平静。";
+                break;
+            default:
+                benefitDetail = mode.benefit;
+                guideDetail = "保持自然的呼吸节奏，关注当下的呼吸感受。";
+        }
+        
+        benefitText.setText(benefitDetail);
+        guideText.setText(guideDetail);
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setPositiveButton("开始练习", (dialogInterface, i) -> {
                 if (!isBreathing) {
-                    startBreathingExercise();
+                    startBreathing();
                 }
             })
             .setNegativeButton("关闭", null)
-            .show();
+            .create();
+
+        // 设置对话框背景和动画
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(R.drawable.dialog_background);
+            dialog.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
+        }
+
+        dialog.show();
     }
 
     private void initializeBreathingPatterns() {
