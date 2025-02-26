@@ -2,40 +2,40 @@ package com.example.mentalhealthdiary;
 
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
+import android.app.AlarmManager;
+import android.app.AlertDialog;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.os.SystemClock;
-import android.provider.AlarmClock;
-import android.provider.Settings;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
+
 import androidx.appcompat.app.AppCompatActivity;
+
 import com.example.mentalhealthdiary.database.AppDatabase;
 import com.example.mentalhealthdiary.database.BreathingSession;
-import android.app.AlarmManager;
-import android.app.PendingIntent;
-import android.view.animation.AccelerateDecelerateInterpolator;
-import android.animation.ValueAnimator;
 import com.google.android.material.snackbar.Snackbar;
-import android.app.AlertDialog;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
-import java.util.ArrayList;
 
 public class BreathingActivity extends AppCompatActivity {
     private ImageView breathingCircle;
@@ -86,10 +86,11 @@ public class BreathingActivity extends AppCompatActivity {
         timerText = findViewById(R.id.timerText);
 
         setupBreathingAnimation();
+        setupUI();
 
         startButton.setOnClickListener(v -> {
             if (!isBreathing) {
-                startBreathingExercise();
+                startBreathing();
             } else {
                 stopBreathingExercise();
             }
@@ -140,6 +141,36 @@ public class BreathingActivity extends AppCompatActivity {
         breathingAnimation.playTogether(scaleX, scaleY, alpha);
         breathingAnimation.setDuration(8000);
         breathingAnimation.setInterpolator(new AccelerateDecelerateInterpolator());
+    }
+
+    private void setupUI() {
+        // 设置引导文本颜色为深青色
+        guidanceText.setTextColor(getResources().getColor(android.R.color.darker_gray));
+        
+        // 设置计时器文本样式
+        timerText.setTextColor(getResources().getColor(android.R.color.holo_blue_dark));
+        timerText.setAlpha(0.8f);
+        
+        // 设置开始按钮样式
+        startButton.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.teal_700)));
+        startButton.setTextColor(Color.WHITE);
+    }
+
+    private void startBreathing() {
+        // 添加3秒预备时间
+        guidanceText.setText("准备开始...");
+        new CountDownTimer(3000, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                int secondsLeft = (int) (millisUntilFinished / 1000) + 1;
+                guidanceText.setText("准备开始..." + secondsLeft);
+            }
+
+            @Override
+            public void onFinish() {
+                startBreathingExercise();  // 开始正式的呼吸练习
+            }
+        }.start();
     }
 
     private void startBreathingExercise() {
@@ -250,10 +281,7 @@ public class BreathingActivity extends AppCompatActivity {
     }
 
     private void startGuidanceTimer() {
-        if (breathingTimer != null) {
-            breathingTimer.cancel();
-        }
-        
+        // 直接启动呼吸计时器，不再需要额外的准备时间
         breathingTimer = new CountDownTimer(8000, 4000) {
             boolean inhale = true;
             
@@ -271,11 +299,26 @@ public class BreathingActivity extends AppCompatActivity {
     }
 
     private void updateGuidanceText(boolean inhale) {
+        // 取消之前的动画
+        guidanceText.animate().cancel();
+        
+        // 设置初始透明度
+        guidanceText.setAlpha(0f);
+        
         if (inhale) {
+            guidanceText.setTextColor(getResources().getColor(R.color.teal_700));
             guidanceText.setText("吸气...");
         } else {
+            guidanceText.setTextColor(getResources().getColor(android.R.color.darker_gray));
             guidanceText.setText("呼气...");
         }
+        
+        // 统一处理动画
+        guidanceText.animate()
+            .alpha(1f)
+            .setDuration(800)
+            .setInterpolator(new AccelerateDecelerateInterpolator())
+            .start();
     }
 
     @Override

@@ -1,35 +1,36 @@
 package com.example.mentalhealthdiary;
 
+import android.Manifest;
+import android.app.AlertDialog;
+import android.app.DatePickerDialog;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
-import com.example.mentalhealthdiary.model.MoodEntry;
-import com.example.mentalhealthdiary.database.AppDatabase;
-import java.util.Date;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.mentalhealthdiary.adapter.MoodEntryAdapter;
-import android.app.DatePickerDialog;
-import android.widget.DatePicker;
-import java.util.Calendar;
-import java.text.SimpleDateFormat;
-import java.util.Locale;
-import android.content.Intent;
+import com.example.mentalhealthdiary.database.AppDatabase;
+import com.example.mentalhealthdiary.model.MoodEntry;
 import com.example.mentalhealthdiary.service.TipsWorkManager;
-import android.view.MenuItem;
-import android.view.Menu;
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.os.Build;
-import android.widget.ScrollView;
-import android.app.AlertDialog;
-import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.chip.ChipGroup;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
     private RadioGroup moodRadioGroup;
