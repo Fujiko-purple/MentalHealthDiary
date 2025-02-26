@@ -1,0 +1,18 @@
+<androidx.preference.PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <SwitchPreference
+        android:key="enable_tips"
+        android:title="每日心理小贴士"
+        android:summary="接收每日心理健康提示"
+        android:defaultValue="true"/>
+        
+    <ListPreference
+        android:key="tips_time"
+        android:title="提示时间"
+        android:summary="选择接收提示的时间"
+        android:entries="@array/tips_times"
+        android:entryValues="@array/tips_time_values"
+        android:defaultValue="9"/>
+        
+</androidx.preference.PreferenceScreen> 

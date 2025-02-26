@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="time_range_options">
+        <item>最近一周</item>
+        <item>最近两周</item>
+        <item>最近一月</item>
+        <item>全部记录</item>
+    </string-array>
+
+    <string-array name="tips_times">
+        <item>早上 7 点</item>
+        <item>早上 8 点</item>
+        <item>早上 9 点</item>
+        <item>早上 10 点</item>
+        <item>中午 12 点</item>
+        <item>下午 2 点</item>
+        <item>下午 4 点</item>
+        <item>晚上 8 点</item>
+    </string-array>
+
+    <string-array name="tips_time_values">
+        <item>7</item>
+        <item>8</item>
+        <item>9</item>
+        <item>10</item>
+        <item>12</item>
+        <item>14</item>
+        <item>16</item>
+        <item>20</item>
+    </string-array>
+</resources> 
