@@ -505,11 +505,7 @@ public class BreathingActivity extends AppCompatActivity {
 
         AlertDialog dialog = new AlertDialog.Builder(this)
             .setView(dialogView)
-            .setPositiveButton("开始练习", (dialogInterface, i) -> {
-                if (!isBreathing) {
-                    startBreathing();
-                }
-            })
+            .setPositiveButton("开始练习", null)  // 先设置为null
             .setNegativeButton("关闭", null)
             .create();
 
@@ -520,6 +516,22 @@ public class BreathingActivity extends AppCompatActivity {
         }
 
         dialog.show();
+
+        // 获取按钮并设置样式
+        Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+        Button negativeButton = dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
+        
+        // 设置按钮样式
+        positiveButton.setTextColor(getResources().getColor(R.color.teal_700));
+        negativeButton.setTextColor(Color.GRAY);
+        
+        // 设置点击事件
+        positiveButton.setOnClickListener(v -> {
+            if (!isBreathing) {
+                startBreathing();
+                dialog.dismiss();
+            }
+        });
     }
 
     private void initializeBreathingPatterns() {
