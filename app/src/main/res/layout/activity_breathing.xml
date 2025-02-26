@@ -34,16 +34,16 @@
 
     <Spinner
         android:id="@+id/breathingModeSpinner"
-        android:layout_width="wrap_content"
+        android:layout_width="240dp"
         android:layout_height="wrap_content"
-        android:minWidth="200dp"
         android:layout_marginTop="32dp"
         android:background="@drawable/spinner_background"
-        android:padding="12dp"
         android:popupBackground="#CC000000"
         android:spinnerMode="dropdown"
         android:dropDownWidth="240dp"
         android:dropDownVerticalOffset="48dp"
+        android:gravity="center"
+        style="@style/SpinnerStyle"
         app:layout_constraintTop_toBottomOf="@id/subtitleText"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent" />
