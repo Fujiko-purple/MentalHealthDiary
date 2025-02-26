@@ -5,6 +5,8 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.AlarmManager;
 import android.app.AlertDialog;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -26,6 +28,8 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
 import com.example.mentalhealthdiary.database.AppDatabase;
 import com.example.mentalhealthdiary.database.BreathingSession;
@@ -50,6 +54,10 @@ public class BreathingActivity extends AppCompatActivity {
     private int sessionSeconds = 0;
     private boolean isPreparingToStart = false;
     private CountDownTimer prepTimer;
+
+    private static final String CHANNEL_ID = "breathing_reminder_channel";
+    private static final String CHANNEL_NAME = "呼吸练习提醒";
+    private static final String CHANNEL_DESC = "提醒您进行每日呼吸练习";
 
     // 更新呼吸模式枚举
     private enum BreathingMode {
@@ -590,5 +598,42 @@ public class BreathingActivity extends AppCompatActivity {
             this.exhale = exhale;
             this.benefit = benefit;
         }
+    }
+
+    private void createNotificationChannel() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                CHANNEL_ID,
+                CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_DEFAULT
+            );
+            channel.setDescription(CHANNEL_DESC);
+            
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    private void showNotification(Context context) {
+        createNotificationChannel();
+
+        Intent intent = new Intent(context, BreathingActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+            context, 
+            0, 
+            intent, 
+            PendingIntent.FLAG_IMMUTABLE
+        );
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle("呼吸练习提醒")
+            .setContentText("现在是放松身心的好时候，让我们进行一次呼吸练习吧")
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent);
+
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+        notificationManager.notify(1, builder.build());
     }
 } 

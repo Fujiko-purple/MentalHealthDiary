@@ -33,9 +33,9 @@ public class ReminderReceiver extends BroadcastReceiver {
 
     private void showNotification(Context context) {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_achievement)
-            .setContentTitle("正念练习时间到了")
-            .setContentText("花几分钟时间，让心灵沉淀下来")
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle("呼吸练习提醒")
+            .setContentText("现在是放松身心的好时候，让我们进行一次呼吸练习吧")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setAutoCancel(true);
 

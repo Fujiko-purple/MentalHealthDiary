@@ -405,8 +405,17 @@ public class BreathingHistoryActivity extends AppCompatActivity {
             holder.durationText.setText(String.format("练习时长: %d分%d秒", 
                 session.duration / 60, session.duration % 60));
             
-            String achievement = getAchievementText(session.duration);
-            holder.achievementText.setText(achievement);
+            // 根据时长设置成就等级和对应图标
+            if (session.duration >= 900) { // 15分钟以上
+                holder.achievementText.setText("禅定大师");
+                holder.achievementIcon.setImageResource(R.drawable.ic_achievement_master);
+            } else if (session.duration >= 300) { // 5分钟以上
+                holder.achievementText.setText("进阶者");
+                holder.achievementIcon.setImageResource(R.drawable.ic_achievement_intermediate);
+            } else {
+                holder.achievementText.setText("初心者");
+                holder.achievementIcon.setImageResource(R.drawable.ic_achievement_beginner);
+            }
 
             // 设置长按删除
             holder.itemView.setOnLongClickListener(v -> {
@@ -444,13 +453,6 @@ public class BreathingHistoryActivity extends AppCompatActivity {
             }
         }
 
-        private String getAchievementText(int duration) {
-            if (duration >= 1800) return "禅定大师";
-            if (duration >= 900) return "专注达人";
-            if (duration >= 300) return "呼吸高手";
-            return "初心者";
-        }
-
         @Override
         public int getItemCount() {
             return sessions.size();
@@ -461,6 +463,7 @@ public class BreathingHistoryActivity extends AppCompatActivity {
             TextView durationText;
             TextView achievementText;
             CheckBox checkBox;
+            ImageView achievementIcon;
 
             ViewHolder(View view) {
                 super(view);
@@ -468,6 +471,7 @@ public class BreathingHistoryActivity extends AppCompatActivity {
                 durationText = view.findViewById(R.id.durationText);
                 achievementText = view.findViewById(R.id.achievementText);
                 checkBox = view.findViewById(R.id.checkBox);
+                achievementIcon = view.findViewById(R.id.achievementIcon);
             }
         }
     }

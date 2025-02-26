@@ -4,7 +4,8 @@
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
+    <!-- 莲花花瓣图案 -->
     <path
-        android:fillColor="#FFD700"
-        android:pathData="M12,2C8.13,2 5,5.13 5,9c0,5.25 7,13 7,13s7,-7.75 7,-13c0,-3.87 -3.13,-7 -7,-7zM12,11.5c-1.38,0 -2.5,-1.12 -2.5,-2.5s1.12,-2.5 2.5,-2.5 2.5,1.12 2.5,2.5 -1.12,2.5 -2.5,2.5z"/>
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,2L8,12L12,14L16,12L12,2M12,14L8,12V20L12,22L16,20V12L12,14M12,14L12,22"/>
 </vector> 
