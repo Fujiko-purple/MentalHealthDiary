@@ -48,6 +48,8 @@ public class BreathingActivity extends AppCompatActivity {
     private AnimatorSet breathingAnimation;
     private TextView timerText;
     private int sessionSeconds = 0;
+    private boolean isPreparingToStart = false;
+    private CountDownTimer prepTimer;
 
     // 更新呼吸模式枚举
     private enum BreathingMode {
@@ -177,9 +179,20 @@ public class BreathingActivity extends AppCompatActivity {
     }
 
     private void startBreathing() {
-        // 添加3秒预备时间
+        // 如果正在准备或正在呼吸，直接返回
+        if (isPreparingToStart || isBreathing) {
+            return;
+        }
+
+        isPreparingToStart = true;
         guidanceText.setText("准备开始...");
-        new CountDownTimer(3000, 1000) {
+        
+        // 取消可能存在的计时器
+        if (prepTimer != null) {
+            prepTimer.cancel();
+        }
+
+        prepTimer = new CountDownTimer(3000, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
                 int secondsLeft = (int) (millisUntilFinished / 1000) + 1;
@@ -188,14 +201,22 @@ public class BreathingActivity extends AppCompatActivity {
 
             @Override
             public void onFinish() {
-                startBreathingExercise();  // 开始正式的呼吸练习
+                isPreparingToStart = false;
+                if (!isBreathing) { // 确保没有在呼吸状态才开始
+                    startBreathingExercise();
+                }
             }
         }.start();
     }
 
     private void startBreathingExercise() {
+        if (isBreathing) {
+            return;
+        }
+
         isBreathing = true;
         startButton.setText("停止");
+        sessionSeconds = 0; // 确保从0开始计时
         
         // 开始动画
         breathingAnimation.start();
@@ -207,31 +228,40 @@ public class BreathingActivity extends AppCompatActivity {
         startGuidanceTimer();
         
         // 添加练习时长计时
-        durationTimer = new CountDownTimer(3600000, 1000) { // 最多1小时
+        if (durationTimer != null) {
+            durationTimer.cancel();
+        }
+        
+        durationTimer = new CountDownTimer(3600000, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
-                sessionSeconds++;
-                int minutes = sessionSeconds / 60;
-                int seconds = sessionSeconds % 60;
-                String timeText = String.format("练习时长: %02d:%02d", minutes, seconds);
-                timerText.setText(timeText);
-                
-                // 每10秒记录一次当前时长
-                if (sessionSeconds % 10 == 0) {
-                    Log.d("BreathingActivity", "当前计时: " + timeText + " (总秒数: " + sessionSeconds + ")");
+                if (isBreathing) { // 只有在呼吸状态才增加时间
+                    sessionSeconds++;
+                    int minutes = sessionSeconds / 60;
+                    int seconds = sessionSeconds % 60;
+                    String timeText = String.format("练习时长: %02d:%02d", minutes, seconds);
+                    timerText.setText(timeText);
                 }
             }
 
             @Override
             public void onFinish() {
-                Log.d("BreathingActivity", "计时器结束，最终时长: " + sessionSeconds + "秒");
                 stopBreathingExercise();
             }
         }.start();
     }
 
     private void stopBreathingExercise() {
-        Log.d("BreathingActivity", "Stopping exercise with duration: " + sessionSeconds);
+        // 如果正在准备阶段，取消准备
+        if (isPreparingToStart && prepTimer != null) {
+            prepTimer.cancel();
+            isPreparingToStart = false;
+        }
+
+        if (!isBreathing) {
+            return;
+        }
+
         isBreathing = false;
         startButton.setText("开始");
         
@@ -251,10 +281,7 @@ public class BreathingActivity extends AppCompatActivity {
         
         // 保存练习记录
         if (sessionSeconds >= 5) {
-            Log.d("BreathingActivity", "Will save session with duration: " + sessionSeconds);
             saveBreathingSession();
-        } else {
-            Log.d("BreathingActivity", "Session too short, not saving: " + sessionSeconds);
         }
         
         // 重置引导文本和计时器
