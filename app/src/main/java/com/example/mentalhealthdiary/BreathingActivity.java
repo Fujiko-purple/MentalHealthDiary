@@ -62,9 +62,9 @@ public class BreathingActivity extends AppCompatActivity {
     // 更新呼吸模式枚举
     private enum BreathingMode {
         NORMAL(4, 4, "标准呼吸 4-4", "平衡身心"),      // 平静呼吸
-        CALMING(4, 6, "安眠呼吸 4-6", "助于入睡"),     // 专注呼吸
+        FOCUS(4, 6, "专注呼吸 4-6", "提升专注"),      // 专注呼吸
         ENERGIZING(6, 2, "提神呼吸 6-2", "提升能量"),  // 提神呼吸
-        RELAXING(4, 8, "放松呼吸 4-8", "缓解压力");    // 放松呼吸
+        CALMING(4, 8, "安眠呼吸 4-8", "助于入睡");     // 安眠呼吸
 
         final int inhaleSeconds;
         final int exhaleSeconds;
@@ -495,13 +495,13 @@ public class BreathingActivity extends AppCompatActivity {
             case NORMAL: // 平静呼吸
                 textColor = getResources().getColor(R.color.calm_breathing);  // 蓝色
                 break;
-            case CALMING: // 专注呼吸
+            case FOCUS: // 专注呼吸
                 textColor = getResources().getColor(R.color.focus_breathing);  // 紫色
                 break;
             case ENERGIZING: // 提神呼吸
                 textColor = getResources().getColor(R.color.deep_breathing);  // 橙色
                 break;
-            case RELAXING: // 放松呼吸
+            case CALMING: // 安眠呼吸
                 textColor = getResources().getColor(R.color.relax_breathing);  // 绿色
                 break;
             default:
@@ -526,20 +526,20 @@ public class BreathingActivity extends AppCompatActivity {
                 guideDetail = "找到舒适的坐姿，保持背部挺直。跟随圆圈的节奏，" +
                             "通过鼻子缓慢吸气，感受气息充满胸腹，然后轻柔地呼出。";
                 break;
-            case RELAXING:
-                benefitDetail = "• 快速缓解焦虑\n• 降低心率\n• 放松身心\n• 舒缓紧张情绪";
-                guideDetail = "采用更长的呼气时间，帮助身体进入放松状态。" +
-                            "想象吸气时接收平静能量，呼气时释放所有压力。";
+            case CALMING:
+                benefitDetail = "• 帮助入睡\n• 减轻失眠\n• 平静心绪\n• 改善睡眠质量";
+                guideDetail = "可以采用躺姿，放松全身肌肉。" +
+                            "将注意力集中在呼吸上，让思绪随着呼吸渐渐平静。";
                 break;
             case ENERGIZING:
                 benefitDetail = "• 提升能量水平\n• 增强清醒度\n• 改善注意力\n• 提高工作效率";
                 guideDetail = "较长的吸气和短促的呼气能激活身体系统。" +
                             "保持正确的呼吸节奏，感受能量在体内流动。";
                 break;
-            case CALMING:
-                benefitDetail = "• 帮助入睡\n• 减轻失眠\n• 平静心绪\n• 改善睡眠质量";
-                guideDetail = "可以采用躺姿，放松全身肌肉。" +
-                            "将注意力集中在呼吸上，让思绪随着呼吸渐渐平静。";
+            case FOCUS:
+                benefitDetail = "• 收敛思绪，提升专注力";
+                guideDetail = "找到舒适的坐姿，保持背部挺直。跟随圆圈的节奏，" +
+                            "通过鼻子缓慢吸气，感受气息充满胸腹，然后轻柔地呼出。";
                 break;
             default:
                 benefitDetail = mode.benefit;
@@ -688,7 +688,7 @@ public class BreathingActivity extends AppCompatActivity {
             case 2: // 提神呼吸
                 textColor = getResources().getColor(R.color.deep_breathing);  // 橙色
                 break;
-            case 3: // 放松呼吸
+            case 3: // 安眠呼吸
                 textColor = getResources().getColor(R.color.relax_breathing);  // 绿色
                 break;
             default:
@@ -700,9 +700,6 @@ public class BreathingActivity extends AppCompatActivity {
             guidanceText.setTextColor(textColor);
         }
 
-        // 找到副标题文本
-        TextView subtitleText = findViewById(R.id.subtitleText);
-        
         // 根据不同模式设置不同的引导语
         String subtitle;
         switch (position) {
@@ -715,13 +712,16 @@ public class BreathingActivity extends AppCompatActivity {
             case 2: // 提神呼吸
                 subtitle = "唤醒身心，激发内在能量";
                 break;
-            case 3: // 放松呼吸
-                subtitle = "舒展身心，释放所有压力";
+            case 3: // 安眠呼吸
+                subtitle = "放松身心，安抚入眠";
                 break;
             default:
                 subtitle = "让心灵沉淀，找回内在平静";
                 break;
         }
+        
+        // 找到副标题文本
+        TextView subtitleText = findViewById(R.id.subtitleText);
         
         // 设置文字并添加动画效果
         subtitleText.animate()
