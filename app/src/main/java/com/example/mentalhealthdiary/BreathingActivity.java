@@ -12,6 +12,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
@@ -488,8 +490,9 @@ public class BreathingActivity extends AppCompatActivity {
         TextView rhythmText = dialogView.findViewById(R.id.modeRhythmText);
         TextView benefitText = dialogView.findViewById(R.id.modeBenefitText);
         TextView guideText = dialogView.findViewById(R.id.modeGuideText);
+        TextView benefitTitleText = (TextView) dialogView.findViewById(R.id.benefitTitleText);
         
-        // 根据呼吸模式设置颜色，与 updateBreathingMode 保持一致
+        // 首先设置颜色
         int textColor;
         switch (mode) {
             case NORMAL: // 平静呼吸
@@ -509,9 +512,53 @@ public class BreathingActivity extends AppCompatActivity {
                 break;
         }
         
-        // 设置标题和节奏文本的颜色
+        // 然后设置图标
+        int iconRes;
+        switch (mode) {
+            case NORMAL:
+                iconRes = R.drawable.ic_benefits;
+                break;
+            case FOCUS:
+                iconRes = R.drawable.ic_breathing_focus;
+                break;
+            case ENERGIZING:
+                iconRes = R.drawable.ic_breathing_energy;
+                break;
+            case CALMING:
+                iconRes = R.drawable.ic_breathing_sleep;
+                break;
+            default:
+                iconRes = R.drawable.ic_benefits;
+                break;
+        }
+        
+        // 设置图标并应用颜色
+        benefitTitleText.setCompoundDrawablesWithIntrinsicBounds(iconRes, 0, 0, 0);
+        Drawable[] drawables = benefitTitleText.getCompoundDrawables();
+        if (drawables[0] != null) {
+            drawables[0].setColorFilter(textColor, PorterDuff.Mode.SRC_IN);
+        }
+        
+        // 设置标题、节奏文本和主要功效标题的颜色
         titleText.setTextColor(textColor);
         rhythmText.setTextColor(textColor);
+        benefitTitleText.setTextColor(textColor);
+        
+        // 设置主要功效文本的颜色（使用较浅的主题色）
+        int benefitTextColor = adjustAlpha(textColor, 0.75f);
+        benefitText.setTextColor(benefitTextColor);
+        
+        // 设置练习指导标题和内容的颜色（使用柔和的灰绿色，象征平静和自然）
+        int guideColor = getResources().getColor(R.color.mindful_guide);
+        TextView guideTitleText = dialogView.findViewById(R.id.guideTitleText);
+        guideTitleText.setTextColor(guideColor);
+        guideText.setTextColor(adjustAlpha(guideColor, 0.8f));
+        
+        // 设置练习指导图标的颜色
+        Drawable guideIcon = getResources().getDrawable(R.drawable.ic_guide).mutate();
+        guideIcon.setColorFilter(guideColor, PorterDuff.Mode.SRC_IN);
+        guideTitleText.setCompoundDrawablesWithIntrinsicBounds(guideIcon, null, null, null);
+        guideTitleText.setCompoundDrawablePadding(8);  // 保持原有的padding
         
         titleText.setText(mode.description);
         rhythmText.setText(String.format("呼吸节奏：吸气 %d 秒，呼气 %d 秒", 
@@ -537,7 +584,7 @@ public class BreathingActivity extends AppCompatActivity {
                             "保持正确的呼吸节奏，感受能量在体内流动。";
                 break;
             case FOCUS:
-                benefitDetail = "• 收敛思绪，提升专注力";
+                benefitDetail = "• 提升专注力\n• 增强思维清晰度\n• 改善学习效率\n• 减少分心走神";
                 guideDetail = "找到舒适的坐姿，保持背部挺直。跟随圆圈的节奏，" +
                             "通过鼻子缓慢吸气，感受气息充满胸腹，然后轻柔地呼出。";
                 break;
