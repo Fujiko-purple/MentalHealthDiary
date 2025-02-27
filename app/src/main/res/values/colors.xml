@@ -15,4 +15,8 @@
     <color name="accent_color">#009688</color>
     <color name="card_background">#FFFFFF</color>
     <color name="blue_grey_600">#546E7A</color>
+    <color name="calm_breathing">#4A90E2</color>
+    <color name="focus_breathing">#9B59B6</color>
+    <color name="relax_breathing">#2ECC71</color>
+    <color name="deep_breathing">#E67E22</color>
 </resources>

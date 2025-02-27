@@ -124,6 +124,7 @@ public class BreathingActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 currentMode = BreathingMode.values()[position];
+                updateBreathingMode(position);
                 onModeSelected(currentMode);
             }
 
@@ -635,5 +636,32 @@ public class BreathingActivity extends AppCompatActivity {
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
         notificationManager.notify(1, builder.build());
+    }
+
+    private void updateBreathingMode(int position) {
+        // 根据不同的呼吸模式设置不同的颜色
+        int textColor;
+        switch (position) {
+            case 0: // 平静呼吸
+                textColor = getResources().getColor(R.color.calm_breathing);
+                break;
+            case 1: // 专注呼吸
+                textColor = getResources().getColor(R.color.focus_breathing);
+                break;
+            case 2: // 放松呼吸
+                textColor = getResources().getColor(R.color.relax_breathing);
+                break;
+            case 3: // 深度呼吸
+                textColor = getResources().getColor(R.color.deep_breathing);
+                break;
+            default:
+                textColor = getResources().getColor(R.color.calm_breathing);
+                break;
+        }
+        
+        // 确保 guidanceText 不为空
+        if (guidanceText != null) {
+            guidanceText.setTextColor(textColor);
+        }
     }
 } 
