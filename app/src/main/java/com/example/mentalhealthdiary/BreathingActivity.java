@@ -150,6 +150,19 @@ public class BreathingActivity extends AppCompatActivity {
             }
             return false;
         });
+
+        // 找到副标题文本
+        TextView subtitleText = findViewById(R.id.subtitleText);
+        
+        // 添加文字阴影效果
+        subtitleText.setShadowLayer(3, 1, 1, Color.parseColor("#50000000"));
+        
+        // 添加淡入动画
+        subtitleText.setAlpha(0f);
+        subtitleText.animate()
+            .alpha(1f)
+            .setDuration(1500)
+            .start();
     }
 
     private void setupBreathingAnimation() {
@@ -672,10 +685,10 @@ public class BreathingActivity extends AppCompatActivity {
             case 1: // 专注呼吸
                 textColor = getResources().getColor(R.color.focus_breathing);  // 紫色
                 break;
-            case 2: // 提神呼吸 (Energizing)
+            case 2: // 提神呼吸
                 textColor = getResources().getColor(R.color.deep_breathing);  // 橙色
                 break;
-            case 3: // 放松呼吸 (Relaxing)
+            case 3: // 放松呼吸
                 textColor = getResources().getColor(R.color.relax_breathing);  // 绿色
                 break;
             default:
@@ -686,5 +699,54 @@ public class BreathingActivity extends AppCompatActivity {
         if (guidanceText != null) {
             guidanceText.setTextColor(textColor);
         }
+
+        // 找到副标题文本
+        TextView subtitleText = findViewById(R.id.subtitleText);
+        
+        // 根据不同模式设置不同的引导语
+        String subtitle;
+        switch (position) {
+            case 0: // 平静呼吸
+                subtitle = "让心灵沉淀，找回内在平静";
+                break;
+            case 1: // 专注呼吸
+                subtitle = "收敛思绪，提升专注力";
+                break;
+            case 2: // 提神呼吸
+                subtitle = "唤醒身心，激发内在能量";
+                break;
+            case 3: // 放松呼吸
+                subtitle = "舒展身心，释放所有压力";
+                break;
+            default:
+                subtitle = "让心灵沉淀，找回内在平静";
+                break;
+        }
+        
+        // 设置文字并添加动画效果
+        subtitleText.animate()
+            .alpha(0f)
+            .setDuration(150)
+            .withEndAction(() -> {
+                subtitleText.setText(subtitle);
+                // 设置半透明的对应颜色
+                int subtitleColor = adjustAlpha(textColor, 0.9f);
+                subtitleText.setTextColor(subtitleColor);
+                // 文字淡入动画
+                subtitleText.animate()
+                    .alpha(0.8f)
+                    .setDuration(300)
+                    .start();
+            })
+            .start();
+    }
+
+    // 辅助方法：调整颜色的透明度
+    private int adjustAlpha(int color, float factor) {
+        int alpha = Math.round(Color.alpha(color) * factor);
+        int red = Color.red(color);
+        int green = Color.green(color);
+        int blue = Color.blue(color);
+        return Color.argb(alpha, red, green, blue);
     }
 } 
