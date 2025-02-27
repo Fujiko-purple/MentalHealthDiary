@@ -61,10 +61,10 @@ public class BreathingActivity extends AppCompatActivity {
 
     // 更新呼吸模式枚举
     private enum BreathingMode {
-        NORMAL(4, 4, "标准呼吸 4-4", "平衡身心"),
-        RELAXING(4, 8, "放松呼吸 4-8", "缓解压力"),
-        ENERGIZING(6, 2, "提神呼吸 6-2", "提升能量"),
-        CALMING(4, 6, "安眠呼吸 4-6", "助于入睡");
+        NORMAL(4, 4, "标准呼吸 4-4", "平衡身心"),      // 平静呼吸
+        CALMING(4, 6, "安眠呼吸 4-6", "助于入睡"),     // 专注呼吸
+        ENERGIZING(6, 2, "提神呼吸 6-2", "提升能量"),  // 提神呼吸
+        RELAXING(4, 8, "放松呼吸 4-8", "缓解压力");    // 放松呼吸
 
         final int inhaleSeconds;
         final int exhaleSeconds;
@@ -476,6 +476,30 @@ public class BreathingActivity extends AppCompatActivity {
         TextView benefitText = dialogView.findViewById(R.id.modeBenefitText);
         TextView guideText = dialogView.findViewById(R.id.modeGuideText);
         
+        // 根据呼吸模式设置颜色，与 updateBreathingMode 保持一致
+        int textColor;
+        switch (mode) {
+            case NORMAL: // 平静呼吸
+                textColor = getResources().getColor(R.color.calm_breathing);  // 蓝色
+                break;
+            case CALMING: // 专注呼吸
+                textColor = getResources().getColor(R.color.focus_breathing);  // 紫色
+                break;
+            case ENERGIZING: // 提神呼吸
+                textColor = getResources().getColor(R.color.deep_breathing);  // 橙色
+                break;
+            case RELAXING: // 放松呼吸
+                textColor = getResources().getColor(R.color.relax_breathing);  // 绿色
+                break;
+            default:
+                textColor = getResources().getColor(R.color.calm_breathing);
+                break;
+        }
+        
+        // 设置标题和节奏文本的颜色
+        titleText.setTextColor(textColor);
+        rhythmText.setTextColor(textColor);
+        
         titleText.setText(mode.description);
         rhythmText.setText(String.format("呼吸节奏：吸气 %d 秒，呼气 %d 秒", 
             mode.inhaleSeconds, mode.exhaleSeconds));
@@ -531,7 +555,7 @@ public class BreathingActivity extends AppCompatActivity {
         Button negativeButton = dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
         
         // 设置按钮样式
-        positiveButton.setTextColor(getResources().getColor(R.color.teal_700));
+        positiveButton.setTextColor(textColor);
         negativeButton.setTextColor(Color.GRAY);
         
         // 设置点击事件
@@ -643,23 +667,22 @@ public class BreathingActivity extends AppCompatActivity {
         int textColor;
         switch (position) {
             case 0: // 平静呼吸
-                textColor = getResources().getColor(R.color.calm_breathing);
+                textColor = getResources().getColor(R.color.calm_breathing);  // 蓝色
                 break;
             case 1: // 专注呼吸
-                textColor = getResources().getColor(R.color.focus_breathing);
+                textColor = getResources().getColor(R.color.focus_breathing);  // 紫色
                 break;
-            case 2: // 放松呼吸
-                textColor = getResources().getColor(R.color.relax_breathing);
+            case 2: // 提神呼吸 (Energizing)
+                textColor = getResources().getColor(R.color.deep_breathing);  // 橙色
                 break;
-            case 3: // 深度呼吸
-                textColor = getResources().getColor(R.color.deep_breathing);
+            case 3: // 放松呼吸 (Relaxing)
+                textColor = getResources().getColor(R.color.relax_breathing);  // 绿色
                 break;
             default:
                 textColor = getResources().getColor(R.color.calm_breathing);
                 break;
         }
         
-        // 确保 guidanceText 不为空
         if (guidanceText != null) {
             guidanceText.setTextColor(textColor);
         }
