@@ -4,7 +4,26 @@
     android:height="200dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
+    
+    <!-- 光芒背景 -->
     <path
-        android:fillColor="#4A90E2"
-        android:pathData="M19,5h-2V3H7v2H5C3.9,5 3,5.9 3,7v1c0,2.55 1.92,4.63 4.39,4.94c0.63,1.5 1.98,2.63 3.61,2.96V19H7v2h10v-2h-4v-3.1c1.63,-0.33 2.98,-1.46 3.61,-2.96C19.08,12.63 21,10.55 21,8V7C21,5.9 20.1,5 19,5zM5,8V7h2v3.82C5.84,10.4 5,9.3 5,8zM19,8c0,1.3 -0.84,2.4 -2,2.82V7h2V8z"/>
+        android:fillColor="#FFB74D"
+        android:fillAlpha="0.2"
+        android:pathData="M12,2L14.39,8.26L21,8.27L15.77,12.47L18.18,18.73L12,14.48L5.82,18.73L8.23,12.47L3,8.27L9.61,8.26z"/>
+    
+    <!-- 主体星星 -->
+    <path
+        android:fillColor="#FFB74D"
+        android:pathData="M12,8L13.59,11.26L17,11.27L14.17,13.47L15.18,16.73L12,14.48L8.82,16.73L9.83,13.47L7,11.27L10.41,11.26z"/>
+    
+    <!-- 上升的小星星 -->
+    <path
+        android:fillColor="#FFB74D"
+        android:fillAlpha="0.6"
+        android:pathData="M6,12l1,2l1,-2l-1,-2z"/>
+    
+    <path
+        android:fillColor="#FFB74D"
+        android:fillAlpha="0.8"
+        android:pathData="M16,8l1,2l1,-2l-1,-2z"/>
 </vector> 

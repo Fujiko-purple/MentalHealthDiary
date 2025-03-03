@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    
+    <!-- 背景圆 -->
+    <path
+        android:fillColor="#81C784"
+        android:fillAlpha="0.1"
+        android:pathData="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2z"/>
+    
+    <!-- 树叶图案 -->
+    <path
+        android:fillColor="#81C784"
+        android:pathData="M12,22c4.97,0 9,-4.03 9,-9c-4.97,0 -9,4.03 -9,9c0,-4.97 -4.03,-9 -9,-9C3,17.97 7.03,22 12,22z"/>
+    
+    <!-- 上方小叶子 -->
+    <path
+        android:fillColor="#81C784"
+        android:fillAlpha="0.7"
+        android:pathData="M12,5.5c2.48,0 4.5,2.02 4.5,4.5c0,-2.48 2.02,-4.5 4.5,-4.5c-2.48,0 -4.5,-2.02 -4.5,-4.5C16.5,3.52 14.48,5.5 12,5.5z"/>
+</vector> 

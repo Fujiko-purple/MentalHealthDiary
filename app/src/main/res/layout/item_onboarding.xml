@@ -10,7 +10,8 @@
         android:id="@+id/imageView"
         android:layout_width="200dp"
         android:layout_height="200dp"
-        android:layout_marginBottom="32dp" />
+        android:layout_marginBottom="32dp"
+        android:alpha="0.9"/>
 
     <TextView
         android:id="@+id/titleText"
@@ -18,8 +19,9 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:textColor="@color/text_primary"
-        android:textSize="24sp"
-        android:textStyle="bold" />
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:letterSpacing="0.1"/>
 
     <TextView
         android:id="@+id/descriptionText"
@@ -27,6 +29,8 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:textColor="@color/text_secondary"
-        android:textSize="16sp" />
+        android:textSize="16sp"
+        android:lineSpacingMultiplier="1.5"
+        android:alpha="0.8"/>
 
 </LinearLayout> 

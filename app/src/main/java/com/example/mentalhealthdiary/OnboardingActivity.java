@@ -33,17 +33,22 @@ public class OnboardingActivity extends AppCompatActivity {
             new OnboardingItem(
                 R.drawable.ic_meditation,
                 "静心呼吸",
-                "通过正念呼吸，让心灵回归平静"
+                "让我们一起深呼吸，\n感受此刻的平静与美好"
             ),
             new OnboardingItem(
                 R.drawable.ic_mood_tracking,
-                "情绪记录",
-                "记录每一天的心情变化，了解自己的情绪轨迹"
+                "倾听内心",
+                "每一个情绪都值得被关注，\n记录下你的心情，让我陪你一起成长"
+            ),
+            new OnboardingItem(
+                R.drawable.ic_nature,
+                "拥抱自然",
+                "聆听鸟鸣，感受微风，\n让心灵在大自然中找到归属"
             ),
             new OnboardingItem(
                 R.drawable.ic_achievement,
-                "成长足迹",
-                "在正念修习的道路上，见证自己的每一步进步"
+                "点滴进步",
+                "每一次练习都是一份珍贵的礼物，\n让我们一起见证美好的改变"
             )
         };
 
@@ -70,6 +75,25 @@ public class OnboardingActivity extends AppCompatActivity {
             // 跳转到主页面
             startActivity(new Intent(this, MainActivity.class));
             finish();
+        });
+
+        // 添加页面切换动画效果
+        viewPager.setPageTransformer(new ViewPager2.PageTransformer() {
+            @Override
+            public void transformPage(@NonNull View page, float position) {
+                float absPos = Math.abs(position);
+                
+                // 淡入淡出效果
+                page.setAlpha(1 - (absPos * 0.5f));
+                
+                // 缩放效果
+                float scale = 1 - (absPos * 0.2f);
+                page.setScaleX(scale);
+                page.setScaleY(scale);
+                
+                // 平移效果
+                page.setTranslationX(-position * page.getWidth() / 8);
+            }
         });
     }
 

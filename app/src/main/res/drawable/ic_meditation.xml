@@ -4,7 +4,35 @@
     android:height="200dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
+    
+    <!-- 背景圆 -->
     <path
         android:fillColor="#4A90E2"
-        android:pathData="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zM12,20c-4.41,0 -8,-3.59 -8,-8s3.59,-8 8,-8 8,3.59 8,8 -3.59,8 -8,8zM12,6c-3.31,0 -6,2.69 -6,6s2.69,6 6,6 6,-2.69 6,-6 -2.69,-6 -6,-6zM12,16c-2.21,0 -4,-1.79 -4,-4s1.79,-4 4,-4 4,1.79 4,4 -1.79,4 -4,4z"/>
+        android:fillAlpha="0.1"
+        android:pathData="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2z"/>
+    
+    <!-- 山峰 -->
+    <path
+        android:fillColor="#4A90E2"
+        android:fillAlpha="0.6"
+        android:pathData="M7,18 L12,8 L17,18 Z"/>
+    
+    <!-- 倒影 -->
+    <path
+        android:fillColor="#4A90E2"
+        android:fillAlpha="0.2"
+        android:pathData="M7,18 L12,20 L17,18 L12,19 Z"/>
+    
+    <!-- 上方月亮 -->
+    <path
+        android:fillColor="#4A90E2"
+        android:fillAlpha="0.4"
+        android:pathData="M14,7 A2,2 0 1,1 14,7.1"/>
+        
+    <!-- 水平线 -->
+    <path
+        android:strokeColor="#4A90E2"
+        android:strokeWidth="0.5"
+        android:strokeAlpha="0.3"
+        android:pathData="M5,18 L19,18"/>
 </vector> 
