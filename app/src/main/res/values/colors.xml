@@ -8,7 +8,7 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="colorPrimary">#FF6200EE</color>
-    <color name="background_light">#F5F5F5</color>
+    <color name="background_light">#FFFFFF</color>
     <color name="text_primary">#212121</color>
     <color name="text_secondary">#757575</color>
     <color name="text_hint">#BDBDBD</color>
@@ -20,4 +20,5 @@
     <color name="relax_breathing">#2ECC71</color>
     <color name="deep_breathing">#E67E22</color>
     <color name="mindful_guide">#558B2F</color>
+    <color name="primary">#4A90E2</color>
 </resources>
