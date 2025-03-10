@@ -10,6 +10,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.example.mentalhealthdiary.R;
 import com.example.mentalhealthdiary.model.AIPersonality;
 
@@ -47,11 +48,28 @@ public class AIPersonalityAdapter extends RecyclerView.Adapter<AIPersonalityAdap
         holder.nameText.setText(personality.getName());
         holder.descriptionText.setText(personality.getDescription());
         
-        // 设置头像
-        int resourceId = holder.itemView.getContext().getResources()
-                .getIdentifier(personality.getAvatar(), "drawable", 
-                        holder.itemView.getContext().getPackageName());
-        holder.avatarImage.setImageResource(resourceId);
+        // 修改头像加载逻辑
+        try {
+            // 先尝试从 drawable 资源加载
+            int resourceId = holder.itemView.getContext().getResources()
+                    .getIdentifier(personality.getAvatar(), "drawable", 
+                            holder.itemView.getContext().getPackageName());
+            
+            if (resourceId != 0) {
+                // 使用 Glide 加载并处理图片
+                Glide.with(holder.itemView.getContext())
+                    .load(resourceId)
+                    .circleCrop()  // 将图片裁剪成圆形
+                    .into(holder.avatarImage);
+            } else {
+                // 如果找不到资源，使用默认头像
+                holder.avatarImage.setImageResource(R.drawable.ic_ai_assistant);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            // 发生错误时使用默认头像
+            holder.avatarImage.setImageResource(R.drawable.ic_ai_assistant);
+        }
         
         // 设置选中状态
         holder.selectRadio.setChecked(personality.getId().equals(selectedId));
