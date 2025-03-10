@@ -6,6 +6,7 @@ import androidx.room.ForeignKey;
 import androidx.room.PrimaryKey;
 import androidx.room.Ignore;
 import androidx.room.Index;
+import com.google.gson.annotations.SerializedName;
 
 @Entity(
     tableName = "chat_message",
@@ -37,6 +38,7 @@ public class ChatMessage {
     private boolean isLoading;
 
     @ColumnInfo(name = "personality_id")
+    @SerializedName("personality_id")
     private String personalityId;
 
     // 主构造函数 - Room 将使用这个

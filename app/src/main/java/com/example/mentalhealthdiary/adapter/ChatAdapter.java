@@ -64,6 +64,14 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             MessageViewHolder messageHolder = (MessageViewHolder) holder;
             ChatMessage message = messages.get(position);
 
+            Log.d("ChatAdapter", String.format(
+                "Binding message at position %d: content='%s', isUser=%b, personalityId='%s'",
+                position,
+                message.getMessage(),
+                message.isUser(),
+                message.getPersonalityId()
+            ));
+
             messageHolder.messageText.setText(message.getMessage());
             
             if (message.isUser()) {
@@ -75,18 +83,24 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 messageHolder.messageContainer.setGravity(Gravity.START);
                 messageHolder.avatarImage.setVisibility(View.VISIBLE);
                 
+                Log.d("ChatAdapter", "Message position " + position + ":");
+                Log.d("ChatAdapter", "  Message: " + message.getMessage());
+                Log.d("ChatAdapter", "  Personality ID: " + message.getPersonalityId());
+                
                 AIPersonality messagePersonality = message.getPersonalityId() != null ?
                         AIPersonalityConfig.getPersonalityById(message.getPersonalityId()) :
                         currentPersonality;
                 
+                Log.d("ChatAdapter", "  Using personality: " + messagePersonality.getName());
+                Log.d("ChatAdapter", "  Avatar: " + messagePersonality.getAvatar());
+                
                 try {
                     String avatarName = messagePersonality.getAvatar();
-                    Log.d("ChatAdapter", "Loading avatar for personality: " + 
-                          messagePersonality.getName() + ", Avatar: " + avatarName);
-                    
                     int resourceId = holder.itemView.getContext().getResources()
                             .getIdentifier(avatarName, "drawable", 
                                     holder.itemView.getContext().getPackageName());
+                    
+                    Log.d("ChatAdapter", "  Resource ID: " + resourceId);
                     
                     if (resourceId != 0) {
                         Glide.with(holder.itemView.getContext())
@@ -94,6 +108,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                             .circleCrop()
                             .into(messageHolder.avatarImage);
                     } else {
+                        Log.e("ChatAdapter", "  Avatar resource not found: " + avatarName);
                         messageHolder.avatarImage.setImageResource(R.drawable.ic_ai_assistant);
                     }
                 } catch (Exception e) {

@@ -2,6 +2,7 @@ package com.example.mentalhealthdiary.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 public class PreferenceManager {
     private static final String PREF_NAME = "MentalHealthDiaryPrefs";
@@ -23,14 +24,16 @@ public class PreferenceManager {
         return getPreferences(context).getLong(KEY_LAST_CHAT_ID, -1);
     }
     
-    public static void saveCurrentPersonalityId(Context context, String personalityId) {
-        getPreferences(context)
-            .edit()
-            .putString(KEY_CURRENT_PERSONALITY, personalityId)
-            .commit();
+    public static void saveCurrentPersonalityId(Context context, String id) {
+        Log.d("PreferenceManager", "Saving personality ID: " + id);
+        SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        prefs.edit().putString(KEY_CURRENT_PERSONALITY, id).apply();
     }
     
     public static String getCurrentPersonalityId(Context context) {
-        return getPreferences(context).getString(KEY_CURRENT_PERSONALITY, null);
+        SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        String id = prefs.getString(KEY_CURRENT_PERSONALITY, null);
+        Log.d("PreferenceManager", "Getting current personality ID: " + id);
+        return id;
     }
 } 

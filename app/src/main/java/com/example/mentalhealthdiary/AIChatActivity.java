@@ -26,6 +26,7 @@ import com.example.mentalhealthdiary.model.AIPersonality;
 import com.example.mentalhealthdiary.utils.PreferenceManager;
 import com.google.android.material.button.MaterialButton;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
@@ -135,13 +136,13 @@ public class AIChatActivity extends AppCompatActivity {
         Log.d("AIChatActivity", "Loading personality ID: " + personalityId);
         
         if (personalityId == null) {
-            personalityId = "default";
+            personalityId = "default";  // 确保这里设置的是 "default"
             PreferenceManager.saveCurrentPersonalityId(this, personalityId);
         }
         
         currentPersonality = AIPersonalityConfig.getPersonalityById(personalityId);
         Log.d("AIChatActivity", "Loaded personality: " + 
-              (currentPersonality != null ? currentPersonality.getName() : "null"));
+              (currentPersonality != null ? currentPersonality.getName() + ", ID: " + currentPersonality.getId() : "null"));
         
         // 更新标题
         if (getSupportActionBar() != null) {
@@ -211,13 +212,40 @@ public class AIChatActivity extends AppCompatActivity {
     }
 
     private void sendToAI(String userMessage, int loadingPos) {
+        // 添加日志检查当前性格
+        Log.d("AIChatActivity", "Sending message with personality: " + 
+              currentPersonality.getName() + ", ID: " + currentPersonality.getId());
+        
         // 保存用户消息
         saveMessage(userMessage, true, currentPersonality.getId());
 
         List<ChatRequest.Message> apiMessages = new ArrayList<>();
         
-        // 添加当前性格的系统提示词
-        apiMessages.add(new ChatRequest.Message("system", currentPersonality.getSystemPrompt()));
+        // 获取历史消息中的所有对话，用于保持对话连贯性
+        List<ChatRequest.Message> historyMessages = new ArrayList<>();
+        for (ChatMessage msg : messages) {
+            if (!msg.isLoading()) {
+                // 根据消息的 personalityId 获取对应的性格
+                AIPersonality messagePersonality = msg.getPersonalityId() != null ?
+                        AIPersonalityConfig.getPersonalityById(msg.getPersonalityId()) :
+                        currentPersonality;
+                        
+                if (!msg.isUser() && historyMessages.isEmpty()) {
+                    // 第一条 AI 消息前添加对应的系统提示词
+                    apiMessages.add(new ChatRequest.Message(
+                        "system", 
+                        messagePersonality.getSystemPrompt()
+                    ));
+                }
+                
+                apiMessages.add(new ChatRequest.Message(
+                    msg.isUser() ? "user" : "assistant",
+                    msg.getMessage()
+                ));
+            }
+        }
+        
+        // 添加当前用户消息
         apiMessages.add(new ChatRequest.Message("user", userMessage));
         
         // 使用配置的模型名称
@@ -235,11 +263,12 @@ public class AIChatActivity extends AppCompatActivity {
                     
                     if (response.isSuccessful() && response.body() != null) {
                         String aiResponse = response.body().choices.get(0).message.content;
+                        // 使用当前性格的 ID 保存 AI 回复
                         messages.add(new ChatMessage(aiResponse, false, currentPersonality.getId()));
                         adapter.notifyItemInserted(messages.size() - 1);
                         chatRecyclerView.scrollToPosition(messages.size() - 1);
                         
-                        // 保存AI的回复
+                        // 保存 AI 的回复
                         saveMessage(aiResponse, false, currentPersonality.getId());
                     } else {
                         showError("AI响应错误: " + (response.code() == 429 ? "请求太频繁，请稍后再试" : 
@@ -279,30 +308,61 @@ public class AIChatActivity extends AppCompatActivity {
             try {
                 ChatHistory history = database.chatHistoryDao().getHistoryById(historyId);
                 if (history != null && history.getMessages() != null) {
-                    Type type = new TypeToken<List<ChatMessage>>(){}.getType();
-                    List<ChatMessage> historyMessages = new Gson().fromJson(history.getMessages(), type);
+                    Log.d("ChatDebug", "Loading messages from JSON: " + history.getMessages());
                     
+                    Gson gson = new GsonBuilder()
+                        .serializeNulls()
+                        .create();
+                    Type type = new TypeToken<List<ChatMessage>>(){}.getType();
+                    List<ChatMessage> historyMessages = gson.fromJson(history.getMessages(), type);
+                    
+                    // 找到第一条 AI 消息的性格ID
+                    String chatPersonalityId = null;
+                    if (historyMessages != null) {
+                        for (ChatMessage msg : historyMessages) {
+                            if (!msg.isUser() && msg.getPersonalityId() != null) {
+                                chatPersonalityId = msg.getPersonalityId();
+                                Log.d("ChatDebug", "Found chat personality ID: " + chatPersonalityId);
+                                break;
+                            }
+                        }
+                    }
+
+                    // 如果找到了性格ID，更新当前性格
+                    if (chatPersonalityId != null) {
+                        AIPersonality chatPersonality = AIPersonalityConfig.getPersonalityById(chatPersonalityId);
+                        if (chatPersonality != null) {
+                            Log.d("ChatDebug", "Updating current personality to: " + chatPersonality.getName());
+                            currentPersonality = chatPersonality;
+                        }
+                    }
+
                     runOnUiThread(() -> {
                         messages.clear();
                         if (historyMessages != null && !historyMessages.isEmpty()) {
                             messages.addAll(historyMessages);
+                            
+                            // 更新适配器的当前性格
+                            adapter.setCurrentPersonality(currentPersonality);
+                            
+                            // 更新标题
+                            if (getSupportActionBar() != null) {
+                                getSupportActionBar().setTitle(currentPersonality.getName());
+                            }
                         } else {
-                            // 如果没有消息，显示当前性格的欢迎消息
                             messages.add(new ChatMessage(
                                 currentPersonality.getWelcomeMessage(),
-                                false
+                                false,
+                                currentPersonality.getId()
                             ));
                         }
                         adapter.notifyDataSetChanged();
-                        chatRecyclerView.scrollToPosition(messages.size() - 1);
                     });
                 } else {
-                    // 如果找不到历史记录，创建新对话
-                    runOnUiThread(() -> {
-                        createNewChat();
-                    });
+                    runOnUiThread(this::createNewChat);
                 }
             } catch (Exception e) {
+                Log.e("ChatDebug", "Error loading chat: ", e);
                 e.printStackTrace();
                 runOnUiThread(() -> {
                     showError("加载对话时出错");
@@ -342,20 +402,28 @@ public class AIChatActivity extends AppCompatActivity {
 
     private void saveCurrentChat() {
         if (currentHistoryId != -1 && messages != null && !messages.isEmpty()) {
-            // 只有当有消息时才保存
             executorService.execute(() -> {
                 try {
-                    // 在后台线程中获取标题
+                    // 添加日志检查消息
+                    for (ChatMessage msg : messages) {
+                        if (!msg.isUser()) {
+                            Log.d("ChatDebug", "Saving AI message with personality ID: " + msg.getPersonalityId());
+                        }
+                    }
+
                     String title = generateChatTitle();
                     String messagesJson = convertMessagesToJson(messages);
                     
+                    // 添加日志检查 JSON
+                    Log.d("ChatDebug", "Messages JSON: " + messagesJson);
+
                     ChatHistory history = new ChatHistory(new Date(), title, messagesJson);
                     history.setId(currentHistoryId);
                     database.chatHistoryDao().update(history);
                     
-                    // 确保最后一次对话ID被保存
                     PreferenceManager.saveLastChatId(this, currentHistoryId);
                 } catch (Exception e) {
+                    Log.e("ChatDebug", "保存对话失败", e);
                     e.printStackTrace();
                 }
             });
@@ -390,8 +458,12 @@ public class AIChatActivity extends AppCompatActivity {
     }
 
     private String convertMessagesToJson(List<ChatMessage> messages) {
-        // 实现将消息列表转换为JSON字符串的逻辑
-        return new Gson().toJson(messages);
+        Gson gson = new GsonBuilder()
+            .serializeNulls()  // 这会确保 null 值也被序列化
+            .create();
+        String json = gson.toJson(messages);
+        Log.d("ChatDebug", "Converting messages to JSON: " + json);  // 添加日志
+        return json;
     }
 
     @Override

@@ -3,14 +3,15 @@ package com.example.mentalhealthdiary.config;
 import com.example.mentalhealthdiary.model.AIPersonality;
 import java.util.ArrayList;
 import java.util.List;
+import android.util.Log;
 
 public class AIPersonalityConfig {
     private static final List<AIPersonality> personalities = new ArrayList<>();
     
     static {
-        // 默认心理咨询师
+        // 默认心理咨询师 - 确保 ID 是 "default"
         personalities.add(new AIPersonality(
-            "default",
+            "default",  // 这个 ID 必须是 "default"
             "小安心理咨询师",
             "ic_counselor",
             "专业、温和的心理咨询师，擅长倾听和共情",
@@ -66,11 +67,15 @@ public class AIPersonalityConfig {
     }
     
     public static AIPersonality getPersonalityById(String id) {
+        // 添加日志
+        Log.d("AIPersonalityConfig", "Getting personality by ID: " + id);
         for (AIPersonality personality : personalities) {
             if (personality.getId().equals(id)) {
+                Log.d("AIPersonalityConfig", "Found personality: " + personality.getName());
                 return personality;
             }
         }
+        Log.w("AIPersonalityConfig", "Personality not found, returning default");
         return personalities.get(0); // 返回默认性格
     }
 } 
