@@ -432,7 +432,7 @@ public class BreathingActivity extends AppCompatActivity {
     private void scheduleReminder() {
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(this, ReminderReceiver.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
 
         // 设置每天固定时间提醒
         Calendar calendar = Calendar.getInstance();
@@ -450,6 +450,7 @@ public class BreathingActivity extends AppCompatActivity {
     private void updateBreathingAnimation() {
         if (breathingAnimation != null) {
             breathingAnimation.cancel();
+
         }
         
         int totalDuration = currentMode.inhaleSeconds + currentMode.exhaleSeconds;
