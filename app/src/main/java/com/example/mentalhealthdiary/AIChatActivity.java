@@ -34,6 +34,16 @@ public class AIChatActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ai_chat);
 
+        // 初始化欢迎消息
+        if (messages.isEmpty()) {
+            messages.add(new ChatMessage(
+                "您好，我是心理健康助手小安，持有国家二级心理咨询师资质。\n" +
+                "🤗 无论您遇到情绪困扰、压力问题还是情感困惑，我都会在这里倾听。\n" +
+                "🔒 对话内容将严格保密，您可以放心倾诉～",
+                false
+            ));
+        }
+
         // 初始化视图
         chatRecyclerView = findViewById(R.id.chatRecyclerView);
         messageInput = findViewById(R.id.messageInput);
@@ -69,6 +79,13 @@ public class AIChatActivity extends AppCompatActivity {
 
     private void sendToAI(String userMessage, int loadingPos) {
         List<ChatRequest.Message> apiMessages = new ArrayList<>();
+        
+        // 添加系统预设消息
+        apiMessages.add(new ChatRequest.Message("system", 
+            "你是一个专业的心理健康助手，具备心理咨询师资质。请用温暖、共情的语气，结合认知行为疗法等专业方法进行对话。"
+            + "回答要简明扼要（不超过300字），适当使用emoji增加亲和力。"
+            + "用户可能有抑郁、焦虑等情绪问题，需保持高度敏感和同理心。"));
+        
         apiMessages.add(new ChatRequest.Message("user", userMessage));
         
         ChatRequest request = new ChatRequest(apiMessages, "deepseek-ai/DeepSeek-R1");

@@ -6,6 +6,18 @@
     android:layout_height="match_parent"
     android:background="@color/background_light">
 
+    <TextView
+        android:id="@+id/aiIntroText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:text="🤖 您的专属心理健康助手\n具备国家二级心理咨询师资质 | 严格保密 | 7×24小时在线"
+        android:textColor="@color/teal_700"
+        android:textSize="12sp"
+        android:gravity="center"
+        android:background="@color/background_light"
+        app:layout_constraintTop_toTopOf="parent"/>
+
     <!-- 聊天记录列表 -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/chatRecyclerView"
@@ -13,7 +25,7 @@
         android:layout_height="0dp"
         android:padding="8dp"
         android:clipToPadding="false"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/aiIntroText"
         app:layout_constraintBottom_toTopOf="@id/inputContainer"/>
 
     <!-- 输入区域 -->
