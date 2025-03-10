@@ -352,7 +352,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showAIAssistantDialog() {
-        Intent intent = new Intent(this, AIChatActivity.class);
-        startActivity(intent);
+        startActivity(new Intent(this, AIChatActivity.class));
     }
 }

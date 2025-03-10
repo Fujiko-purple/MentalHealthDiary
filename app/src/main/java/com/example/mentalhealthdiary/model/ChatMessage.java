@@ -5,18 +5,18 @@ public class ChatMessage {
     private boolean isUser;
     private boolean isLoading;
 
-    public ChatMessage(String message, boolean isUser) {
+    public ChatMessage(String message, boolean isUser, boolean isLoading) {
         this.message = message;
         this.isUser = isUser;
-        this.isLoading = false;
-    }
-
-    private ChatMessage(boolean isLoading) {
         this.isLoading = isLoading;
     }
 
+    public ChatMessage(String message, boolean isUser) {
+        this(message, isUser, false);
+    }
+
     public static ChatMessage createLoadingMessage() {
-        return new ChatMessage(true);
+        return new ChatMessage("", false, true);
     }
 
     public String getMessage() {
