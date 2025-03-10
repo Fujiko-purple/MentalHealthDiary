@@ -1,31 +1,38 @@
 package com.example.mentalhealthdiary.adapter;
 
 import android.os.Handler;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.example.mentalhealthdiary.R;
+import com.example.mentalhealthdiary.model.AIPersonality;
 import com.example.mentalhealthdiary.model.ChatMessage;
+import com.example.mentalhealthdiary.config.AIPersonalityConfig;
 
 import java.util.List;
 
 public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
-    private static final int TYPE_MESSAGE = 0;
-    private static final int TYPE_LOADING = 1;
+    private static final int TYPE_MESSAGE = 1;
+    private static final int TYPE_LOADING = 2;
     private List<ChatMessage> messages;
+    private AIPersonality currentPersonality;
     private Handler loadingAnimationHandler = new Handler();
     private int loadingDots = 0;
     private TextView currentLoadingView;
 
-    public ChatAdapter(List<ChatMessage> messages) {
+    public ChatAdapter(List<ChatMessage> messages, AIPersonality personality) {
         this.messages = messages;
+        this.currentPersonality = personality;
     }
 
     @Override
@@ -50,28 +57,49 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        ChatMessage message = messages.get(position);
-        
         if (holder.getItemViewType() == TYPE_LOADING) {
             LoadingViewHolder loadingHolder = (LoadingViewHolder) holder;
             startLoadingAnimation(loadingHolder.loadingDots);
         } else {
             MessageViewHolder messageHolder = (MessageViewHolder) holder;
-            if (message.isLoading()) {
-                messageHolder.messageText.setText("正在思考...");
-                messageHolder.messageText.setBackgroundResource(R.drawable.chat_bubble_received);
-                messageHolder.itemView.setGravity(Gravity.START);
-                return;
-            }
+            ChatMessage message = messages.get(position);
 
             messageHolder.messageText.setText(message.getMessage());
             
             if (message.isUser()) {
                 messageHolder.messageText.setBackgroundResource(R.drawable.chat_bubble_sent);
-                messageHolder.itemView.setGravity(Gravity.END);
+                messageHolder.messageContainer.setGravity(Gravity.END);
+                messageHolder.avatarImage.setVisibility(View.GONE);
             } else {
                 messageHolder.messageText.setBackgroundResource(R.drawable.chat_bubble_received);
-                messageHolder.itemView.setGravity(Gravity.START);
+                messageHolder.messageContainer.setGravity(Gravity.START);
+                messageHolder.avatarImage.setVisibility(View.VISIBLE);
+                
+                AIPersonality messagePersonality = message.getPersonalityId() != null ?
+                        AIPersonalityConfig.getPersonalityById(message.getPersonalityId()) :
+                        currentPersonality;
+                
+                try {
+                    String avatarName = messagePersonality.getAvatar();
+                    Log.d("ChatAdapter", "Loading avatar for personality: " + 
+                          messagePersonality.getName() + ", Avatar: " + avatarName);
+                    
+                    int resourceId = holder.itemView.getContext().getResources()
+                            .getIdentifier(avatarName, "drawable", 
+                                    holder.itemView.getContext().getPackageName());
+                    
+                    if (resourceId != 0) {
+                        Glide.with(holder.itemView.getContext())
+                            .load(resourceId)
+                            .circleCrop()
+                            .into(messageHolder.avatarImage);
+                    } else {
+                        messageHolder.avatarImage.setImageResource(R.drawable.ic_ai_assistant);
+                    }
+                } catch (Exception e) {
+                    Log.e("ChatAdapter", "Error loading avatar", e);
+                    messageHolder.avatarImage.setImageResource(R.drawable.ic_ai_assistant);
+                }
             }
         }
     }
@@ -123,12 +151,20 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     static class MessageViewHolder extends RecyclerView.ViewHolder {
         TextView messageText;
-        LinearLayout itemView;
+        ImageView avatarImage;
+        LinearLayout messageContainer;
 
-        MessageViewHolder(View view) {
-            super(view);
-            messageText = view.findViewById(R.id.messageText);
-            itemView = (LinearLayout) view;
+        MessageViewHolder(View itemView) {
+            super(itemView);
+            messageText = itemView.findViewById(R.id.messageText);
+            avatarImage = itemView.findViewById(R.id.avatarImage);
+            messageContainer = itemView.findViewById(R.id.messageContainer);
         }
+    }
+
+    public void setCurrentPersonality(AIPersonality personality) {
+        Log.d("ChatAdapter", "Setting personality: " + 
+              (personality != null ? personality.getName() + ", ID: " + personality.getId() : "null"));
+        this.currentPersonality = personality;
     }
 } 

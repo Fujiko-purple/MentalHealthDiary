@@ -61,17 +61,25 @@ public class AIChatActivity extends AppCompatActivity {
         messageInput = findViewById(R.id.messageInput);
         sendButton = findViewById(R.id.sendButton);
 
-        // 设置RecyclerView
-        adapter = new ChatAdapter(messages);
-        chatRecyclerView.setAdapter(adapter);
-        chatRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-
         // 设置 Toolbar
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setTitle("AI 心理助手");
+        }
+
+        // 先加载当前AI性格
+        loadCurrentPersonality();
+
+        // 初始化适配器
+        adapter = new ChatAdapter(messages, currentPersonality);
+        chatRecyclerView.setAdapter(adapter);
+        chatRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        // 如果是新对话，显示欢迎消息
+        if (messages.isEmpty()) {
+            messages.add(new ChatMessage(currentPersonality.getWelcomeMessage(), false));
+            adapter.notifyDataSetChanged();
         }
 
         database = AppDatabase.getInstance(this);
@@ -94,9 +102,6 @@ public class AIChatActivity extends AppCompatActivity {
         } else {
             createNewChat();
         }
-
-        // 加载当前选择的AI性格
-        loadCurrentPersonality();
 
         // 设置发送按钮点击事件
         sendButton.setOnClickListener(v -> {
@@ -127,24 +132,34 @@ public class AIChatActivity extends AppCompatActivity {
 
     private void loadCurrentPersonality() {
         String personalityId = PreferenceManager.getCurrentPersonalityId(this);
+        Log.d("AIChatActivity", "Loading personality ID: " + personalityId);
+        
         if (personalityId == null) {
-            personalityId = "default"; // 使用默认性格
+            personalityId = "default";
             PreferenceManager.saveCurrentPersonalityId(this, personalityId);
         }
+        
         currentPersonality = AIPersonalityConfig.getPersonalityById(personalityId);
-        updatePersonalityUI();
-    }
-
-    private void updatePersonalityUI() {
+        Log.d("AIChatActivity", "Loaded personality: " + 
+              (currentPersonality != null ? currentPersonality.getName() : "null"));
+        
         // 更新标题
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle(currentPersonality.getName());
         }
+    }
 
-        // 如果是新对话，显示欢迎消息
-        if (messages.isEmpty()) {
-            messages.add(new ChatMessage(currentPersonality.getWelcomeMessage(), false));
+    // 当切换AI性格时调用此方法
+    private void updatePersonality(AIPersonality newPersonality) {
+        currentPersonality = newPersonality;
+        if (adapter != null) {
+            adapter.setCurrentPersonality(newPersonality);
             adapter.notifyDataSetChanged();
+        }
+        
+        // 更新标题
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle(newPersonality.getName());
         }
     }
 
@@ -177,8 +192,10 @@ public class AIChatActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 1 && resultCode == RESULT_OK) {
-            // 性格已更改，重新加载性格并开始新对话
+            // 重新加载性格并开始新对话
             loadCurrentPersonality();
+            Log.d("AIChatActivity", "Personality changed to: " + 
+                  (currentPersonality != null ? currentPersonality.getName() : "null"));
             startNewChat();
         }
     }
@@ -195,7 +212,7 @@ public class AIChatActivity extends AppCompatActivity {
 
     private void sendToAI(String userMessage, int loadingPos) {
         // 保存用户消息
-        saveMessage(userMessage, true);
+        saveMessage(userMessage, true, currentPersonality.getId());
 
         List<ChatRequest.Message> apiMessages = new ArrayList<>();
         
@@ -218,12 +235,12 @@ public class AIChatActivity extends AppCompatActivity {
                     
                     if (response.isSuccessful() && response.body() != null) {
                         String aiResponse = response.body().choices.get(0).message.content;
-                        messages.add(new ChatMessage(aiResponse, false));
+                        messages.add(new ChatMessage(aiResponse, false, currentPersonality.getId()));
                         adapter.notifyItemInserted(messages.size() - 1);
                         chatRecyclerView.scrollToPosition(messages.size() - 1);
                         
                         // 保存AI的回复
-                        saveMessage(aiResponse, false);
+                        saveMessage(aiResponse, false, currentPersonality.getId());
                     } else {
                         showError("AI响应错误: " + (response.code() == 429 ? "请求太频繁，请稍后再试" : 
                                 response.code() == 503 ? "服务暂时不可用" : 
@@ -296,27 +313,25 @@ public class AIChatActivity extends AppCompatActivity {
     }
 
     private void createNewChat() {
-        // 创建新的聊天历史记录
         executorService.execute(() -> {
             try {
                 ChatHistory newHistory = new ChatHistory(new Date(), "新对话", "");
                 currentHistoryId = database.chatHistoryDao().insert(newHistory);
                 
-                // 保存最后一次对话的ID
                 PreferenceManager.saveLastChatId(this, currentHistoryId);
                 
-                // 添加当前性格的欢迎消息
                 runOnUiThread(() -> {
-                    messages.clear(); // 确保清空任何可能的加载消息
+                    messages.clear();
+                    // 添加欢迎消息时包含性格ID
                     ChatMessage welcomeMessage = new ChatMessage(
                         currentPersonality.getWelcomeMessage(),
-                        false
+                        false,
+                        currentPersonality.getId()  // 添加性格ID
                     );
                     messages.add(welcomeMessage);
                     adapter.notifyDataSetChanged();
                     
-                    // 保存欢迎消息
-                    saveMessage(welcomeMessage.getMessage(), false);
+                    saveMessage(welcomeMessage.getMessage(), false, currentPersonality.getId());
                 });
             } catch (Exception e) {
                 e.printStackTrace();
@@ -413,11 +428,10 @@ public class AIChatActivity extends AppCompatActivity {
         }
     }
 
-    private void saveMessage(String content, boolean isUser) {
+    private void saveMessage(String content, boolean isUser, String personalityId) {
         try {
-            // 添加保存到数据库的代码
-            ChatMessage message = new ChatMessage(content, isUser);
-            message.setChatId(currentHistoryId);  // 确保设置了正确的chatId
+            ChatMessage message = new ChatMessage(content, isUser, personalityId);
+            message.setChatId(currentHistoryId);
             message.setTimestamp(System.currentTimeMillis());
             
             AppDatabase.getInstance(this).chatMessageDao().insert(message);

@@ -49,7 +49,7 @@ public class AIPersonalitySelectActivity extends AppCompatActivity
 
     @Override
     public void onPersonalitySelected(AIPersonality personality) {
-        // 保存选择
+        // 保存选择的性格ID
         PreferenceManager.saveCurrentPersonalityId(this, personality.getId());
         setResult(RESULT_OK);
         finish();

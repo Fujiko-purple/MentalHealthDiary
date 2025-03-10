@@ -36,20 +36,37 @@ public class ChatMessage {
     @Ignore
     private boolean isLoading;
 
+    @ColumnInfo(name = "personality_id")
+    private String personalityId;
+
+    // 主构造函数 - Room 将使用这个
+    public ChatMessage(String message, boolean isUser, String personalityId) {
+        this.message = message;
+        this.isUser = isUser;
+        this.isLoading = false;
+        this.personalityId = personalityId;
+    }
+
+    // 其他构造函数需要用 @Ignore 标记
+    @Ignore
     public ChatMessage(String message, boolean isUser, boolean isLoading) {
         this.message = message;
         this.isUser = isUser;
         this.isLoading = isLoading;
+        this.personalityId = null;
     }
 
+    @Ignore
     public ChatMessage(String message, boolean isUser) {
         this(message, isUser, false);
     }
 
+    @Ignore
     public static ChatMessage createLoadingMessage() {
         return new ChatMessage("", false, true);
     }
 
+    // Getters and Setters
     public long getId() { return id; }
     public void setId(long id) { this.id = id; }
     
@@ -67,4 +84,7 @@ public class ChatMessage {
     
     public boolean isLoading() { return isLoading; }
     public void setLoading(boolean loading) { isLoading = loading; }
+
+    public String getPersonalityId() { return personalityId; }
+    public void setPersonalityId(String personalityId) { this.personalityId = personalityId; }
 } 
