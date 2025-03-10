@@ -45,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
     private ChipGroup moodFilterChips;
     private MaterialButton filterButton;
     private MaterialButton sortButton;
+    private MaterialButton aiButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -123,6 +124,12 @@ public class MainActivity extends AppCompatActivity {
 
         // 设置筛选按钮
         filterButton.setOnClickListener(v -> showFilterDialog());
+
+        // 添加 AI 助手按钮
+        aiButton = findViewById(R.id.aiButton);
+        aiButton.setOnClickListener(v -> {
+            showAIAssistantDialog();
+        });
     }
 
     private void showDatePickerDialog() {
@@ -341,6 +348,15 @@ public class MainActivity extends AppCompatActivity {
                         break;
                 }
             })
+            .show();
+    }
+
+    private void showAIAssistantDialog() {
+        // 这里先用一个简单的对话框展示
+        new AlertDialog.Builder(this)
+            .setTitle("AI 助手")
+            .setMessage("AI 助手正在开发中...\n即将为您提供智能情绪分析和建议。")
+            .setPositiveButton("确定", null)
             .show();
     }
 }

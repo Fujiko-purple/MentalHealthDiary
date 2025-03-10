@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    
+    <!-- 外圈 -->
+    <path
+        android:strokeColor="#4A90E2"
+        android:strokeWidth="1.5"
+        android:strokeAlpha="0.8"
+        android:fillColor="#10000000"
+        android:pathData="M12,12m-9,0a9,9 0,1 1,18 0a9,9 0,1 1,-18 0"/>
+    
+    <!-- 大脑图案 -->
+    <path
+        android:fillColor="#4A90E2"
+        android:fillAlpha="0.8"
+        android:pathData="M12,5C15.87,5 19,8.13 19,12C19,15.87 15.87,19 12,19C8.13,19 5,15.87 5,12C5,8.13 8.13,5 12,5M12,7C9.24,7 7,9.24 7,12C7,14.76 9.24,17 12,17C14.76,17 17,14.76 17,12C17,9.24 14.76,7 12,7M12,9C13.66,9 15,10.34 15,12C15,13.66 13.66,15 12,15C10.34,15 9,13.66 9,12C9,10.34 10.34,9 12,9"/>
+    
+    <!-- 连接线条 -->
+    <path
+        android:strokeColor="#4A90E2"
+        android:strokeWidth="1.2"
+        android:strokeAlpha="0.7"
+        android:strokeLineCap="round"
+        android:pathData="M7,8L9,10M17,8L15,10M7,16L9,14M17,16L15,14"/>
+</vector> 
