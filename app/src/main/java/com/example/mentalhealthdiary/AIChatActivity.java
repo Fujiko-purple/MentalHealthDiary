@@ -20,6 +20,7 @@ import com.example.mentalhealthdiary.config.RemoteConfig;
 import com.example.mentalhealthdiary.database.AppDatabase;
 import com.example.mentalhealthdiary.model.ChatHistory;
 import com.example.mentalhealthdiary.model.ChatMessage;
+import com.example.mentalhealthdiary.utils.PreferenceManager;
 import com.google.android.material.button.MaterialButton;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -56,8 +57,20 @@ public class AIChatActivity extends AppCompatActivity {
             getSupportActionBar().setTitle("AI 心理助手");
         }
 
-        // 初始化欢迎消息
-        if (messages.isEmpty()) {
+        database = AppDatabase.getInstance(this);
+        
+        // 检查是否是从历史记录打开的特定对话
+        currentHistoryId = getIntent().getLongExtra("chat_history_id", -1);
+        
+        if (currentHistoryId == -1) {
+            // 如果不是从历史记录打开的，则加载最后一次的对话
+            currentHistoryId = PreferenceManager.getLastChatId(this);
+        }
+        
+        if (currentHistoryId != -1) {
+            loadChatHistory(currentHistoryId);
+        } else {
+            // 如果没有历史对话，显示欢迎消息
             messages.add(new ChatMessage(
                 "您好，我是心理健康助手小安，持有国家二级心理咨询师资质。\n" +
                 "🤗 无论您遇到情绪困扰、压力问题还是情感困惑，我都会在这里倾听。\n" +
@@ -76,24 +89,19 @@ public class AIChatActivity extends AppCompatActivity {
         chatRecyclerView.setAdapter(adapter);
         chatRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        database = AppDatabase.getInstance(this);
-        
-        // 检查是否是加载历史记录
-        currentHistoryId = getIntent().getLongExtra("chat_history_id", -1);
-        if (currentHistoryId != -1) {
-            loadChatHistory(currentHistoryId);
-        }
-
         sendButton.setOnClickListener(v -> {
             sendButton.setEnabled(false);  // 禁用按钮防止重复点击
             String userMessage = messageInput.getText().toString().trim();
             if (!userMessage.isEmpty()) {
+                // 清理所有旧的加载状态
+                clearLoadingStates();
+                
                 // 添加用户消息
                 messages.add(new ChatMessage(userMessage, true));
                 adapter.notifyItemInserted(messages.size() - 1);
                 messageInput.setText("");
                 
-                // 添加加载状态
+                // 添加新的加载状态
                 messages.add(new ChatMessage("", false, true));
                 int loadingPos = messages.size() - 1;
                 adapter.notifyItemInserted(loadingPos);
@@ -122,6 +130,22 @@ public class AIChatActivity extends AppCompatActivity {
             startActivity(new Intent(this, ChatHistoryActivity.class));
             finish();
             return true;
+        } else if (item.getItemId() == R.id.action_new_chat) {
+            // 清除当前对话ID
+            currentHistoryId = -1;
+            PreferenceManager.saveLastChatId(this, -1);
+            
+            // 清除消息列表
+            messages.clear();
+            // 添加欢迎消息
+            messages.add(new ChatMessage(
+                "您好，我是心理健康助手小安，持有国家二级心理咨询师资质。\n" +
+                "🤗 无论您遇到情绪困扰、压力问题还是情感困惑，我都会在这里倾听。\n" +
+                "🔒 对话内容将严格保密，您可以放心倾诉～",
+                false
+            ));
+            adapter.notifyDataSetChanged();
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -144,33 +168,48 @@ public class AIChatActivity extends AppCompatActivity {
         ChatApiClient.getInstance(this).sendMessage(request).enqueue(new Callback<ChatResponse>() {
             @Override
             public void onResponse(Call<ChatResponse> call, Response<ChatResponse> response) {
-                runOnUiThread(() -> sendButton.setEnabled(true));
-                // 移除加载状态
-                messages.remove(loadingPos);
-                adapter.notifyItemRemoved(loadingPos);
-                
-                if (response.isSuccessful() && response.body() != null) {
-                    String aiResponse = response.body().choices.get(0).message.content;
-                    messages.add(new ChatMessage(aiResponse, false));
-                    adapter.notifyItemInserted(messages.size() - 1);
-                    chatRecyclerView.scrollToPosition(messages.size() - 1);
-                } else {
-                    showError("AI响应错误: " + response.code());
-                }
+                runOnUiThread(() -> {
+                    sendButton.setEnabled(true);
+                    // 移除加载状态
+                    messages.remove(loadingPos);
+                    adapter.notifyItemRemoved(loadingPos);
+                    
+                    if (response.isSuccessful() && response.body() != null) {
+                        String aiResponse = response.body().choices.get(0).message.content;
+                        messages.add(new ChatMessage(aiResponse, false));
+                        adapter.notifyItemInserted(messages.size() - 1);
+                        chatRecyclerView.scrollToPosition(messages.size() - 1);
+                    } else {
+                        showError("AI响应错误: " + (response.code() == 429 ? "请求太频繁，请稍后再试" : 
+                                response.code() == 503 ? "服务暂时不可用" : 
+                                "错误代码 " + response.code()));
+                    }
+                });
             }
 
             @Override
             public void onFailure(Call<ChatResponse> call, Throwable t) {
-                runOnUiThread(() -> sendButton.setEnabled(true));
-                messages.remove(loadingPos);
-                adapter.notifyItemRemoved(loadingPos);
-                showError("网络请求失败: " + t.getMessage());
+                runOnUiThread(() -> {
+                    sendButton.setEnabled(true);
+                    showError(t.getMessage().contains("timeout") ? 
+                        "请求超时，请检查网络连接" : 
+                        "网络请求失败: " + t.getMessage());
+                });
             }
         });
     }
 
     private void showError(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+        // 只移除最后一个加载状态
+        if (!messages.isEmpty() && messages.get(messages.size() - 1).isLoading()) {
+            messages.remove(messages.size() - 1);
+            adapter.notifyItemRemoved(messages.size());
+        }
+        
+        // 添加错误消息
+        messages.add(new ChatMessage("❌ " + message, false));
+        adapter.notifyItemInserted(messages.size() - 1);
+        chatRecyclerView.scrollToPosition(messages.size() - 1);
     }
 
     private void loadChatHistory(long historyId) {
@@ -197,15 +236,23 @@ public class AIChatActivity extends AppCompatActivity {
         if (messages.isEmpty()) return;
         
         new Thread(() -> {
-            // 生成对话标题（使用第一条用户消息的前20个字符）
+            // 如果是已存在的对话，保持原有标题
             String title = "新对话";
-            for (ChatMessage msg : messages) {
-                if (msg.isUser()) {
-                    title = msg.getMessage();
-                    if (title.length() > 20) {
-                        title = title.substring(0, 20) + "...";
+            if (currentHistoryId != -1) {
+                ChatHistory existingHistory = database.chatHistoryDao().getHistoryById(currentHistoryId);
+                if (existingHistory != null) {
+                    title = existingHistory.getTitle();
+                }
+            } else {
+                // 只有新对话才生成标题（使用第一条用户消息）
+                for (ChatMessage msg : messages) {
+                    if (msg.isUser()) {
+                        title = msg.getMessage();
+                        if (title.length() > 20) {
+                            title = title.substring(0, 20) + "...";
+                        }
+                        break;
                     }
-                    break;
                 }
             }
             
@@ -226,5 +273,17 @@ public class AIChatActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         saveCurrentChat();
+        // 保存最后一次对话的ID
+        PreferenceManager.saveLastChatId(this, currentHistoryId);
+    }
+
+    private void clearLoadingStates() {
+        // 从后向前遍历，删除所有加载状态的消息
+        for (int i = messages.size() - 1; i >= 0; i--) {
+            if (messages.get(i).isLoading()) {
+                messages.remove(i);
+                adapter.notifyItemRemoved(i);
+            }
+        }
     }
 } 

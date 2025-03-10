@@ -26,4 +26,7 @@ public interface ChatHistoryDao {
     
     @Query("SELECT * FROM chat_histories WHERE id = :id")
     ChatHistory getHistoryById(long id);
+
+    @Query("SELECT * FROM chat_histories ORDER BY timestamp DESC")
+    List<ChatHistory> getAllHistoriesSync();
 } 

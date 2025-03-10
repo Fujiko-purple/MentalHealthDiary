@@ -1,8 +1,11 @@
 package com.example.mentalhealthdiary.adapter;
 
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -23,6 +26,8 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
 
     public interface OnHistoryClickListener {
         void onHistoryClick(ChatHistory history);
+        void onHistoryEdit(ChatHistory history);
+        void onHistoryDelete(ChatHistory history);
     }
 
     public ChatHistoryAdapter(OnHistoryClickListener listener) {
@@ -48,6 +53,33 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
                 listener.onHistoryClick(history);
             }
         });
+
+        holder.itemView.setOnLongClickListener(v -> {
+            showPopupMenu(v, history);
+            return true;
+        });
+    }
+
+    private void showPopupMenu(View view, ChatHistory history) {
+        PopupMenu popup = new PopupMenu(view.getContext(), view);
+        popup.inflate(R.menu.menu_chat_history_item);
+        
+        popup.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.action_edit) {
+                if (listener != null) {
+                    listener.onHistoryEdit(history);
+                }
+                return true;
+            } else if (item.getItemId() == R.id.action_delete) {
+                if (listener != null) {
+                    listener.onHistoryDelete(history);
+                }
+                return true;
+            }
+            return false;
+        });
+        
+        popup.show();
     }
 
     @Override
@@ -58,6 +90,10 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
     public void setHistories(List<ChatHistory> histories) {
         this.histories = histories;
         notifyDataSetChanged();
+    }
+
+    public List<ChatHistory> getHistories() {
+        return histories;
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
