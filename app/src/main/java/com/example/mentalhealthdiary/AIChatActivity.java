@@ -29,6 +29,8 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -43,41 +45,12 @@ public class AIChatActivity extends AppCompatActivity {
     private AppDatabase database;
     private long currentHistoryId = -1;
     private Toolbar toolbar;
+    private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ai_chat);
-
-        // 设置 Toolbar
-        toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setTitle("AI 心理助手");
-        }
-
-        database = AppDatabase.getInstance(this);
-        
-        // 检查是否是从历史记录打开的特定对话
-        currentHistoryId = getIntent().getLongExtra("chat_history_id", -1);
-        
-        if (currentHistoryId == -1) {
-            // 如果不是从历史记录打开的，则加载最后一次的对话
-            currentHistoryId = PreferenceManager.getLastChatId(this);
-        }
-        
-        if (currentHistoryId != -1) {
-            loadChatHistory(currentHistoryId);
-        } else {
-            // 如果没有历史对话，显示欢迎消息
-            messages.add(new ChatMessage(
-                "您好，我是心理健康助手小安，持有国家二级心理咨询师资质。\n" +
-                "🤗 无论您遇到情绪困扰、压力问题还是情感困惑，我都会在这里倾听。\n" +
-                "🔒 对话内容将严格保密，您可以放心倾诉～",
-                false
-            ));
-        }
 
         // 初始化视图
         chatRecyclerView = findViewById(R.id.chatRecyclerView);
@@ -89,6 +62,36 @@ public class AIChatActivity extends AppCompatActivity {
         chatRecyclerView.setAdapter(adapter);
         chatRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
+        // 设置 Toolbar
+        toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setTitle("AI 心理助手");
+        }
+
+        database = AppDatabase.getInstance(this);
+        
+        // 获取传入的历史记录ID
+        currentHistoryId = getIntent().getLongExtra("chat_history_id", -1);
+        
+        // 如果没有传入历史记录ID，检查是否有上次对话
+        if (currentHistoryId == -1) {
+            currentHistoryId = PreferenceManager.getLastChatId(this);
+        }
+        
+        if (currentHistoryId != -1) {
+            // 显示加载提示
+            messages.add(new ChatMessage("正在加载对话...", false, true));
+            adapter.notifyItemInserted(0);
+            
+            // 加载已有对话
+            loadExistingChat(currentHistoryId);
+        } else {
+            createNewChat();
+        }
+
+        // 设置发送按钮点击事件
         sendButton.setOnClickListener(v -> {
             sendButton.setEnabled(false);  // 禁用按钮防止重复点击
             String userMessage = messageInput.getText().toString().trim();
@@ -212,69 +215,125 @@ public class AIChatActivity extends AppCompatActivity {
         chatRecyclerView.scrollToPosition(messages.size() - 1);
     }
 
-    private void loadChatHistory(long historyId) {
-        new Thread(() -> {
-            ChatHistory history = database.chatHistoryDao().getHistoryById(historyId);
-            if (history != null) {
-                try {
+    private void loadExistingChat(long historyId) {
+        executorService.execute(() -> {
+            try {
+                ChatHistory history = database.chatHistoryDao().getHistoryById(historyId);
+                if (history != null && history.getMessages() != null) {
                     Type type = new TypeToken<List<ChatMessage>>(){}.getType();
                     List<ChatMessage> historyMessages = new Gson().fromJson(history.getMessages(), type);
+                    
                     runOnUiThread(() -> {
-                        messages.clear();
-                        messages.addAll(historyMessages);
-                        adapter.notifyDataSetChanged();
-                        chatRecyclerView.scrollToPosition(messages.size() - 1);
+                        try {
+                            messages.clear();
+                            if (historyMessages != null && !historyMessages.isEmpty()) {
+                                messages.addAll(historyMessages);
+                            } else {
+                                // 如果没有消息，显示欢迎消息
+                                messages.add(new ChatMessage(
+                                    "您好，我是心理健康助手小安，持有国家二级心理咨询师资质。\n" +
+                                    "🤗 无论您遇到情绪困扰、压力问题还是情感困惑，我都会在这里倾听。\n" +
+                                    "🔒 对话内容将严格保密，您可以放心倾诉～",
+                                    false
+                                ));
+                            }
+                            adapter.notifyDataSetChanged();
+                            chatRecyclerView.scrollToPosition(messages.size() - 1);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            showError("加载对话失败");
+                        }
                     });
-                } catch (Exception e) {
-                    e.printStackTrace();
+                } else {
+                    runOnUiThread(() -> showError("找不到对话记录"));
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
+                runOnUiThread(() -> showError("加载对话时出错"));
             }
-        }).start();
+        });
+    }
+
+    private void createNewChat() {
+        // 创建新的聊天历史记录
+        executorService.execute(() -> {
+            ChatHistory newHistory = new ChatHistory(new Date(), "新对话", "");
+            currentHistoryId = database.chatHistoryDao().insert(newHistory);
+            // 保存最后一次对话的ID
+            PreferenceManager.saveLastChatId(this, currentHistoryId);
+            
+            // 添加欢迎消息
+            runOnUiThread(() -> {
+                messages.clear(); // 确保清空任何可能的加载消息
+                messages.add(new ChatMessage(
+                    "您好，我是心理健康助手小安，持有国家二级心理咨询师资质。\n" +
+                    "🤗 无论您遇到情绪困扰、压力问题还是情感困惑，我都会在这里倾听。\n" +
+                    "🔒 对话内容将严格保密，您可以放心倾诉～",
+                    false
+                ));
+                adapter.notifyDataSetChanged();
+            });
+        });
     }
 
     private void saveCurrentChat() {
-        if (messages.isEmpty()) return;
-        
-        new Thread(() -> {
-            // 如果是已存在的对话，保持原有标题
-            String title = "新对话";
-            if (currentHistoryId != -1) {
+        if (currentHistoryId != -1 && messages != null && !messages.isEmpty()) {
+            // 只有当有消息时才保存
+            executorService.execute(() -> {
+                try {
+                    // 在后台线程中获取标题
+                    String title = generateChatTitle();
+                    String messagesJson = convertMessagesToJson(messages);
+                    
+                    ChatHistory history = new ChatHistory(new Date(), title, messagesJson);
+                    history.setId(currentHistoryId);
+                    database.chatHistoryDao().update(history);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+    }
+
+    private String generateChatTitle() {
+        // 如果是已存在的对话，保持原有标题
+        if (currentHistoryId != -1) {
+            try {
                 ChatHistory existingHistory = database.chatHistoryDao().getHistoryById(currentHistoryId);
-                if (existingHistory != null) {
-                    title = existingHistory.getTitle();
+                if (existingHistory != null && existingHistory.getTitle() != null 
+                    && !existingHistory.getTitle().isEmpty()) {
+                    return existingHistory.getTitle();
                 }
-            } else {
-                // 只有新对话才生成标题（使用第一条用户消息）
-                for (ChatMessage msg : messages) {
-                    if (msg.isUser()) {
-                        title = msg.getMessage();
-                        if (title.length() > 20) {
-                            title = title.substring(0, 20) + "...";
-                        }
-                        break;
-                    }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        
+        // 只有新对话才生成标题（使用第一条用户消息）
+        for (ChatMessage msg : messages) {
+            if (msg.isUser()) {
+                String title = msg.getMessage();
+                if (title.length() > 20) {
+                    title = title.substring(0, 20) + "...";
                 }
+                return title;
             }
-            
-            // 将消息列表转换为JSON字符串
-            String messagesJson = new Gson().toJson(messages);
-            
-            ChatHistory history = new ChatHistory(new Date(), title, messagesJson);
-            if (currentHistoryId != -1) {
-                history.setId(currentHistoryId);
-                database.chatHistoryDao().update(history);
-            } else {
-                currentHistoryId = database.chatHistoryDao().insert(history);
-            }
-        }).start();
+        }
+        return "新对话";
+    }
+
+    private String convertMessagesToJson(List<ChatMessage> messages) {
+        // 实现将消息列表转换为JSON字符串的逻辑
+        return new Gson().toJson(messages);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        saveCurrentChat();
-        // 保存最后一次对话的ID
+        // 保存最后一次对话的ID（这个可以在主线程执行，因为是轻量级操作）
         PreferenceManager.saveLastChatId(this, currentHistoryId);
+        // 在后台线程保存对话内容
+        saveCurrentChat();
     }
 
     private void clearLoadingStates() {
@@ -283,6 +342,21 @@ public class AIChatActivity extends AppCompatActivity {
             if (messages.get(i).isLoading()) {
                 messages.remove(i);
                 adapter.notifyItemRemoved(i);
+            }
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // 确保最后一次保存完成
+        if (executorService != null) {
+            try {
+                saveCurrentChat();
+                Thread.sleep(100); // 给一点时间让保存操作完成
+                executorService.shutdown();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
     }

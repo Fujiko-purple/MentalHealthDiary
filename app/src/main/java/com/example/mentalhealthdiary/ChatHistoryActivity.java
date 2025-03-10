@@ -19,11 +19,14 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.example.mentalhealthdiary.utils.PreferenceManager;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ChatHistoryActivity extends AppCompatActivity implements ChatHistoryAdapter.OnHistoryClickListener {
     private RecyclerView recyclerView;
     private ChatHistoryAdapter adapter;
     private AppDatabase database;
+    private ExecutorService executorService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +80,20 @@ public class ChatHistoryActivity extends AppCompatActivity implements ChatHistor
                 onHistoryDelete(history);
             }
         }).attachToRecyclerView(recyclerView);
+
+        executorService = Executors.newSingleThreadExecutor();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // 清理空对话
+        executorService.execute(() -> {
+            List<ChatHistory> emptyChats = database.chatHistoryDao().getEmptyChats();
+            if (!emptyChats.isEmpty()) {
+                database.chatHistoryDao().deleteAll(emptyChats);
+            }
+        });
     }
 
     @Override

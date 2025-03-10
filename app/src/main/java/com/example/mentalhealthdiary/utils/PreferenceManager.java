@@ -12,7 +12,10 @@ public class PreferenceManager {
     }
     
     public static void saveLastChatId(Context context, long chatId) {
-        getPreferences(context).edit().putLong(KEY_LAST_CHAT_ID, chatId).apply();
+        getPreferences(context)
+            .edit()
+            .putLong(KEY_LAST_CHAT_ID, chatId)
+            .commit();
     }
     
     public static long getLastChatId(Context context) {

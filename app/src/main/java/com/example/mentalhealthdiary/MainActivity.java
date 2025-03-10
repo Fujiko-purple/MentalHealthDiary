@@ -32,6 +32,8 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.example.mentalhealthdiary.utils.PreferenceManager;
+
 public class MainActivity extends AppCompatActivity {
     private RadioGroup moodRadioGroup;
     private EditText diaryContent;
@@ -352,6 +354,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showAIAssistantDialog() {
-        startActivity(new Intent(this, AIChatActivity.class));
+        Intent intent = new Intent(this, AIChatActivity.class);
+        // 获取最后一次对话的ID
+        long lastChatId = PreferenceManager.getLastChatId(this);
+        if (lastChatId != -1) {
+            // 如果存在最后一次对话，则加载该对话
+            intent.putExtra("chat_history_id", lastChatId);
+        }
+        startActivity(intent);
     }
 }

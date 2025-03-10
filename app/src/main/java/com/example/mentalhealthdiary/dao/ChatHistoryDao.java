@@ -29,4 +29,10 @@ public interface ChatHistoryDao {
 
     @Query("SELECT * FROM chat_histories ORDER BY timestamp DESC")
     List<ChatHistory> getAllHistoriesSync();
+
+    @Query("SELECT * FROM chat_histories WHERE messages = '' OR messages IS NULL")
+    List<ChatHistory> getEmptyChats();
+
+    @Delete
+    void deleteAll(List<ChatHistory> chats);
 } 
