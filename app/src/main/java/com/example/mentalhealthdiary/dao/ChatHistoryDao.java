@@ -21,16 +21,16 @@ public interface ChatHistoryDao {
     @Delete
     void delete(ChatHistory chatHistory);
     
-    @Query("SELECT * FROM chat_histories ORDER BY timestamp DESC")
+    @Query("SELECT * FROM chat_history ORDER BY timestamp DESC")
     LiveData<List<ChatHistory>> getAllHistories();
     
-    @Query("SELECT * FROM chat_histories WHERE id = :id")
+    @Query("SELECT * FROM chat_history WHERE id = :id LIMIT 1")
     ChatHistory getHistoryById(long id);
 
-    @Query("SELECT * FROM chat_histories ORDER BY timestamp DESC")
+    @Query("SELECT * FROM chat_history ORDER BY timestamp DESC")
     List<ChatHistory> getAllHistoriesSync();
 
-    @Query("SELECT * FROM chat_histories WHERE messages = '' OR messages IS NULL")
+    @Query("SELECT * FROM chat_history WHERE messages = '' OR messages IS NULL")
     List<ChatHistory> getEmptyChats();
 
     @Delete

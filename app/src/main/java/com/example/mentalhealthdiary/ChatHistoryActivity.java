@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.annotation.NonNull;
+import android.view.View;
 
 import com.example.mentalhealthdiary.adapter.ChatHistoryAdapter;
 import com.example.mentalhealthdiary.database.AppDatabase;
@@ -63,7 +64,12 @@ public class ChatHistoryActivity extends AppCompatActivity implements ChatHistor
 
         // 观察聊天历史记录
         database.chatHistoryDao().getAllHistories().observe(this, histories -> {
-            adapter.setHistories(histories);
+            if (histories != null && !histories.isEmpty()) {
+                adapter.setHistories(histories);
+            } else {
+                // 显示空状态
+                findViewById(R.id.emptyView).setVisibility(View.VISIBLE);
+            }
         });
 
         // 添加滑动删除功能
@@ -98,6 +104,9 @@ public class ChatHistoryActivity extends AppCompatActivity implements ChatHistor
 
     @Override
     public void onHistoryClick(ChatHistory history) {
+        // 保存最后一次对话ID
+        PreferenceManager.saveLastChatId(this, history.getId());
+        
         Intent intent = new Intent(this, AIChatActivity.class);
         intent.putExtra("chat_history_id", history.getId());
         startActivity(intent);

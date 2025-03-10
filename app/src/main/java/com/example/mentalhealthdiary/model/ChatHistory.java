@@ -2,18 +2,20 @@ package com.example.mentalhealthdiary.model;
 
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
+import androidx.room.ColumnInfo;
 import androidx.room.TypeConverters;
 
 import com.example.mentalhealthdiary.database.DateConverter;
 import java.util.Date;
 
-@Entity(tableName = "chat_histories")
-@TypeConverters(DateConverter.class)
+@Entity(tableName = "chat_history")
 public class ChatHistory {
     @PrimaryKey(autoGenerate = true)
     private long id;
     
+    @TypeConverters(DateConverter.class)
     private Date timestamp;
+    
     private String title;
     private String messages;
     
