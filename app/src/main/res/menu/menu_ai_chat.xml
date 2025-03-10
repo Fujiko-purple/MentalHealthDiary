@@ -2,6 +2,11 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:id="@+id/action_personality"
+        android:title="切换性格"
+        android:icon="@drawable/ic_personality"
+        app:showAsAction="ifRoom"/>
+    <item
         android:id="@+id/action_new_chat"
         android:title="新对话"
         android:icon="@drawable/ic_add"

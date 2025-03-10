@@ -17,9 +17,11 @@ import com.example.mentalhealthdiary.api.ChatApiClient;
 import com.example.mentalhealthdiary.api.model.ChatRequest;
 import com.example.mentalhealthdiary.api.model.ChatResponse;
 import com.example.mentalhealthdiary.config.RemoteConfig;
+import com.example.mentalhealthdiary.config.AIPersonalityConfig;
 import com.example.mentalhealthdiary.database.AppDatabase;
 import com.example.mentalhealthdiary.model.ChatHistory;
 import com.example.mentalhealthdiary.model.ChatMessage;
+import com.example.mentalhealthdiary.model.AIPersonality;
 import com.example.mentalhealthdiary.utils.PreferenceManager;
 import com.google.android.material.button.MaterialButton;
 import com.google.gson.Gson;
@@ -46,6 +48,7 @@ public class AIChatActivity extends AppCompatActivity {
     private long currentHistoryId = -1;
     private Toolbar toolbar;
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private AIPersonality currentPersonality;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,6 +94,9 @@ public class AIChatActivity extends AppCompatActivity {
             createNewChat();
         }
 
+        // 加载当前选择的AI性格
+        loadCurrentPersonality();
+
         // 设置发送按钮点击事件
         sendButton.setOnClickListener(v -> {
             sendButton.setEnabled(false);  // 禁用按钮防止重复点击
@@ -118,6 +124,29 @@ public class AIChatActivity extends AppCompatActivity {
         });
     }
 
+    private void loadCurrentPersonality() {
+        String personalityId = PreferenceManager.getCurrentPersonalityId(this);
+        if (personalityId == null) {
+            personalityId = "default"; // 使用默认性格
+            PreferenceManager.saveCurrentPersonalityId(this, personalityId);
+        }
+        currentPersonality = AIPersonalityConfig.getPersonalityById(personalityId);
+        updatePersonalityUI();
+    }
+
+    private void updatePersonalityUI() {
+        // 更新标题
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle(currentPersonality.getName());
+        }
+
+        // 如果是新对话，显示欢迎消息
+        if (messages.isEmpty()) {
+            messages.add(new ChatMessage(currentPersonality.getWelcomeMessage(), false));
+            adapter.notifyDataSetChanged();
+        }
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_ai_chat, menu);
@@ -129,39 +158,47 @@ public class AIChatActivity extends AppCompatActivity {
         if (item.getItemId() == android.R.id.home) {
             onBackPressed();
             return true;
+        } else if (item.getItemId() == R.id.action_personality) {
+            startActivityForResult(new Intent(this, AIPersonalitySelectActivity.class), 1);
+            return true;
         } else if (item.getItemId() == R.id.action_history) {
             startActivity(new Intent(this, ChatHistoryActivity.class));
             finish();
             return true;
         } else if (item.getItemId() == R.id.action_new_chat) {
-            // 清除当前对话ID
-            currentHistoryId = -1;
-            PreferenceManager.saveLastChatId(this, -1);
-            
-            // 清除消息列表
-            messages.clear();
-            // 添加欢迎消息
-            messages.add(new ChatMessage(
-                "您好，我是心理健康助手小安，持有国家二级心理咨询师资质。\n" +
-                "🤗 无论您遇到情绪困扰、压力问题还是情感困惑，我都会在这里倾听。\n" +
-                "🔒 对话内容将严格保密，您可以放心倾诉～",
-                false
-            ));
-            adapter.notifyDataSetChanged();
+            startNewChat();
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1 && resultCode == RESULT_OK) {
+            // 性格已更改，重新加载性格并开始新对话
+            loadCurrentPersonality();
+            startNewChat();
+        }
+    }
+
+    private void startNewChat() {
+        // 清除当前对话ID
+        currentHistoryId = -1;
+        PreferenceManager.saveLastChatId(this, -1);
+        
+        // 清除消息列表
+        messages.clear();
+        // 添加新性格的欢迎消息
+        messages.add(new ChatMessage(currentPersonality.getWelcomeMessage(), false));
+        adapter.notifyDataSetChanged();
+    }
+
     private void sendToAI(String userMessage, int loadingPos) {
         List<ChatRequest.Message> apiMessages = new ArrayList<>();
         
-        // 添加系统预设消息
-        apiMessages.add(new ChatRequest.Message("system", 
-            "你是一个专业的心理健康助手，具备心理咨询师资质。请用温暖、共情的语气，结合认知行为疗法等专业方法进行对话。"
-            + "回答要简明扼要（不超过300字），适当使用emoji增加亲和力。"
-            + "用户可能有抑郁、焦虑等情绪问题，需保持高度敏感和同理心。"));
-        
+        // 添加当前性格的系统提示词
+        apiMessages.add(new ChatRequest.Message("system", currentPersonality.getSystemPrompt()));
         apiMessages.add(new ChatRequest.Message("user", userMessage));
         
         // 使用配置的模型名称
@@ -229,11 +266,9 @@ public class AIChatActivity extends AppCompatActivity {
                             if (historyMessages != null && !historyMessages.isEmpty()) {
                                 messages.addAll(historyMessages);
                             } else {
-                                // 如果没有消息，显示欢迎消息
+                                // 如果没有消息，显示当前性格的欢迎消息
                                 messages.add(new ChatMessage(
-                                    "您好，我是心理健康助手小安，持有国家二级心理咨询师资质。\n" +
-                                    "🤗 无论您遇到情绪困扰、压力问题还是情感困惑，我都会在这里倾听。\n" +
-                                    "🔒 对话内容将严格保密，您可以放心倾诉～",
+                                    currentPersonality.getWelcomeMessage(),
                                     false
                                 ));
                             }
@@ -262,13 +297,11 @@ public class AIChatActivity extends AppCompatActivity {
             // 保存最后一次对话的ID
             PreferenceManager.saveLastChatId(this, currentHistoryId);
             
-            // 添加欢迎消息
+            // 添加当前性格的欢迎消息
             runOnUiThread(() -> {
                 messages.clear(); // 确保清空任何可能的加载消息
                 messages.add(new ChatMessage(
-                    "您好，我是心理健康助手小安，持有国家二级心理咨询师资质。\n" +
-                    "🤗 无论您遇到情绪困扰、压力问题还是情感困惑，我都会在这里倾听。\n" +
-                    "🔒 对话内容将严格保密，您可以放心倾诉～",
+                    currentPersonality.getWelcomeMessage(),
                     false
                 ));
                 adapter.notifyDataSetChanged();

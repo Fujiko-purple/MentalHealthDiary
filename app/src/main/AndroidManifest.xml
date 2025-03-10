@@ -72,6 +72,15 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".AIChatActivity" />
         </activity>
+        <activity
+            android:name=".AIPersonalitySelectActivity"
+            android:label="选择AI性格"
+            android:theme="@style/Theme.MentalHealthDiary.NoActionBar"
+            android:parentActivityName=".AIChatActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".AIChatActivity" />
+        </activity>
     </application>
 
 </manifest>

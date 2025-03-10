@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 public class PreferenceManager {
     private static final String PREF_NAME = "MentalHealthDiaryPrefs";
     private static final String KEY_LAST_CHAT_ID = "last_chat_id";
+    private static final String KEY_CURRENT_PERSONALITY = "current_personality_id";
     
     private static SharedPreferences getPreferences(Context context) {
         return context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
@@ -20,5 +21,16 @@ public class PreferenceManager {
     
     public static long getLastChatId(Context context) {
         return getPreferences(context).getLong(KEY_LAST_CHAT_ID, -1);
+    }
+    
+    public static void saveCurrentPersonalityId(Context context, String personalityId) {
+        getPreferences(context)
+            .edit()
+            .putString(KEY_CURRENT_PERSONALITY, personalityId)
+            .commit();
+    }
+    
+    public static String getCurrentPersonalityId(Context context) {
+        return getPreferences(context).getString(KEY_CURRENT_PERSONALITY, null);
     }
 } 
