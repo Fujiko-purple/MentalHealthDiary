@@ -12,6 +12,7 @@ import com.example.mentalhealthdiary.adapter.ChatAdapter;
 import com.example.mentalhealthdiary.api.ChatApiClient;
 import com.example.mentalhealthdiary.api.model.ChatRequest;
 import com.example.mentalhealthdiary.api.model.ChatResponse;
+import com.example.mentalhealthdiary.config.RemoteConfig;
 import com.example.mentalhealthdiary.model.ChatMessage;
 import com.google.android.material.button.MaterialButton;
 
@@ -88,7 +89,9 @@ public class AIChatActivity extends AppCompatActivity {
         
         apiMessages.add(new ChatRequest.Message("user", userMessage));
         
-        ChatRequest request = new ChatRequest(apiMessages, "deepseek-ai/DeepSeek-R1");
+        // 使用配置的模型名称
+        String modelName = RemoteConfig.getCustomModelName();
+        ChatRequest request = new ChatRequest(apiMessages, modelName);
         
         ChatApiClient.getInstance(this).sendMessage(request).enqueue(new Callback<ChatResponse>() {
             @Override

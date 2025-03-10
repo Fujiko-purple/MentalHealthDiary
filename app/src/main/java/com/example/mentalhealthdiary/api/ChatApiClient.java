@@ -24,8 +24,9 @@ import okhttp3.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+import com.example.mentalhealthdiary.config.RemoteConfig;
+
 public class ChatApiClient {
-    private static final String BASE_URL = "https://api.siliconflow.cn/";
     private static final List<String> API_IPS = Arrays.asList(
         "106.14.246.150",
         "139.196.152.242",
@@ -75,8 +76,13 @@ public class ChatApiClient {
                 .readTimeout(45, TimeUnit.SECONDS)
                 .build();
 
+            // 使用RemoteConfig获取配置
+            String baseUrl = RemoteConfig.getCustomApiBase();
+            String apiKey = RemoteConfig.getCustomApiKey();
+            
+            // 修改Retrofit配置
             Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(BASE_URL)
+                .baseUrl(baseUrl)
                 .client(client)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();

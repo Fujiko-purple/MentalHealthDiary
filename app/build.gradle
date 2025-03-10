@@ -22,7 +22,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {
-            buildConfigField "String", "API_KEY", "\"sk-rcqdbrkvekqbaanjqwnvnnxbgkjkqyqxcuxkwrerfcslkecj\""
+            buildConfigField "String", "API_KEY", "\"your_api_key_here\""
         }
     }
     compileOptions {
