@@ -6,6 +6,15 @@
     android:layout_height="match_parent"
     android:background="@color/background_light">
 
+    <!-- 在布局顶部添加 Toolbar -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        app:layout_constraintTop_toTopOf="parent"/>
+
     <TextView
         android:id="@+id/aiIntroText"
         android:layout_width="match_parent"
@@ -16,7 +25,7 @@
         android:textSize="12sp"
         android:gravity="center"
         android:background="@color/background_light"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toBottomOf="@id/toolbar"/>
 
     <!-- 聊天记录列表 -->
     <androidx.recyclerview.widget.RecyclerView

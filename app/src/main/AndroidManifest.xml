@@ -57,10 +57,20 @@
         <activity
             android:name=".AIChatActivity"
             android:label="AI 心理助手"
+            android:theme="@style/Theme.MentalHealthDiary.NoActionBar"
             android:parentActivityName=".MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
+        </activity>
+        <activity
+            android:name=".ChatHistoryActivity"
+            android:label="聊天记录"
+            android:theme="@style/Theme.MentalHealthDiary.NoActionBar"
+            android:parentActivityName=".AIChatActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".AIChatActivity" />
         </activity>
     </application>
 
