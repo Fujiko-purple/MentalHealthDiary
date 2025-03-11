@@ -50,6 +50,8 @@ public class AIPersonality {
                 return 4;
             case "tiga_divine":       // 迪迦
                 return 5;
+            case "yangjian_tactician": // 杨戬
+                return 6;
             case "default":           // 默认心理咨询师
                 return 0;
             default:
@@ -77,6 +79,9 @@ public class AIPersonality {
                 break;
             case 5:  // tiga_divine
                 resourceName = "ic_tiga_divine";     // 迪迦头像
+                break;
+            case 6:  // yangjian_tactician
+                resourceName = "ic_yangjian";        // 杨戬头像
                 break;
             default:
                 resourceName = "ic_ai_assistant";    // 默认头像

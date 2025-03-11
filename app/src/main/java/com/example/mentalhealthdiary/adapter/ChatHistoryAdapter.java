@@ -209,6 +209,8 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
                 return "ic_kafka";
             case "tiga_divine":
                 return "ic_tiga_divine";
+            case "yangjian_tactician":
+                return "ic_yangjian";
             case "default":
                 return "ic_counselor";
             default:
