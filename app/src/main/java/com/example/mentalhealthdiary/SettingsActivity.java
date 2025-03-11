@@ -24,6 +24,8 @@ import android.app.ProgressDialog;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import android.util.Log;
+import android.content.Context;
 
 public class SettingsActivity extends AppCompatActivity {
     @Override
@@ -95,6 +97,16 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         private void validateApiConfig() {
+            // 使用 getActivity() 替代 this 来获取 Context
+            Context context = getActivity();
+            if (context == null) return;
+
+            // 添加日志输出
+            Log.d("ApiConfig", "useCustomApi: " + ApiConfig.isCustomApiEnabled(context));
+            Log.d("ApiConfig", "apiBase: " + ApiConfig.getBaseUrl(context));
+            Log.d("ApiConfig", "apiKey: " + ApiConfig.getApiKey(context));
+            Log.d("ApiConfig", "modelName: " + ApiConfig.getModelName(context));
+            
             EditTextPreference apiKeyPref = findPreference("custom_api_key");
             EditTextPreference apiBasePref = findPreference("custom_api_base");
             EditTextPreference modelNamePref = findPreference("custom_model_name");

@@ -30,8 +30,7 @@
             android:key="custom_api_key"
             android:title="API密钥"
             android:summary="输入您的API密钥"
-            android:dependency="use_custom_api"
-            android:inputType="textPassword"/>
+            android:dependency="use_custom_api"/>
             
         <EditTextPreference
             android:key="custom_api_base"

@@ -19,9 +19,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.mentalhealthdiary.adapter.MoodEntryAdapter;
+import com.example.mentalhealthdiary.config.RemoteConfig;
 import com.example.mentalhealthdiary.database.AppDatabase;
 import com.example.mentalhealthdiary.model.MoodEntry;
 import com.example.mentalhealthdiary.service.TipsWorkManager;
+import com.example.mentalhealthdiary.utils.PreferenceManager;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.ChipGroup;
 
@@ -31,8 +33,6 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import com.example.mentalhealthdiary.utils.PreferenceManager;
 
 public class MainActivity extends AppCompatActivity {
     private RadioGroup moodRadioGroup;
@@ -53,6 +53,15 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // 初始化远程配置
+        RemoteConfig.init(getApplicationContext());
+        RemoteConfig.updateConfig(
+                "sk_sugjpsC0Bk8C__-Dokz2WIW4D125z5qxDZh28mcSNu4",
+                "https://api.ppinfra.com/v3/openai",
+                "deepseek/deepseek-r1-turbo"
+
+        );
 
         // 请求通知权限（Android 13及以上需要）
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
