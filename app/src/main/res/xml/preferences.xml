@@ -16,23 +16,35 @@
         android:entryValues="@array/tips_time_values"
         android:defaultValue="9"/>
         
-    <PreferenceCategory android:title="高级API设置">
+    <PreferenceCategory 
+        android:title="API设置"
+        android:key="api_settings">
+        
+        <SwitchPreference
+            android:key="use_custom_api"
+            android:title="使用自定义API"
+            android:summary="启用后将使用下方配置的API设置"
+            android:defaultValue="false"/>
+            
         <EditTextPreference
             android:key="custom_api_key"
             android:title="API密钥"
-            android:inputType="textPassword"
-            android:summary="输入您的API密钥"/>
+            android:summary="输入您的API密钥"
+            android:dependency="use_custom_api"
+            android:inputType="textPassword"/>
             
         <EditTextPreference
             android:key="custom_api_base"
             android:title="API地址"
-            android:inputType="textUri"
-            android:summary="例如：https://api.example.com/"/>
+            android:summary="输入API基础地址"
+            android:dependency="use_custom_api"
+            android:inputType="textUri"/>
             
         <EditTextPreference
             android:key="custom_model_name"
             android:title="模型名称"
-            android:summary="例如：gpt-3.5-turbo"/>
+            android:summary="输入要使用的模型名称"
+            android:dependency="use_custom_api"/>
     </PreferenceCategory>
     
 </androidx.preference.PreferenceScreen> 
