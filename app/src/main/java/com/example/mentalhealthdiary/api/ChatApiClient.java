@@ -72,8 +72,9 @@ public class ChatApiClient {
                 .hostnameVerifier((hostname, session) -> true)
                 .addInterceptor(IP_INTERCEPTOR)
                 .dns(customDns)
-                .connectTimeout(45, TimeUnit.SECONDS)
-                .readTimeout(45, TimeUnit.SECONDS)
+                .connectTimeout(60, TimeUnit.SECONDS)
+                .readTimeout(60, TimeUnit.SECONDS)
+                .writeTimeout(60, TimeUnit.SECONDS)
                 .build();
 
             // 使用RemoteConfig获取配置

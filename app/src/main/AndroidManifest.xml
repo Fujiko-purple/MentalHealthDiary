@@ -81,6 +81,10 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".AIChatActivity" />
         </activity>
+        <service
+            android:name=".service.ChatService"
+            android:enabled="true"
+            android:exported="false" />
     </application>
 
 </manifest>

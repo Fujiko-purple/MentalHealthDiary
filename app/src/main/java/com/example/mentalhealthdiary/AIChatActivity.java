@@ -1,7 +1,13 @@
 package com.example.mentalhealthdiary;
 
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -10,6 +16,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -23,6 +30,7 @@ import com.example.mentalhealthdiary.database.AppDatabase;
 import com.example.mentalhealthdiary.model.ChatHistory;
 import com.example.mentalhealthdiary.model.ChatMessage;
 import com.example.mentalhealthdiary.model.AIPersonality;
+import com.example.mentalhealthdiary.service.ChatService;
 import com.example.mentalhealthdiary.utils.PreferenceManager;
 import com.google.android.material.button.MaterialButton;
 import com.google.gson.Gson;
@@ -51,6 +59,43 @@ public class AIChatActivity extends AppCompatActivity {
     private Toolbar toolbar;
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
     private AIPersonality currentPersonality;
+    private ChatService chatService;
+    private boolean serviceBound = false;
+    private BroadcastReceiver chatReceiver;
+
+    // 添加ServiceConnection
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            ChatService.ChatBinder binder = (ChatService.ChatBinder) service;
+            chatService = binder.getService();
+            serviceBound = true;
+            
+            // 检查是否有正在进行的请求
+            if (currentHistoryId != -1 && chatService.isThinking(currentHistoryId)) {
+                // 显示加载状态
+                boolean hasLoading = false;
+                for (ChatMessage msg : messages) {
+                    if (msg.isLoading()) {
+                        hasLoading = true;
+                        break;
+                    }
+                }
+                
+                if (!hasLoading) {
+                    messages.add(new ChatMessage("", false, true));
+                    adapter.notifyItemInserted(messages.size() - 1);
+                    chatRecyclerView.scrollToPosition(messages.size() - 1);
+                }
+            }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            chatService = null;
+            serviceBound = false;
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -129,6 +174,53 @@ public class AIChatActivity extends AppCompatActivity {
                 sendToAI(userMessage, loadingPos);
             }
         });
+
+        // 绑定Service
+        Intent serviceIntent = new Intent(this, ChatService.class);
+        bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+        
+        // 注册广播接收器
+        chatReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+                long chatId = intent.getLongExtra(ChatService.EXTRA_CHAT_ID, -1);
+                
+                // 只处理与当前聊天相关的广播
+                if (chatId != currentHistoryId) {
+                    return;
+                }
+                
+                if (ChatService.ACTION_CHAT_RESPONSE.equals(action)) {
+                    String response = intent.getStringExtra(ChatService.EXTRA_RESPONSE);
+                    
+                    // 移除加载状态
+                    clearLoadingStates();
+                    
+                    // 添加AI回复
+                    messages.add(new ChatMessage(response, false, currentPersonality.getId()));
+                    adapter.notifyItemInserted(messages.size() - 1);
+                    chatRecyclerView.scrollToPosition(messages.size() - 1);
+                    
+                    // 保存AI回复
+                    saveMessage(response, false, currentPersonality.getId());
+                    
+                } else if (ChatService.ACTION_CHAT_ERROR.equals(action)) {
+                    String error = intent.getStringExtra(ChatService.EXTRA_ERROR);
+                    
+                    // 移除加载状态
+                    clearLoadingStates();
+                    
+                    // 显示错误
+                    showError(error);
+                }
+            }
+        };
+        
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ChatService.ACTION_CHAT_RESPONSE);
+        filter.addAction(ChatService.ACTION_CHAT_ERROR);
+        LocalBroadcastManager.getInstance(this).registerReceiver(chatReceiver, filter);
     }
 
     private void loadCurrentPersonality() {
@@ -165,31 +257,6 @@ public class AIChatActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_ai_chat, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            onBackPressed();
-            return true;
-        } else if (item.getItemId() == R.id.action_personality) {
-            startActivityForResult(new Intent(this, AIPersonalitySelectActivity.class), 1);
-            return true;
-        } else if (item.getItemId() == R.id.action_history) {
-            startActivity(new Intent(this, ChatHistoryActivity.class));
-            finish();
-            return true;
-        } else if (item.getItemId() == R.id.action_new_chat) {
-            startNewChat();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 1 && resultCode == RESULT_OK) {
@@ -222,7 +289,6 @@ public class AIChatActivity extends AppCompatActivity {
         List<ChatRequest.Message> apiMessages = new ArrayList<>();
         
         // 获取历史消息中的所有对话，用于保持对话连贯性
-        List<ChatRequest.Message> historyMessages = new ArrayList<>();
         for (ChatMessage msg : messages) {
             if (!msg.isLoading()) {
                 // 根据消息的 personalityId 获取对应的性格
@@ -230,7 +296,7 @@ public class AIChatActivity extends AppCompatActivity {
                         AIPersonalityConfig.getPersonalityById(msg.getPersonalityId()) :
                         currentPersonality;
                         
-                if (!msg.isUser() && historyMessages.isEmpty()) {
+                if (!msg.isUser() && apiMessages.isEmpty()) {
                     // 第一条 AI 消息前添加对应的系统提示词
                     apiMessages.add(new ChatRequest.Message(
                         "system", 
@@ -245,49 +311,21 @@ public class AIChatActivity extends AppCompatActivity {
             }
         }
         
-        // 添加当前用户消息
-        apiMessages.add(new ChatRequest.Message("user", userMessage));
-        
         // 使用配置的模型名称
         String modelName = RemoteConfig.getCustomModelName();
         ChatRequest request = new ChatRequest(apiMessages, modelName);
         
-        ChatApiClient.getInstance(this).sendMessage(request).enqueue(new Callback<ChatResponse>() {
-            @Override
-            public void onResponse(Call<ChatResponse> call, Response<ChatResponse> response) {
-                runOnUiThread(() -> {
-                    sendButton.setEnabled(true);
-                    // 移除加载状态
-                    messages.remove(loadingPos);
-                    adapter.notifyItemRemoved(loadingPos);
-                    
-                    if (response.isSuccessful() && response.body() != null) {
-                        String aiResponse = response.body().choices.get(0).message.content;
-                        // 使用当前性格的 ID 保存 AI 回复
-                        messages.add(new ChatMessage(aiResponse, false, currentPersonality.getId()));
-                        adapter.notifyItemInserted(messages.size() - 1);
-                        chatRecyclerView.scrollToPosition(messages.size() - 1);
-                        
-                        // 保存 AI 的回复
-                        saveMessage(aiResponse, false, currentPersonality.getId());
-                    } else {
-                        showError("AI响应错误: " + (response.code() == 429 ? "请求太频繁，请稍后再试" : 
-                                response.code() == 503 ? "服务暂时不可用" : 
-                                "错误代码 " + response.code()));
-                    }
-                });
-            }
-
-            @Override
-            public void onFailure(Call<ChatResponse> call, Throwable t) {
-                runOnUiThread(() -> {
-                    sendButton.setEnabled(true);
-                    showError(t.getMessage().contains("timeout") ? 
-                        "请求超时，请检查网络连接" : 
-                        "网络请求失败: " + t.getMessage());
-                });
-            }
-        });
+        // 使用Service发送请求
+        if (serviceBound && chatService != null) {
+            chatService.sendChatRequest(request, currentHistoryId);
+            sendButton.setEnabled(true);  // 启用发送按钮
+        } else {
+            // 如果Service未绑定，显示错误
+            messages.remove(loadingPos);
+            adapter.notifyItemRemoved(loadingPos);
+            showError("服务未准备好，请稍后再试");
+            sendButton.setEnabled(true);
+        }
     }
 
     private void showError(String message) {
@@ -488,6 +526,18 @@ public class AIChatActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        
+        // 解绑Service
+        if (serviceBound) {
+            unbindService(serviceConnection);
+            serviceBound = false;
+        }
+        
+        // 注销广播接收器
+        if (chatReceiver != null) {
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(chatReceiver);
+        }
+        
         // 确保最后一次保存完成
         if (executorService != null) {
             try {
@@ -512,5 +562,30 @@ public class AIChatActivity extends AppCompatActivity {
             Log.e("ChatDebug", "保存消息失败: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_ai_chat, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            onBackPressed();
+            return true;
+        } else if (item.getItemId() == R.id.action_personality) {
+            startActivityForResult(new Intent(this, AIPersonalitySelectActivity.class), 1);
+            return true;
+        } else if (item.getItemId() == R.id.action_history) {
+            startActivity(new Intent(this, ChatHistoryActivity.class));
+            finish();
+            return true;
+        } else if (item.getItemId() == R.id.action_new_chat) {
+            startNewChat();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 } 
