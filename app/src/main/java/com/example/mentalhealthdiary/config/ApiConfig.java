@@ -6,11 +6,11 @@ import androidx.preference.PreferenceManager;
 
 public class ApiConfig {
     private static final String DEFAULT_BASE_URL = "https://api.ppinfra.com/v3/openai/";
-    private static final String DEFAULT_MODEL = "deepseek/deepseek-r1-turbo";
+    private static final String DEFAULT_MODEL = "";
     
     public static String getApiKey(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getString("custom_api_key", "sk_sugjpsC0Bk8C__-Dokz2WIW4D125z5qxDZh28mcSNu4");
+        return prefs.getString("custom_api_key", "");
     }
     
     public static String getBaseUrl(Context context) {

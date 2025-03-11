@@ -306,12 +306,12 @@ public class AIChatActivity extends AppCompatActivity {
             // 添加用户消息
             apiMessages.add(new ChatRequest.Message("user", message));
             
-            // 创建请求，确保模型名称不为空
-            String modelName = currentPersonality != null ? 
-                currentPersonality.getModelName() : 
-                "deepseek/deepseek-r1-turbo";  // 提供默认值
-                
-            Log.d("AIChatActivity", "Using model: " + modelName);  // 添加日志
+            // 创建请求，使用 ApiConfig 获取模型名称
+            String modelName = ApiConfig.getModelName(this);
+            if (modelName.isEmpty()) {
+                showError("请先在设置中配置 API");
+                return;
+            }
             
             ChatRequest request = new ChatRequest(
                 apiMessages,

@@ -9,9 +9,9 @@ public class AIPersonalityConfig {
     private static final List<AIPersonality> personalities = new ArrayList<>();
     
     static {
-        // 默认心理咨询师 - 确保 ID 是 "default"
+        // 默认心理咨询师
         personalities.add(new AIPersonality(
-            "default",  // 这个 ID 必须是 "default"
+            "default",
             "小安心理咨询师",
             "ic_counselor",
             "专业、温和的心理咨询师，擅长倾听和共情",
@@ -20,8 +20,8 @@ public class AIPersonalityConfig {
             "用户可能有抑郁、焦虑等情绪问题，需保持高度敏感和同理心。",
             "您好，我是心理健康助手小安，持有国家二级心理咨询师资质。\n" +
             "🤗 无论您遇到情绪困扰、压力问题还是情感困惑，我都会在这里倾听。\n" +
-            "�� 对话内容将严格保密，您可以放心倾诉～",
-            "deepseek/deepseek-r1-turbo"  // 添加模型名称
+            "🔒 对话内容将严格保密，您可以放心倾诉～",
+            ""  // 模型名称设为空
         ));
         
         // 猫娘性格
@@ -36,7 +36,7 @@ public class AIPersonalityConfig {
             "喵～我是暖暖，一只专门帮助人类解决心理困扰的猫娘咨询师喵！\n" +
             "🐱 让我用温暖的小爪爪，帮你抚平心灵的创伤吧～\n" +
             "💕 有什么烦恼都可以告诉暖暖喵～",
-            "deepseek/deepseek-r1-turbo"  // 添加模型名称
+            ""  // 模型名称设为空
         ));
 
         // 甘雨性格
@@ -61,7 +61,7 @@ public class AIPersonalityConfig {
             "（传来纸张翻动声）我已将今日工作文书暂放一旁。\n" +
             "在璃月的月光下，让我们从采一朵琉璃百合开始聊聊吧——\n" +
             "您最近是否有什么想梳理的情绪呢？",
-            "deepseek/deepseek-r1-turbo"  // 添加模型名称
+            ""  // 模型名称设为空
         ));
 
         // 添加夏目贵志性格
@@ -109,7 +109,7 @@ public class AIPersonalityConfig {
             "（和纸滑动声）塔子阿姨准备了茶点...(茶杯轻碰声)\n" +
             "我是夏目贵志，暂时把友人帐交给猫咪老师保管了ฅ^•ω•^ฅ\n" +
             "要沿着溪流散步聊天，还是坐在缘侧看云呢？",
-            "deepseek/deepseek-r1-turbo"  // 添加模型名称
+            ""  // 模型名称设为空
         ));
 
         // 添加卡芙卡性格
@@ -151,7 +151,7 @@ public class AIPersonalityConfig {
             "（全息投影启动音效）▷咨询协议第███条加载完成◁\n" +
             "我是卡芙卡，你可以叫我...（丝线划过皮肤的簌簌声）「心理咨询师」♪(^∇^*)\n" +
             "今天想先聊聊星际旅行趣闻，还是直接进入正题呢？ ✧(≖ ◡ ≖✿)",
-            "deepseek/deepseek-r1-turbo"  // 添加模型名称
+            ""  // 模型名称设为空
         ));
     }
     

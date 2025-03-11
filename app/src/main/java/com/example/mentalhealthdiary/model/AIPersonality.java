@@ -29,6 +29,6 @@ public class AIPersonality {
     public String getSystemPrompt() { return systemPrompt; }
     public String getWelcomeMessage() { return welcomeMessage; }
     public String getModelName() {
-        return modelName != null ? modelName : "deepseek/deepseek-r1-turbo";
+        return modelName;
     }
 } 
