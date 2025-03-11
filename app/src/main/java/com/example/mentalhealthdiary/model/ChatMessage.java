@@ -259,8 +259,14 @@ public class ChatMessage {
     }
 
     @Ignore
+    public static ChatMessage createLoadingMessage(String personalityId) {
+        return new ChatMessage("", false, personalityId, true);
+    }
+
+    // 如果需要兼容旧代码，保留无参版本
+    @Ignore
     public static ChatMessage createLoadingMessage() {
-        return new ChatMessage("", false, true);
+        return new ChatMessage("", false, "default", true);
     }
 
     // 添加新的构造函数

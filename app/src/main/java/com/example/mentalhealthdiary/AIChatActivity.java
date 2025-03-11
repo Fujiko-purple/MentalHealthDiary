@@ -318,10 +318,10 @@ public class AIChatActivity extends AppCompatActivity {
                 modelName
             );
             
-            // 添加加载消息
-            ChatMessage loadingMessage = ChatMessage.createLoadingMessage();
+            // 创建加载消息时包含当前性格ID
+            ChatMessage loadingMessage = new ChatMessage("", false, currentPersonality.getId(), true);
             messages.add(loadingMessage);
-            adapter.stopThinkingAnimation();  // 使用 stopThinkingAnimation 替代 resetThinkingTimer
+            adapter.stopThinkingAnimation();
             adapter.notifyItemInserted(messages.size() - 1);
             
             // 发送请求

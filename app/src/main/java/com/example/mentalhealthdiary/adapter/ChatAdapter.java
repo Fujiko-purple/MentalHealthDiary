@@ -166,40 +166,22 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             mainHandler.post(timerRunnable);
         }
 
-        private void startThinkingAnimation(final String personalityId) {
+        private void startThinkingAnimation(String personalityId) {
             stopThinkingAnimation();
-            
             animationRunnable = new Runnable() {
                 @Override
                 public void run() {
                     try {
                         if (loadingText != null && itemView.getWindowToken() != null) {
-                            loadingText.animate()
-                                .alpha(0f)
-                                .setDuration(FADE_DURATION)
-                                .withEndAction(() -> {
-                                    try {
-                                        String thinkingFrame = ChatMessage.getNextThinkingFrame(personalityId);
-                                        loadingText.setText(thinkingFrame);
-                                        loadingText.animate()
-                                            .alpha(1f)
-                                            .setDuration(FADE_DURATION)
-                                            .start();
-                                    } catch (Exception e) {
-                                        Log.e("ChatAdapter", "Animation error", e);
-                                    }
-                                })
-                                .start();
-                            
-                            mainHandler.postDelayed(this, ANIMATION_INTERVAL);
+                            String frame = ChatMessage.getNextThinkingFrame(personalityId);
+                            loadingText.setText(frame);
+                            mainHandler.postDelayed(this, 2000);
                         }
                     } catch (Exception e) {
                         Log.e("ChatAdapter", "Animation error", e);
                     }
                 }
             };
-            
-            loadingText.setAlpha(1f);
             mainHandler.post(animationRunnable);
         }
         
