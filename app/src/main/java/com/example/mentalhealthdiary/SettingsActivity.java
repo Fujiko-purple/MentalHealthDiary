@@ -5,13 +5,25 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.widget.Toast;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.EditTextPreference;
+import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.SwitchPreference;
 import androidx.work.Data;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
+import com.example.mentalhealthdiary.config.ApiConfig;
+import com.example.mentalhealthdiary.service.ChatApiClient;
+import com.example.mentalhealthdiary.service.ChatRequest;
+import com.example.mentalhealthdiary.service.ChatResponse;
 import com.example.mentalhealthdiary.service.TipsWorker;
+import java.util.Collections;
+import android.app.ProgressDialog;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class SettingsActivity extends AppCompatActivity {
     @Override
@@ -82,16 +94,136 @@ public class SettingsActivity extends AppCompatActivity {
 
         private void validateApiConfig() {
             EditTextPreference apiKeyPref = findPreference("custom_api_key");
+            EditTextPreference apiBasePref = findPreference("custom_api_base");
+            EditTextPreference modelNamePref = findPreference("custom_model_name");
+            SwitchPreference useCustomApiPref = findPreference("use_custom_api");
+            Preference testApiPref = findPreference("test_api");
+            
+            // API开关监听
+            useCustomApiPref.setOnPreferenceChangeListener((preference, newValue) -> {
+                boolean enabled = (Boolean) newValue;
+                updateApiPreferencesState(enabled);
+                return true;
+            });
+            
+            // API密钥验证
             apiKeyPref.setOnPreferenceChangeListener((preference, newValue) -> {
                 String key = (String) newValue;
-                if (key.contains(" ")) {
-                    Toast.makeText(getContext(), "API密钥不能包含空格", Toast.LENGTH_SHORT).show();
+                if (key.trim().isEmpty()) {
+                    showError("API密钥不能为空");
                     return false;
                 }
                 return true;
             });
             
-            // 类似验证其他字段...
+            // API地址验证
+            apiBasePref.setOnPreferenceChangeListener((preference, newValue) -> {
+                String url = (String) newValue;
+                if (url.trim().isEmpty()) {
+                    showError("API地址不能为空");
+                    return false;
+                }
+                if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                    showError("API地址必须以http://或https://开头");
+                    return false;
+                }
+                if (!url.endsWith("/")) {
+                    url += "/";
+                }
+                return true;
+            });
+            
+            // 测试API按钮点击事件
+            testApiPref.setOnPreferenceClickListener(preference -> {
+                if (!validateApiSettings()) {
+                    return true;
+                }
+                
+                ProgressDialog dialog = new ProgressDialog(getActivity());
+                dialog.setMessage("正在测试API连接...");
+                dialog.setCancelable(false);
+                dialog.show();
+                
+                // 创建测试请求
+                ChatRequest testRequest = new ChatRequest(
+                    Collections.singletonList(
+                        new ChatRequest.Message("user", "测试消息")
+                    ),
+                    ApiConfig.getModelName(getActivity())
+                );
+                
+                // 执行API测试
+                ChatApiClient.getInstance(getActivity())
+                    .testConnection(testRequest, new Callback<ChatResponse>() {
+                        @Override
+                        public void onResponse(Call<ChatResponse> call, Response<ChatResponse> response) {
+                            dialog.dismiss();
+                            if (response.isSuccessful()) {
+                                showSuccess("API连接测试成功！");
+                            } else {
+                                showError("API测试失败: " + response.code());
+                            }
+                        }
+                        
+                        @Override
+                        public void onFailure(Call<ChatResponse> call, Throwable t) {
+                            dialog.dismiss();
+                            showError("API连接失败: " + t.getMessage());
+                        }
+                    });
+                
+                return true;
+            });
+        }
+
+        private void updateApiPreferencesState(boolean enabled) {
+            findPreference("custom_api_key").setEnabled(enabled);
+            findPreference("custom_api_base").setEnabled(enabled);
+            findPreference("custom_model_name").setEnabled(enabled);
+            findPreference("test_api").setEnabled(enabled);
+        }
+
+        private boolean validateApiSettings() {
+            String apiKey = ApiConfig.getApiKey(getActivity());
+            String baseUrl = ApiConfig.getBaseUrl(getActivity());
+            String modelName = ApiConfig.getModelName(getActivity());
+            
+            if (apiKey.trim().isEmpty()) {
+                showError("请先配置API密钥");
+                return false;
+            }
+            
+            if (baseUrl.trim().isEmpty()) {
+                showError("请先配置API地址");
+                return false;
+            }
+            
+            if (modelName.trim().isEmpty()) {
+                showError("请先配置模型名称");
+                return false;
+            }
+            
+            return true;
+        }
+
+        private void showError(String message) {
+            if (getActivity() != null) {
+                new AlertDialog.Builder(getActivity())
+                    .setTitle("错误")
+                    .setMessage(message)
+                    .setPositiveButton("确定", null)
+                    .show();
+            }
+        }
+
+        private void showSuccess(String message) {
+            if (getActivity() != null) {
+                new AlertDialog.Builder(getActivity())
+                    .setTitle("成功")
+                    .setMessage(message)
+                    .setPositiveButton("确定", null)
+                    .show();
+            }
         }
     }
 } 

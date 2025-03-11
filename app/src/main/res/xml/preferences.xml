@@ -37,13 +37,18 @@
             android:key="custom_api_base"
             android:title="API地址"
             android:summary="输入API基础地址"
-            android:dependency="use_custom_api"
-            android:inputType="textUri"/>
+            android:dependency="use_custom_api"/>
             
         <EditTextPreference
             android:key="custom_model_name"
             android:title="模型名称"
             android:summary="输入要使用的模型名称"
+            android:dependency="use_custom_api"/>
+            
+        <Preference
+            android:key="test_api"
+            android:title="测试API连接"
+            android:summary="点击测试API配置是否正确"
             android:dependency="use_custom_api"/>
     </PreferenceCategory>
     

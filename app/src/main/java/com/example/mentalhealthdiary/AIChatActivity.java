@@ -337,7 +337,7 @@ public class AIChatActivity extends AppCompatActivity {
         }
         
         // 使用配置的模型名称
-        String modelName = RemoteConfig.getCustomModelName();
+        String modelName = RemoteConfig.getModelName();
         ChatRequest request = new ChatRequest(apiMessages, modelName);
         
         // 使用Service发送请求

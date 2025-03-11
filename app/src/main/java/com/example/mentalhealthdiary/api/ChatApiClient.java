@@ -78,8 +78,8 @@ public class ChatApiClient {
                 .build();
 
             // 使用RemoteConfig获取配置
-            String baseUrl = RemoteConfig.getCustomApiBase();
-            String apiKey = RemoteConfig.getCustomApiKey();
+            String baseUrl = RemoteConfig.getApiBaseUrl();
+            String apiKey = RemoteConfig.getApiKey();
             
             // 修改Retrofit配置
             Retrofit retrofit = new Retrofit.Builder()
