@@ -12,6 +12,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.annotation.NonNull;
 import android.view.View;
+import android.widget.Button;
+import android.widget.Toast;
 
 import com.example.mentalhealthdiary.adapter.ChatHistoryAdapter;
 import com.example.mentalhealthdiary.database.AppDatabase;
@@ -22,12 +24,17 @@ import com.example.mentalhealthdiary.utils.PreferenceManager;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.ArrayList;
 
 public class ChatHistoryActivity extends AppCompatActivity implements ChatHistoryAdapter.OnHistoryClickListener {
     private RecyclerView recyclerView;
     private ChatHistoryAdapter adapter;
     private AppDatabase database;
     private ExecutorService executorService;
+    private Button selectAllButton;
+    private Button deleteButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +69,68 @@ public class ChatHistoryActivity extends AppCompatActivity implements ChatHistor
             finish();
         });
 
+        // 初始化按钮
+        selectAllButton = findViewById(R.id.selectAllButton);
+        deleteButton = findViewById(R.id.deleteButton);
+
+        // 设置全选按钮点击事件
+        selectAllButton.setOnClickListener(v -> {
+            if (selectAllButton.getText().equals("全选")) {
+                adapter.selectAll();
+                selectAllButton.setText("取消全选");
+            } else {
+                adapter.clearSelection();
+                selectAllButton.setText("全选");
+            }
+        });
+
+        // 设置删除按钮点击事件
+        deleteButton.setOnClickListener(v -> {
+            Set<Long> selectedIds = adapter.getSelectedItems();
+            if (selectedIds.isEmpty()) {
+                Toast.makeText(this, "请先选择要删除的记录", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            new AlertDialog.Builder(this)
+                .setTitle("删除记录")
+                .setMessage("确定要删除选中的 " + selectedIds.size() + " 条记录吗？")
+                .setPositiveButton("删除", (dialog, which) -> {
+                    executorService.execute(() -> {  // 使用已有的 executorService
+                        // 获取当前对话ID
+                        long currentChatId = PreferenceManager.getLastChatId(this);
+                        
+                        // 执行批量删除
+                        database.chatHistoryDao().deleteByIds(new ArrayList<>(selectedIds));
+
+                        // 如果删除的记录中包含当前对话，需要更新最后一次对话ID
+                        if (selectedIds.contains(currentChatId)) {
+                            List<ChatHistory> histories = database.chatHistoryDao().getAllHistoriesSync();
+                            
+                            runOnUiThread(() -> {
+                                if (histories.isEmpty()) {
+                                    PreferenceManager.saveLastChatId(this, -1);
+                                } else {
+                                    ChatHistory latest = histories.get(0);
+                                    PreferenceManager.saveLastChatId(this, latest.getId());
+                                }
+                                adapter.clearSelection();
+                                selectAllButton.setText("全选");
+                                Toast.makeText(this, "删除成功", Toast.LENGTH_SHORT).show();
+                            });
+                        } else {
+                            runOnUiThread(() -> {
+                                adapter.clearSelection();
+                                selectAllButton.setText("全选");
+                                Toast.makeText(this, "删除成功", Toast.LENGTH_SHORT).show();
+                            });
+                        }
+                    });
+                })
+                .setNegativeButton("取消", null)
+                .show();
+        });
+
         // 观察聊天历史记录
         database.chatHistoryDao().getAllHistories().observe(this, histories -> {
             if (histories != null && !histories.isEmpty()) {
@@ -72,7 +141,7 @@ public class ChatHistoryActivity extends AppCompatActivity implements ChatHistor
             }
         });
 
-        // 添加滑动删除功能
+        // 修改滑动删除的实现
         new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
             @Override
             public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
@@ -83,7 +152,43 @@ public class ChatHistoryActivity extends AppCompatActivity implements ChatHistor
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
                 int position = viewHolder.getAdapterPosition();
                 ChatHistory history = adapter.getHistories().get(position);
-                onHistoryDelete(history);
+                
+                // 显示删除确认对话框，并在用户取消时恢复item
+                new AlertDialog.Builder(ChatHistoryActivity.this)
+                    .setTitle("删除对话")
+                    .setMessage("确定要删除这个对话吗？")
+                    .setPositiveButton("删除", (dialog, which) -> {
+                        new Thread(() -> {
+                            database.chatHistoryDao().delete(history);
+                            
+                            if (PreferenceManager.getLastChatId(ChatHistoryActivity.this) == history.getId()) {
+                                List<ChatHistory> histories = database.chatHistoryDao().getAllHistoriesSync();
+                                
+                                runOnUiThread(() -> {
+                                    if (histories.isEmpty()) {
+                                        PreferenceManager.saveLastChatId(ChatHistoryActivity.this, -1);
+                                    } else {
+                                        ChatHistory latest = histories.get(0);
+                                        PreferenceManager.saveLastChatId(ChatHistoryActivity.this, latest.getId());
+                                    }
+                                    Toast.makeText(ChatHistoryActivity.this, "删除成功", Toast.LENGTH_SHORT).show();
+                                });
+                            } else {
+                                runOnUiThread(() -> {
+                                    Toast.makeText(ChatHistoryActivity.this, "删除成功", Toast.LENGTH_SHORT).show();
+                                });
+                            }
+                        }).start();
+                    })
+                    .setNegativeButton("取消", (dialog, which) -> {
+                        // 用户取消删除，恢复item的显示
+                        adapter.notifyItemChanged(position);
+                    })
+                    .setOnCancelListener(dialog -> {
+                        // 用户点击对话框外部，也要恢复item的显示
+                        adapter.notifyItemChanged(position);
+                    })
+                    .show();
             }
         }).attachToRecyclerView(recyclerView);
 
@@ -137,55 +242,6 @@ public class ChatHistoryActivity extends AppCompatActivity implements ChatHistor
     }
 
     @Override
-    public void onHistoryDelete(ChatHistory history) {
-        new AlertDialog.Builder(this)
-            .setTitle("删除对话")
-            .setMessage("确定要删除这个对话吗？")
-            .setPositiveButton("删除", (dialog, which) -> {
-                new Thread(() -> {
-                    // 如果删除的是最后一次对话，更新为最新的一条记录
-                    if (PreferenceManager.getLastChatId(this) == history.getId()) {
-                        // 获取除了要删除的记录之外的最新记录
-                        List<ChatHistory> histories = database.chatHistoryDao().getAllHistoriesSync();
-                        long newLastId = -1;
-                        
-                        // 找到除了要删除的记录外最新的一条
-                        for (ChatHistory h : histories) {
-                            if (h.getId() != history.getId()) {
-                                if (newLastId == -1 || h.getTimestamp().after(
-                                    database.chatHistoryDao().getHistoryById(newLastId).getTimestamp())) {
-                                    newLastId = h.getId();
-                                }
-                            }
-                        }
-                        
-                        // 保存新的最后一次对话ID
-                        final long finalNewLastId = newLastId;
-                        PreferenceManager.saveLastChatId(this, finalNewLastId);
-                        
-                        // 删除记录
-                        database.chatHistoryDao().delete(history);
-                        
-                        // 在UI线程中返回到聊天界面
-                        runOnUiThread(() -> {
-                            Intent intent = new Intent(this, AIChatActivity.class);
-                            if (finalNewLastId != -1) {
-                                intent.putExtra("chat_history_id", finalNewLastId);
-                            }
-                            startActivity(intent);
-                            finish();
-                        });
-                    } else {
-                        // 如果删除的不是最后一次对话，直接删除
-                        database.chatHistoryDao().delete(history);
-                    }
-                }).start();
-            })
-            .setNegativeButton("取消", null)
-            .show();
-    }
-
-    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
             // 返回到 AIChatActivity，并加载最后一次对话
@@ -211,5 +267,31 @@ public class ChatHistoryActivity extends AppCompatActivity implements ChatHistor
         }
         startActivity(intent);
         finish();
+    }
+
+    @Override
+    public void onHistoryDelete(ChatHistory history) {
+        // 实现接口要求的方法，但实际的删除逻辑已经移到了滑动删除中
+        new Thread(() -> {
+            database.chatHistoryDao().delete(history);
+            
+            if (PreferenceManager.getLastChatId(this) == history.getId()) {
+                List<ChatHistory> histories = database.chatHistoryDao().getAllHistoriesSync();
+                
+                runOnUiThread(() -> {
+                    if (histories.isEmpty()) {
+                        PreferenceManager.saveLastChatId(this, -1);
+                    } else {
+                        ChatHistory latest = histories.get(0);
+                        PreferenceManager.saveLastChatId(this, latest.getId());
+                    }
+                    Toast.makeText(this, "删除成功", Toast.LENGTH_SHORT).show();
+                });
+            } else {
+                runOnUiThread(() -> {
+                    Toast.makeText(this, "删除成功", Toast.LENGTH_SHORT).show();
+                });
+            }
+        }).start();
     }
 } 

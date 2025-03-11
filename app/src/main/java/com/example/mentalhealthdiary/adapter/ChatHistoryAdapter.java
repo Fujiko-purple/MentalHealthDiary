@@ -5,6 +5,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 
@@ -16,13 +17,16 @@ import com.example.mentalhealthdiary.model.ChatHistory;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.ViewHolder> {
     private List<ChatHistory> histories = new ArrayList<>();
     private OnHistoryClickListener listener;
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy年MM月dd日 HH:mm", Locale.getDefault());
+    private Set<Long> selectedItems = new HashSet<>();
 
     public interface OnHistoryClickListener {
         void onHistoryClick(ChatHistory history);
@@ -45,9 +49,12 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         ChatHistory history = histories.get(position);
-        holder.titleText.setText(history.getTitle());
-        holder.dateText.setText(dateFormat.format(history.getTimestamp()));
+        holder.bind(history);
         
+        holder.checkBox.setOnClickListener(v -> {
+            toggleSelection(history.getId());
+        });
+
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onHistoryClick(history);
@@ -96,14 +103,63 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
         return histories;
     }
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView titleText;
-        TextView dateText;
+    public void toggleSelection(long id) {
+        if (selectedItems.contains(id)) {
+            selectedItems.remove(id);
+        } else {
+            selectedItems.add(id);
+        }
+        notifyDataSetChanged();
+    }
 
-        ViewHolder(View view) {
+    public void selectAll() {
+        selectedItems.clear();
+        for (ChatHistory history : histories) {
+            selectedItems.add(history.getId());
+        }
+        notifyDataSetChanged();
+    }
+
+    public void clearSelection() {
+        selectedItems.clear();
+        notifyDataSetChanged();
+    }
+
+    public Set<Long> getSelectedItems() {
+        return selectedItems;
+    }
+
+    public class ViewHolder extends RecyclerView.ViewHolder {
+        private CheckBox checkBox;
+        private TextView titleText;
+        private TextView timeText;
+
+        public ViewHolder(View view) {
             super(view);
-            titleText = view.findViewById(R.id.chatTitleText);
-            dateText = view.findViewById(R.id.chatDateText);
+            checkBox = view.findViewById(R.id.checkBox);
+            titleText = view.findViewById(R.id.titleText);
+            timeText = view.findViewById(R.id.timeText);
+
+            view.setOnClickListener(v -> {
+                if (listener != null) {
+                    int position = getAdapterPosition();
+                    if (position != RecyclerView.NO_POSITION) {
+                        ChatHistory history = histories.get(position);
+                        toggleSelection(history.getId());
+                    }
+                }
+            });
+
+            view.setOnLongClickListener(v -> {
+                showPopupMenu(v, histories.get(getAdapterPosition()));
+                return true;
+            });
+        }
+
+        public void bind(ChatHistory chatHistory) {
+            titleText.setText(chatHistory.getTitle());
+            timeText.setText(dateFormat.format(chatHistory.getTimestamp()));
+            checkBox.setChecked(selectedItems.contains(chatHistory.getId()));
         }
     }
 } 

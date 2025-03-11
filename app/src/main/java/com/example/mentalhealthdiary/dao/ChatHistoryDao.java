@@ -35,4 +35,7 @@ public interface ChatHistoryDao {
 
     @Delete
     void deleteAll(List<ChatHistory> chats);
+
+    @Query("DELETE FROM chat_history WHERE id IN (:ids)")
+    void deleteByIds(List<Long> ids);
 } 
