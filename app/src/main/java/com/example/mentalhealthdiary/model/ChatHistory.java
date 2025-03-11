@@ -20,9 +20,9 @@ public class ChatHistory {
     private String messages;
     
     @ColumnInfo(name = "personality_id")
-    private int personalityId;
+    private String personalityId;
     
-    public ChatHistory(Date timestamp, String title, String messages, int personalityId) {
+    public ChatHistory(Date timestamp, String title, String messages, String personalityId) {
         this.timestamp = timestamp;
         this.title = title;
         this.messages = messages;
@@ -62,11 +62,11 @@ public class ChatHistory {
         this.messages = messages;
     }
     
-    public int getPersonalityId() {
+    public String getPersonalityId() {
         return personalityId;
     }
     
-    public void setPersonalityId(int personalityId) {
+    public void setPersonalityId(String personalityId) {
         this.personalityId = personalityId;
     }
 } 

@@ -344,17 +344,10 @@ public class AIChatActivity extends AppCompatActivity {
                     Type type = new TypeToken<List<ChatMessage>>(){}.getType();
                     List<ChatMessage> historyMessages = gson.fromJson(history.getMessages(), type);
                     
-                    String chatPersonalityId = null;
-                    if (historyMessages != null) {
-                        for (ChatMessage msg : historyMessages) {
-                            if (!msg.isUser() && msg.getPersonalityId() != null) {
-                                chatPersonalityId = msg.getPersonalityId();
-                                Log.d("ChatDebug", "Found chat personality ID: " + chatPersonalityId);
-                                break;
-                            }
-                        }
-                    }
-
+                    // 使用历史记录中保存的 personalityId，而不是当前选择的
+                    String chatPersonalityId = history.getPersonalityId();
+                    Log.d("ChatDebug", "Loading chat with personality ID: " + chatPersonalityId);
+                    
                     if (chatPersonalityId != null) {
                         AIPersonality chatPersonality = AIPersonalityConfig.getPersonalityById(chatPersonalityId);
                         if (chatPersonality != null) {
@@ -401,39 +394,36 @@ public class AIChatActivity extends AppCompatActivity {
     }
 
     private void createNewChat() {
-        executorService.execute(() -> {
-            try {
-                ChatHistory newHistory = new ChatHistory(
-                    new Date(), 
-                    "新对话", 
-                    "",
-                    AIPersonality.getNumericId(currentPersonality.getId())  // 转换为数字ID
+        String currentPersonalityId = PreferenceManager.getCurrentPersonalityId(this);
+        ChatHistory newHistory = new ChatHistory(
+            new Date(),  // timestamp
+            "新对话",    // title
+            "",         // messages 初始为空
+            currentPersonalityId  // 保存当前选择的AI性格ID
+        );
+        
+        new Thread(() -> {
+            long id = database.chatHistoryDao().insert(newHistory);
+            newHistory.setId(id);
+            currentHistoryId = id;
+            
+            runOnUiThread(() -> {
+                messages.clear();
+                ChatMessage welcomeMessage = new ChatMessage(
+                    currentPersonality.getWelcomeMessage(),
+                    false,
+                    currentPersonality.getId()
                 );
-                currentHistoryId = database.chatHistoryDao().insert(newHistory);
+                messages.add(welcomeMessage);
+                adapter.notifyDataSetChanged();
                 
-                PreferenceManager.saveLastChatId(this, currentHistoryId);
-                
-                runOnUiThread(() -> {
-                    messages.clear();
-                    ChatMessage welcomeMessage = new ChatMessage(
-                        currentPersonality.getWelcomeMessage(),
-                        false,
-                        currentPersonality.getId()
-                    );
-                    messages.add(welcomeMessage);
-                    adapter.notifyDataSetChanged();
-                    
-                    chatRecyclerView.post(() -> {
-                        chatRecyclerView.smoothScrollToPosition(messages.size() - 1);
-                    });
-                    
-                    saveMessage(welcomeMessage.getMessage(), false, currentPersonality.getId());
+                chatRecyclerView.post(() -> {
+                    chatRecyclerView.smoothScrollToPosition(messages.size() - 1);
                 });
-            } catch (Exception e) {
-                e.printStackTrace();
-                runOnUiThread(() -> showError("创建新对话失败"));
-            }
-        });
+                
+                saveMessage(welcomeMessage.getMessage(), false, currentPersonality.getId());
+            });
+        }).start();
     }
 
     private void saveCurrentChat() {
@@ -443,11 +433,16 @@ public class AIChatActivity extends AppCompatActivity {
                     String title = generateChatTitle();
                     String messagesJson = convertMessagesToJson(messages);
                     
+                    // 获取原始对话的 personalityId
+                    ChatHistory existingHistory = database.chatHistoryDao().getHistoryById(currentHistoryId);
+                    String originalPersonalityId = existingHistory != null ? 
+                        existingHistory.getPersonalityId() : currentPersonality.getId();
+                    
                     ChatHistory history = new ChatHistory(
                         new Date(), 
                         title, 
                         messagesJson,
-                        AIPersonality.getNumericId(currentPersonality.getId())  // 转换为数字ID
+                        originalPersonalityId  // 使用原始对话的 personalityId
                     );
                     history.setId(currentHistoryId);
                     database.chatHistoryDao().update(history);
@@ -533,17 +528,19 @@ public class AIChatActivity extends AppCompatActivity {
     }
 
     private void saveMessage(String content, boolean isUser, String personalityId) {
-        try {
-            ChatMessage message = new ChatMessage(content, isUser, personalityId);  // 直接使用字符串ID
-            message.setChatId(currentHistoryId);
-            message.setTimestamp(System.currentTimeMillis());
-            
-            AppDatabase.getInstance(this).chatMessageDao().insert(message);
-            Log.d("ChatDebug", "成功保存消息: " + content);
-        } catch (Exception e) {
-            Log.e("ChatDebug", "保存消息失败: " + e.getMessage());
-            e.printStackTrace();
-        }
+        executorService.execute(() -> {
+            try {
+                ChatMessage message = new ChatMessage(content, isUser, personalityId);
+                message.setChatId(currentHistoryId);
+                message.setTimestamp(System.currentTimeMillis());
+                
+                AppDatabase.getInstance(this).chatMessageDao().insert(message);
+                Log.d("ChatDebug", "成功保存消息: " + content);
+            } catch (Exception e) {
+                Log.e("ChatDebug", "保存消息失败: " + e.getMessage());
+                e.printStackTrace();
+            }
+        });
     }
 
     @Override

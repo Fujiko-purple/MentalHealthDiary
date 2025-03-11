@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.Date;
 
 public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.ViewHolder> {
     private List<ChatHistory> histories = new ArrayList<>();
@@ -134,50 +135,82 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-        private CheckBox checkBox;
         private ImageView avatarImage;
         private TextView titleText;
         private TextView timeText;
-
-        public ViewHolder(View view) {
-            super(view);
-            checkBox = view.findViewById(R.id.checkBox);
-            avatarImage = view.findViewById(R.id.avatarImage);
-            titleText = view.findViewById(R.id.titleText);
-            timeText = view.findViewById(R.id.timeText);
-
-            view.setOnClickListener(v -> {
-                if (listener != null) {
-                    int position = getAdapterPosition();
-                    if (position != RecyclerView.NO_POSITION) {
-                        ChatHistory history = histories.get(position);
-                        toggleSelection(history.getId());
-                    }
-                }
-            });
-
-            view.setOnLongClickListener(v -> {
-                showPopupMenu(v, histories.get(getAdapterPosition()));
-                return true;
-            });
+        private CheckBox checkBox;
+        
+        public ViewHolder(@NonNull View itemView) {
+            super(itemView);
+            avatarImage = itemView.findViewById(R.id.avatarImage);
+            titleText = itemView.findViewById(R.id.titleText);
+            timeText = itemView.findViewById(R.id.timeText);
+            checkBox = itemView.findViewById(R.id.checkBox);
         }
-
-        public void bind(ChatHistory chatHistory) {
-            titleText.setText(chatHistory.getTitle());
-            timeText.setText(dateFormat.format(chatHistory.getTimestamp()));
-            checkBox.setChecked(selectedItems.contains(chatHistory.getId()));
+        
+        public void bind(ChatHistory history) {
+            titleText.setText(history.getTitle());
+            timeText.setText(formatDate(history.getTimestamp()));
+            checkBox.setChecked(selectedItems.contains(history.getId()));
             
             // 添加日志
-            int personalityId = chatHistory.getPersonalityId();
-            Log.d("ChatHistory", "Personality ID: " + personalityId);
-            int avatarResId = AIPersonality.getAvatarResourceById(personalityId);
-            Log.d("ChatHistory", "Avatar Resource ID: " + avatarResId);
+            String personalityId = history.getPersonalityId();
+            Log.d("ChatHistoryAdapter", "Binding history item with personality ID: " + personalityId);
             
-            // 使用 Glide 加载圆形头像
-            Glide.with(itemView.getContext())
-                .load(avatarResId)
-                .circleCrop()  // 将图片裁剪成圆形
-                .into(avatarImage);
+            if (personalityId != null) {
+                String avatarResourceName = getAvatarResourceName(personalityId);
+                Log.d("ChatHistoryAdapter", "Avatar resource name: " + avatarResourceName);
+                
+                try {
+                    int resourceId = itemView.getContext().getResources()
+                            .getIdentifier(avatarResourceName, "drawable", 
+                                    itemView.getContext().getPackageName());
+                    Log.d("ChatHistoryAdapter", "Resource ID: " + resourceId);
+                    
+                    if (resourceId != 0) {
+                        Glide.with(itemView.getContext())
+                            .load(resourceId)
+                            .circleCrop()
+                            .into(avatarImage);
+                    } else {
+                        Log.w("ChatHistoryAdapter", "Resource not found: " + avatarResourceName);
+                        avatarImage.setImageResource(R.drawable.ic_ai_assistant);
+                    }
+                } catch (Exception e) {
+                    Log.e("ChatHistoryAdapter", "Error loading avatar", e);
+                    avatarImage.setImageResource(R.drawable.ic_ai_assistant);
+                }
+            } else {
+                Log.w("ChatHistoryAdapter", "No personality ID found");
+                avatarImage.setImageResource(R.drawable.ic_ai_assistant);
+            }
         }
+    }
+    
+    // 根据personalityId获取对应的头像资源名称
+    private String getAvatarResourceName(String personalityId) {
+        if (personalityId == null) return "ic_ai_assistant";
+        
+        Log.d("ChatHistoryAdapter", "Getting avatar for personality ID: " + personalityId);
+        
+        switch (personalityId) {
+            case "ganyu_cbt":
+                return "ic_ganyu_counselor";  // 修改为正确的资源名称
+            case "natsume_narrative_pro":
+                return "ic_natsume";
+            case "cat_girl":
+                return "ic_cat_girl";
+            case "kafka_rebt":
+                return "ic_kafka";
+            case "default":
+                return "ic_ai_assistant";
+            default:
+                Log.w("ChatHistoryAdapter", "Unknown personality ID: " + personalityId);
+                return "ic_ai_assistant";
+        }
+    }
+
+    private String formatDate(Date date) {
+        return dateFormat.format(date);
     }
 } 

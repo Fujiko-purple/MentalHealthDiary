@@ -21,7 +21,7 @@ import com.example.mentalhealthdiary.dao.ChatMessageDao;
         ChatHistory.class,
         ChatMessage.class
     }, 
-    version = 7,
+    version = 8,
     exportSchema = false
 )
 @TypeConverters({DateConverter.class})
@@ -53,6 +53,32 @@ public abstract class AppDatabase extends RoomDatabase {
         }
     };
 
+    private static final Migration MIGRATION_7_8 = new Migration(7, 8) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS chat_history_new " +
+                "(`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                "`timestamp` INTEGER, " +
+                "`title` TEXT, " +
+                "`messages` TEXT, " +
+                "`personality_id` TEXT)");
+
+            database.execSQL("INSERT INTO chat_history_new (id, timestamp, title, messages, personality_id) " +
+                "SELECT id, timestamp, title, messages, CAST(personality_id AS TEXT) FROM chat_history");
+
+            database.execSQL("DROP TABLE chat_history");
+
+            database.execSQL("ALTER TABLE chat_history_new RENAME TO chat_history");
+        }
+    };
+
+    static final Migration MIGRATION_1_2 = new Migration(1, 2) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE chat_history ADD COLUMN personality_id TEXT");
+        }
+    };
+
     public static synchronized AppDatabase getInstance(Context context) {
         if (instance == null) {
             instance = Room.databaseBuilder(
@@ -60,7 +86,7 @@ public abstract class AppDatabase extends RoomDatabase {
                 AppDatabase.class, 
                 "mental_health_diary.db"
             )
-            .addMigrations(MIGRATION_6_7)
+            .addMigrations(MIGRATION_6_7, MIGRATION_7_8)
             .fallbackToDestructiveMigration()
             .build();
         }
