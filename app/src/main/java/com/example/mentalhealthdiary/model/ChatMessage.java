@@ -1,5 +1,6 @@
 package com.example.mentalhealthdiary.model;
 
+import android.util.Log;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.ForeignKey;
@@ -112,35 +113,35 @@ public class ChatMessage {
         
         // 卡芙卡性格
         put("kafka_rebt", new String[]{
-                // 系统启动阶段
-                "🌌全息界面初始化... ███████",
-                "✨丝线感知系统连接中 ▷◁",
-                "💫情绪波动分析：扫描中...",
-                "🎭剧场投影仪校准完毕",
-                
-                // 分析阶段
-                "🌠正在解析情绪星图...",
-                "⚡能量共振：检测到情感波动",
-                "🎪全息剧场：场景重构中",
-                "🔮命运之线：编织进度 85%",
-                
-                // 处理阶段
-                "💫启动「星际疗愈」协议",
-                "✨情绪粒子：重组进行时",
-                "🌈能量校准：寻找平衡点",
-                "🎭开始情景重现演算",
-                
-                // 特殊处理
-                "⚠️检测到强烈情绪波动！",
-                "🌟启动「星光疗愈」程序",
-                "💫正在生成治愈光束...",
-                "✨艾利欧的温柔低语传来",
-                
-                // 总结阶段
-                "📊数据整合：修复进度90%",
-                "🎭剧场重构：即将完成",
-                "💫星轨修正：航向光明",
-                "✨治愈程序：任务完成 (｡♥‿♥｡)"
+            // 危险启动
+            "💋诱惑启幕：心理游戏开始...",
+            "🎭黑天鹅优雅降临",
+            "🍷红酒倾注：心理舞台就绪",
+            "👠危险剧场：帷幕徐徐拉开",
+            
+            // 分析阶段
+            "💫暗夜探测：发现情感裂痕",
+            "🎭剧本编织：勾勒心灵图谱",
+            "🌹玫瑰印记：烙下治愈咒印",
+            "🎪心灵舞台：布置甜蜜陷阱",
+            
+            // 治疗阶段
+            "🎵午夜圆舞：启动诱导模式",
+            "✨思绪缠绕：编织新剧情",
+            "🌙暗夜魅惑：净化负面能量",
+            "💫心灵共舞：情感重构进行",
+            
+            // 特殊处理
+            "⚜️启动危险治疗协议...",
+            "🎭剧情反转：开启守护模式",
+            "✨午夜疗法：创伤修复中",
+            "🌹禁忌结界：情绪稳定器",
+            
+            // 总结阶段
+            "💋优雅谢幕：治疗渐入尾声",
+            "🎪心灵剧场：完美落幕",
+            "✨禁忌之约：记录治愈过程",
+            "🌙月光笼罩：留下美好回忆"
         });
 
         // 添加迪迦的思考动画
@@ -200,11 +201,16 @@ public class ChatMessage {
     private static final Random random = new Random();
     
     public static String getNextThinkingFrame(String personalityId) {
+        // 添加日志
+        Log.d("ChatMessage", "Getting thinking frame for personality: " + personalityId);
         String[] frames = PERSONALITY_THINKING_ANIMATIONS.get(personalityId);
         if (frames == null) {
+            Log.d("ChatMessage", "No frames found for personality, using default");
             frames = PERSONALITY_THINKING_ANIMATIONS.get("default");
         }
-        return frames[random.nextInt(frames.length)];
+        String frame = frames[random.nextInt(frames.length)];
+        Log.d("ChatMessage", "Selected frame: " + frame);
+        return frame;
     }
 
     // 主构造函数 - Room 将使用这个

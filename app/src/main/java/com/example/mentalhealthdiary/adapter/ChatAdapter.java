@@ -29,7 +29,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private AIPersonality currentPersonality;
     private Handler mainHandler = new Handler(Looper.getMainLooper());
     private long thinkingStartTime = 0;
-    private static final int ANIMATION_INTERVAL = 1500;
+    private static final int ANIMATION_INTERVAL = 1000;
     private static final int FADE_DURATION = 300;
 
     public ChatAdapter(List<ChatMessage> messages, AIPersonality personality) {
@@ -216,6 +216,18 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 animationRunnable = null;
             }
             stopTimer();
+        }
+
+        private void updateLoadingMessage(LoadingViewHolder holder, ChatMessage message) {
+            if (System.currentTimeMillis() - thinkingStartTime >= ANIMATION_INTERVAL) {
+                // 添加日志
+                Log.d("ChatAdapter", "Updating thinking animation for personality: " + message.getPersonalityId());
+                String newFrame = ChatMessage.getNextThinkingFrame(message.getPersonalityId());
+                Log.d("ChatAdapter", "Got new frame: " + newFrame);
+                
+                holder.loadingText.setText(newFrame);
+                thinkingStartTime = System.currentTimeMillis();
+            }
         }
     }
 
