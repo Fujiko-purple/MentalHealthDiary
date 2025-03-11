@@ -2,7 +2,7 @@ package com.example.mentalhealthdiary.config;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import com.example.mentalhealthdiary.BuildConfig;
+
 import androidx.preference.PreferenceManager;
 
 public class RemoteConfig {
@@ -20,7 +20,7 @@ public class RemoteConfig {
         
         // 读取所有配置项
         customApiKey = prefs.getString("custom_api_key", "");
-        customApiBase = prefs.getString("custom_api_base", "");
+        customApiBase = prefs.getString("custom_api_url", "");
         customModelName = prefs.getString("custom_model_name", "");
         
         // 原有配置逻辑保持不变...

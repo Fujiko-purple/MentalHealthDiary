@@ -8,6 +8,8 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -61,13 +63,15 @@ public class AIChatActivity extends AppCompatActivity {
     private AIPersonality currentPersonality;
     private ChatService chatService;
     private boolean serviceBound = false;
+    private Handler thinkingTimeHandler = new Handler(Looper.getMainLooper());
+    private Runnable thinkingTimeRunnable;
+    private long thinkingStartTime;
     private BroadcastReceiver chatReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             long chatId = intent.getLongExtra(ChatService.EXTRA_CHAT_ID, -1);
             
-            // 只处理与当前聊天相关的广播
             if (chatId != currentHistoryId) {
                 return;
             }
@@ -75,25 +79,38 @@ public class AIChatActivity extends AppCompatActivity {
             if (ChatService.ACTION_CHAT_START.equals(action)) {
                 // AI 开始思考时禁用发送按钮
                 sendButton.setEnabled(false);
+                // 记录开始思考时间
+                thinkingStartTime = System.currentTimeMillis();
+                startThinkingTimeUpdate();
             } else if (ChatService.ACTION_CHAT_RESPONSE.equals(action)) {
                 String response = intent.getStringExtra(ChatService.EXTRA_RESPONSE);
+                
+                // 计算思考总时长
+                long thinkingTime = System.currentTimeMillis() - thinkingStartTime;
+                int seconds = (int) (thinkingTime / 1000);
                 
                 // 移除加载状态
                 clearLoadingStates();
                 
-                // 添加AI回复
-                messages.add(new ChatMessage(response, false, currentPersonality.getId()));
+                // 添加AI回复，并在开头显示思考时长
+                String responseWithTime = String.format("(思考用时：%d秒)\n\n%s", seconds, response);
+                messages.add(new ChatMessage(responseWithTime, false, currentPersonality.getId()));
                 adapter.notifyItemInserted(messages.size() - 1);
                 chatRecyclerView.scrollToPosition(messages.size() - 1);
                 
                 // 保存AI回复
-                saveMessage(response, false, currentPersonality.getId());
+                saveMessage(responseWithTime, false, currentPersonality.getId());
                 
                 // 收到回复后启用发送按钮
                 sendButton.setEnabled(true);
-                
+                stopThinkingTimeUpdate();
             } else if (ChatService.ACTION_CHAT_ERROR.equals(action)) {
                 String error = intent.getStringExtra(ChatService.EXTRA_ERROR);
+                
+                // 计算思考总时长
+                long thinkingTime = System.currentTimeMillis() - thinkingStartTime;
+                int seconds = (int) (thinkingTime / 1000);
+                error = String.format("(思考用时：%d秒)\n%s", seconds, error);
                 
                 // 移除加载状态
                 clearLoadingStates();
@@ -103,6 +120,7 @@ public class AIChatActivity extends AppCompatActivity {
                 
                 // 发生错误时也要启用发送按钮
                 sendButton.setEnabled(true);
+                stopThinkingTimeUpdate();
             }
         }
     };
@@ -554,6 +572,8 @@ public class AIChatActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
+        
+        stopThinkingTimeUpdate();
     }
 
     private void saveMessage(String content, boolean isUser, String personalityId) {
@@ -593,5 +613,37 @@ public class AIChatActivity extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void startThinkingTimeUpdate() {
+        if (thinkingTimeRunnable != null) {
+            thinkingTimeHandler.removeCallbacks(thinkingTimeRunnable);
+        }
+        
+        thinkingTimeRunnable = new Runnable() {
+            @Override
+            public void run() {
+                long elapsedTime = System.currentTimeMillis() - thinkingStartTime;
+                int seconds = (int) (elapsedTime / 1000);
+                
+                // 更新最后一条消息（加载状态）的文本
+                if (!messages.isEmpty() && messages.get(messages.size() - 1).isLoading()) {
+                    ChatMessage loadingMessage = messages.get(messages.size() - 1);
+                    loadingMessage.setMessage(String.format("AI思考中 (%d秒)", seconds));
+                    adapter.notifyItemChanged(messages.size() - 1);
+                }
+                
+                thinkingTimeHandler.postDelayed(this, 1000);
+            }
+        };
+        
+        thinkingTimeHandler.post(thinkingTimeRunnable);
+    }
+    
+    private void stopThinkingTimeUpdate() {
+        if (thinkingTimeRunnable != null) {
+            thinkingTimeHandler.removeCallbacks(thinkingTimeRunnable);
+            thinkingTimeRunnable = null;
+        }
     }
 } 

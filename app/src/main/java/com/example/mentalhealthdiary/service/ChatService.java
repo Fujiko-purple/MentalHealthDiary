@@ -37,6 +37,10 @@ public class ChatService extends Service {
     private static final int MAX_RETRIES = 3;  // 最大重试次数
     private int retryCount = 0;
     
+    private static final long THINKING_TIMEOUT = 60000; // 60秒超时
+    private Handler timeoutHandler = new Handler(Looper.getMainLooper());
+    private Runnable timeoutRunnable;
+    
     public class ChatBinder extends Binder {
         public ChatService getService() {
             return ChatService.this;
@@ -54,12 +58,33 @@ public class ChatService extends Service {
             currentCall.cancel();
         }
         
+        // 取消之前的超时检查（如果有的话）
+        if (timeoutRunnable != null) {
+            timeoutHandler.removeCallbacks(timeoutRunnable);
+        }
+        
         retryCount = 0;  // 重置重试计数
         sendRequestWithRetry(request, chatId);
     }
     
     private void sendRequestWithRetry(ChatRequest request, long chatId) {
         currentChatId = chatId;
+        
+        // 设置新的超时检查
+        timeoutRunnable = () -> {
+            if (currentCall != null && !currentCall.isCanceled()) {
+                currentCall.cancel();
+                currentChatId = -1;
+                
+                // 发送超时错误广播
+                Intent intent = new Intent(ACTION_CHAT_ERROR);
+                intent.putExtra(EXTRA_ERROR, "AI响应超时，请重试");
+                intent.putExtra(EXTRA_CHAT_ID, chatId);
+                LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+            }
+        };
+        timeoutHandler.postDelayed(timeoutRunnable, THINKING_TIMEOUT);
+        
         // 发送开始思考的广播
         Intent startIntent = new Intent(ACTION_CHAT_START);
         startIntent.putExtra(EXTRA_CHAT_ID, chatId);
@@ -71,6 +96,9 @@ public class ChatService extends Service {
         currentCall.enqueue(new Callback<ChatResponse>() {
             @Override
             public void onResponse(Call<ChatResponse> call, Response<ChatResponse> response) {
+                // 取消超时检查
+                timeoutHandler.removeCallbacks(timeoutRunnable);
+                
                 currentChatId = -1;  // 重置当前聊天ID
                 if (response.isSuccessful() && response.body() != null) {
                     retryCount = 0;  // 成功后重置重试计数
@@ -88,6 +116,9 @@ public class ChatService extends Service {
             
             @Override
             public void onFailure(Call<ChatResponse> call, Throwable t) {
+                // 取消超时检查
+                timeoutHandler.removeCallbacks(timeoutRunnable);
+                
                 if (!call.isCanceled()) {
                     Log.e("ChatService", "请求失败", t);
                     handleError(request, chatId, -1);
@@ -130,6 +161,10 @@ public class ChatService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        // 清理超时检查
+        if (timeoutRunnable != null) {
+            timeoutHandler.removeCallbacks(timeoutRunnable);
+        }
         if (currentCall != null) {
             currentCall.cancel();
         }

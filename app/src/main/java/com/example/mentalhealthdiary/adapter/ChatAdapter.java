@@ -57,12 +57,22 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        if (holder.getItemViewType() == TYPE_LOADING) {
-            LoadingViewHolder loadingHolder = (LoadingViewHolder) holder;
-            startLoadingAnimation(loadingHolder.loadingDots);
+        ChatMessage message = messages.get(position);
+        
+        if (holder instanceof LoadingViewHolder) {
+            ((LoadingViewHolder) holder).bind(message);
+            if (loadingAnimationHandler == null) {
+                loadingAnimationHandler = new Handler();
+                loadingAnimationHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        updateLoadingDots();
+                        loadingAnimationHandler.postDelayed(this, 500);
+                    }
+                }, 500);
+            }
         } else {
             MessageViewHolder messageHolder = (MessageViewHolder) holder;
-            ChatMessage message = messages.get(position);
 
             Log.d("ChatAdapter", String.format(
                 "Binding message at position %d: content='%s', isUser=%b, personalityId='%s'",
@@ -139,15 +149,14 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     private void updateLoadingDots() {
-        if (currentLoadingView != null) {
-            String dots = "";
-            for (int i = 0; i < loadingDots; i++) {
-                dots += ".";
-            }
-            currentLoadingView.setText(dots);
-            loadingDots = (loadingDots + 1) % 4;
-            loadingAnimationHandler.postDelayed(this::updateLoadingDots, 500);
+        if (loadingDots == 0) {
+            currentLoadingView.setText(".");
+        } else if (loadingDots == 1) {
+            currentLoadingView.setText("..");
+        } else {
+            currentLoadingView.setText("...");
         }
+        loadingDots = (loadingDots + 1) % 3;
     }
 
     @Override
@@ -155,12 +164,21 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         return messages.size();
     }
 
-    static class LoadingViewHolder extends RecyclerView.ViewHolder {
+    private class LoadingViewHolder extends RecyclerView.ViewHolder {
+        TextView loadingText;
         TextView loadingDots;
-
-        LoadingViewHolder(View view) {
-            super(view);
-            loadingDots = view.findViewById(R.id.loadingDots);
+        
+        LoadingViewHolder(View itemView) {
+            super(itemView);
+            loadingText = itemView.findViewById(R.id.loadingText);
+            loadingDots = itemView.findViewById(R.id.loadingDots);
+        }
+        
+        void bind(ChatMessage message) {
+            loadingText.setText(message.getMessage().isEmpty() ? 
+                "AI思考中" : message.getMessage());
+            currentLoadingView = loadingDots;
+            updateLoadingDots();
         }
     }
 
