@@ -153,19 +153,23 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
             timeText.setText(formatDate(history.getTimestamp()));
             checkBox.setChecked(selectedItems.contains(history.getId()));
             
-            // 添加日志
             String personalityId = history.getPersonalityId();
-            Log.d("ChatHistoryAdapter", "Binding history item with personality ID: " + personalityId);
+            Log.d("ChatHistoryAdapter", String.format(
+                "绑定历史记录: ID=%d, 标题=%s, 性格ID=%s",
+                history.getId(),
+                history.getTitle(),
+                personalityId
+            ));
             
             if (personalityId != null) {
                 String avatarResourceName = getAvatarResourceName(personalityId);
-                Log.d("ChatHistoryAdapter", "Avatar resource name: " + avatarResourceName);
+                Log.d("ChatHistoryAdapter", "头像资源名称: " + avatarResourceName);
                 
                 try {
                     int resourceId = itemView.getContext().getResources()
                             .getIdentifier(avatarResourceName, "drawable", 
                                     itemView.getContext().getPackageName());
-                    Log.d("ChatHistoryAdapter", "Resource ID: " + resourceId);
+                    Log.d("ChatHistoryAdapter", "资源ID: " + resourceId);
                     
                     if (resourceId != 0) {
                         Glide.with(itemView.getContext())
@@ -173,15 +177,16 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
                             .circleCrop()
                             .into(avatarImage);
                     } else {
-                        Log.w("ChatHistoryAdapter", "Resource not found: " + avatarResourceName);
+                        Log.e("ChatHistoryAdapter", "找不到资源: " + avatarResourceName);
                         avatarImage.setImageResource(R.drawable.ic_ai_assistant);
                     }
                 } catch (Exception e) {
-                    Log.e("ChatHistoryAdapter", "Error loading avatar", e);
+                    Log.e("ChatHistoryAdapter", "加载头像出错", e);
+                    e.printStackTrace();
                     avatarImage.setImageResource(R.drawable.ic_ai_assistant);
                 }
             } else {
-                Log.w("ChatHistoryAdapter", "No personality ID found");
+                Log.w("ChatHistoryAdapter", "没有找到性格ID");
                 avatarImage.setImageResource(R.drawable.ic_ai_assistant);
             }
         }
@@ -191,11 +196,11 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
     private String getAvatarResourceName(String personalityId) {
         if (personalityId == null) return "ic_ai_assistant";
         
-        Log.d("ChatHistoryAdapter", "Getting avatar for personality ID: " + personalityId);
+        Log.d("ChatHistoryAdapter", "获取头像，性格ID: " + personalityId);
         
         switch (personalityId) {
             case "ganyu_cbt":
-                return "ic_ganyu_counselor";  // 修改为正确的资源名称
+                return "ic_ganyu_counselor";
             case "natsume_narrative_pro":
                 return "ic_natsume";
             case "cat_girl":
@@ -203,9 +208,9 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
             case "kafka_rebt":
                 return "ic_kafka";
             case "default":
-                return "ic_ai_assistant";
+                return "ic_counselor";
             default:
-                Log.w("ChatHistoryAdapter", "Unknown personality ID: " + personalityId);
+                Log.w("ChatHistoryAdapter", "未知的性格ID: " + personalityId);
                 return "ic_ai_assistant";
         }
     }

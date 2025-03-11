@@ -246,15 +246,23 @@ public class AIChatActivity extends AppCompatActivity {
         }
     }
 
-    private void updatePersonality(AIPersonality newPersonality) {
-        currentPersonality = newPersonality;
-        if (adapter != null) {
-            adapter.setCurrentPersonality(newPersonality);
-            adapter.notifyDataSetChanged();
-        }
-        
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle(newPersonality.getName());
+    private void updatePersonality(AIPersonality personality) {
+        if (personality != null) {
+            currentPersonality = personality;
+            
+            // 更新标题栏
+            if (getSupportActionBar() != null) {
+                getSupportActionBar().setTitle(personality.getName());
+            }
+            
+            // 更新聊天适配器
+            adapter.setCurrentPersonality(personality);
+            
+            // 保存当前对话，使用新的性格ID
+            saveCurrentChat();
+            
+            // 保存选择的性格ID
+            PreferenceManager.saveCurrentPersonalityId(this, personality.getId());
         }
     }
 
@@ -270,10 +278,12 @@ public class AIChatActivity extends AppCompatActivity {
     }
 
     private void startNewChat() {
+        // 先保存当前对话
         if (currentHistoryId != -1) {
             saveCurrentChat();
         }
         
+        // 创建新对话
         createNewChat();
     }
 
@@ -394,36 +404,44 @@ public class AIChatActivity extends AppCompatActivity {
     }
 
     private void createNewChat() {
-        String currentPersonalityId = PreferenceManager.getCurrentPersonalityId(this);
-        ChatHistory newHistory = new ChatHistory(
-            new Date(),  // timestamp
-            "新对话",    // title
-            "",         // messages 初始为空
-            currentPersonalityId  // 保存当前选择的AI性格ID
-        );
-        
-        new Thread(() -> {
-            long id = database.chatHistoryDao().insert(newHistory);
-            newHistory.setId(id);
-            currentHistoryId = id;
-            
-            runOnUiThread(() -> {
-                messages.clear();
-                ChatMessage welcomeMessage = new ChatMessage(
-                    currentPersonality.getWelcomeMessage(),
-                    false,
-                    currentPersonality.getId()
+        executorService.execute(() -> {
+            try {
+                // 创建新的聊天历史记录
+                ChatHistory history = new ChatHistory(
+                    new Date(),
+                    "新对话",
+                    "[]",
+                    currentPersonality.getId()  // 使用当前选择的 AI 性格
                 );
-                messages.add(welcomeMessage);
-                adapter.notifyDataSetChanged();
                 
-                chatRecyclerView.post(() -> {
-                    chatRecyclerView.smoothScrollToPosition(messages.size() - 1);
+                long newHistoryId = database.chatHistoryDao().insert(history);
+                currentHistoryId = newHistoryId;
+                
+                // 清空消息列表
+                runOnUiThread(() -> {
+                    messages.clear();
+                    adapter.notifyDataSetChanged();
+                    
+                    // 添加欢迎消息
+                    ChatMessage welcomeMessage = new ChatMessage(
+                        currentPersonality.getWelcomeMessage(),
+                        false,
+                        currentPersonality.getId()  // 使用当前选择的 AI 性格
+                    );
+                    messages.add(welcomeMessage);
+                    adapter.notifyDataSetChanged();
+                    
+                    chatRecyclerView.post(() -> {
+                        chatRecyclerView.smoothScrollToPosition(messages.size() - 1);
+                    });
+                    
+                    saveMessage(welcomeMessage.getMessage(), false, currentPersonality.getId());
                 });
-                
-                saveMessage(welcomeMessage.getMessage(), false, currentPersonality.getId());
-            });
-        }).start();
+            } catch (Exception e) {
+                Log.e("ChatDebug", "创建新对话失败", e);
+                e.printStackTrace();
+            }
+        });
     }
 
     private void saveCurrentChat() {
@@ -433,16 +451,21 @@ public class AIChatActivity extends AppCompatActivity {
                     String title = generateChatTitle();
                     String messagesJson = convertMessagesToJson(messages);
                     
-                    // 获取原始对话的 personalityId
+                    // 获取原始对话
                     ChatHistory existingHistory = database.chatHistoryDao().getHistoryById(currentHistoryId);
-                    String originalPersonalityId = existingHistory != null ? 
+                    
+                    // 只有在创建新对话时才使用当前性格ID，否则保持原有性格ID
+                    String personalityId = existingHistory != null ? 
                         existingHistory.getPersonalityId() : currentPersonality.getId();
                     
+                    Log.d("ChatDebug", "保存聊天历史，对话ID: " + currentHistoryId + 
+                        ", 使用性格ID: " + personalityId);
+                    
                     ChatHistory history = new ChatHistory(
-                        new Date(), 
+                        new Date(),
                         title, 
                         messagesJson,
-                        originalPersonalityId  // 使用原始对话的 personalityId
+                        personalityId  // 使用正确的性格ID
                     );
                     history.setId(currentHistoryId);
                     database.chatHistoryDao().update(history);

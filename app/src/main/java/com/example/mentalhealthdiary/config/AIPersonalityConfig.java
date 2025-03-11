@@ -1,9 +1,11 @@
 package com.example.mentalhealthdiary.config;
 
+import android.util.Log;
+
 import com.example.mentalhealthdiary.model.AIPersonality;
+
 import java.util.ArrayList;
 import java.util.List;
-import android.util.Log;
 
 public class AIPersonalityConfig {
     private static final List<AIPersonality> personalities = new ArrayList<>();
