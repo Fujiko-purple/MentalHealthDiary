@@ -156,24 +156,26 @@ public class SettingsActivity extends AppCompatActivity {
                 );
                 
                 // 执行API测试
-                ChatApiClient.getInstance(getActivity())
-                    .testConnection(testRequest, new Callback<ChatResponse>() {
-                        @Override
-                        public void onResponse(Call<ChatResponse> call, Response<ChatResponse> response) {
-                            dialog.dismiss();
-                            if (response.isSuccessful()) {
-                                showSuccess("API连接测试成功！");
-                            } else {
-                                showError("API测试失败: " + response.code());
-                            }
+                Call<ChatResponse> call = ChatApiClient.getInstance(getActivity())
+                    .sendMessage(testRequest);
+                    
+                call.enqueue(new Callback<ChatResponse>() {
+                    @Override
+                    public void onResponse(Call<ChatResponse> call, Response<ChatResponse> response) {
+                        dialog.dismiss();
+                        if (response.isSuccessful() && response.body() != null) {
+                            showSuccess("API连接测试成功！");
+                        } else {
+                            showError("API测试失败: " + response.code());
                         }
-                        
-                        @Override
-                        public void onFailure(Call<ChatResponse> call, Throwable t) {
-                            dialog.dismiss();
-                            showError("API连接失败: " + t.getMessage());
-                        }
-                    });
+                    }
+                    
+                    @Override
+                    public void onFailure(Call<ChatResponse> call, Throwable t) {
+                        dialog.dismiss();
+                        showError("API连接失败: " + t.getMessage());
+                    }
+                });
                 
                 return true;
             });

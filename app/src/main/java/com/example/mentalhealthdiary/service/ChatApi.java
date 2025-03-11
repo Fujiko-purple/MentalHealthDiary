@@ -6,7 +6,7 @@ import retrofit2.http.Header;
 import retrofit2.http.POST;
 
 public interface ChatApi {
-    @POST("v3/openai/v1/chat/completions")
+    @POST("v1/chat/completions")
     Call<ChatResponse> chat(
         @Header("Authorization") String authorization,
         @Body ChatRequest request

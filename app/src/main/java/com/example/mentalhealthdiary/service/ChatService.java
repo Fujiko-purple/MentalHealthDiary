@@ -14,6 +14,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.example.mentalhealthdiary.api.ChatApiClient;
 import com.example.mentalhealthdiary.api.model.ChatRequest;
 import com.example.mentalhealthdiary.api.model.ChatResponse;
+import com.example.mentalhealthdiary.config.ApiConfig;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -35,11 +36,13 @@ public class ChatService extends Service {
     private long currentChatId = -1;
     
     private static final int MAX_RETRIES = 3;  // 最大重试次数
-    private int retryCount = 0;
+    private static final int RETRY_DELAY = 20000;  // 每次重试间隔20秒
+    private static final long THINKING_TIMEOUT = 120000; // 增加到120秒超时
     
-    private static final long THINKING_TIMEOUT = 60000; // 60秒超时
     private Handler timeoutHandler = new Handler(Looper.getMainLooper());
+    private Handler retryHandler = new Handler(Looper.getMainLooper());
     private Runnable timeoutRunnable;
+    private int retryCount = 0;
     
     public class ChatBinder extends Binder {
         public ChatService getService() {
@@ -63,95 +66,107 @@ public class ChatService extends Service {
             timeoutHandler.removeCallbacks(timeoutRunnable);
         }
         
-        retryCount = 0;  // 重置重试计数
-        sendRequestWithRetry(request, chatId);
+        handleChatRequest(request, chatId);
     }
     
-    private void sendRequestWithRetry(ChatRequest request, long chatId) {
+    private void handleChatRequest(ChatRequest request, long chatId) {
+        sendStartBroadcast(chatId);
         currentChatId = chatId;
+        retryCount = 0;
         
-        // 设置新的超时检查
+        // 设置总体超时
         timeoutRunnable = () -> {
             if (currentCall != null && !currentCall.isCanceled()) {
                 currentCall.cancel();
+                retryHandler.removeCallbacksAndMessages(null); // 清除所有等待的重试
                 currentChatId = -1;
-                
-                // 发送超时错误广播
-                Intent intent = new Intent(ACTION_CHAT_ERROR);
-                intent.putExtra(EXTRA_ERROR, "AI响应超时，请重试");
-                intent.putExtra(EXTRA_CHAT_ID, chatId);
-                LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+                currentCall = null;
+                sendErrorBroadcast(chatId, "请求超时，请重试");
             }
         };
         timeoutHandler.postDelayed(timeoutRunnable, THINKING_TIMEOUT);
         
-        // 发送开始思考的广播
-        Intent startIntent = new Intent(ACTION_CHAT_START);
-        startIntent.putExtra(EXTRA_CHAT_ID, chatId);
-        LocalBroadcastManager.getInstance(this).sendBroadcast(startIntent);
+        // 发送请求
+        sendRequest(request, chatId);
+    }
+    
+    private void sendRequest(ChatRequest request, long chatId) {
+        if (retryCount >= MAX_RETRIES) {
+            if (timeoutRunnable != null) {
+                timeoutHandler.removeCallbacks(timeoutRunnable);
+            }
+            currentChatId = -1;
+            currentCall = null;
+            sendErrorBroadcast(chatId, "请求失败，请重试");
+            return;
+        }
         
-        Log.d("ChatService", "开始发送请求，重试次数：" + retryCount);
+        retryCount++;
+        Log.d("ChatService", "发送请求，尝试次数：" + retryCount);
         
         currentCall = ChatApiClient.getInstance(this).sendMessage(request);
         currentCall.enqueue(new Callback<ChatResponse>() {
             @Override
             public void onResponse(Call<ChatResponse> call, Response<ChatResponse> response) {
-                // 取消超时检查
-                timeoutHandler.removeCallbacks(timeoutRunnable);
+                if (call.isCanceled()) {
+                    return; // 如果请求已被取消，不做任何处理
+                }
                 
-                currentChatId = -1;  // 重置当前聊天ID
                 if (response.isSuccessful() && response.body() != null) {
-                    retryCount = 0;  // 成功后重置重试计数
-                    String aiResponse = response.body().choices.get(0).message.content;
-                    
-                    Intent intent = new Intent(ACTION_CHAT_RESPONSE);
-                    intent.putExtra(EXTRA_RESPONSE, aiResponse);
-                    intent.putExtra(EXTRA_CHAT_ID, chatId);
-                    LocalBroadcastManager.getInstance(ChatService.this)
-                        .sendBroadcast(intent);
+                    String aiResponse = extractResponseContent(response.body());
+                    if (aiResponse != null) {
+                        if (timeoutRunnable != null) {
+                            timeoutHandler.removeCallbacks(timeoutRunnable);
+                        }
+                        retryHandler.removeCallbacksAndMessages(null);
+                        sendResponseBroadcast(chatId, aiResponse);
+                        currentChatId = -1;
+                        currentCall = null;
+                    } else {
+                        // 响应为空，进行重试
+                        retryHandler.postDelayed(() -> sendRequest(request, chatId), RETRY_DELAY);
+                    }
                 } else {
-                    handleError(request, chatId, response.code());
+                    // 请求不成功，进行重试
+                    retryHandler.postDelayed(() -> sendRequest(request, chatId), RETRY_DELAY);
                 }
             }
             
             @Override
             public void onFailure(Call<ChatResponse> call, Throwable t) {
-                // 取消超时检查
-                timeoutHandler.removeCallbacks(timeoutRunnable);
-                
                 if (!call.isCanceled()) {
-                    Log.e("ChatService", "请求失败", t);
-                    handleError(request, chatId, -1);
+                    // 请求失败，进行重试
+                    retryHandler.postDelayed(() -> sendRequest(request, chatId), RETRY_DELAY);
                 }
             }
         });
     }
     
-    private void handleError(ChatRequest request, long chatId, int responseCode) {
-        if (retryCount < MAX_RETRIES) {
-            retryCount++;
-            // 使用指数退避策略，每次重试等待时间增加
-            long delayMillis = 1000 * (long) Math.pow(2, retryCount - 1);
-            
-            new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                sendRequestWithRetry(request, chatId);
-            }, delayMillis);
-            
-        } else {
-            // 达到最大重试次数，发送错误广播
-            currentChatId = -1;
-            String error = "AI响应错误: " + 
-                (responseCode == 429 ? "请求太频繁，请稍后再试" : 
-                 responseCode == 503 ? "服务暂时不可用" : 
-                 responseCode == -1 ? "网络连接不稳定，请检查网络设置" :
-                 "错误代码 " + responseCode);
-            
-            Intent intent = new Intent(ACTION_CHAT_ERROR);
-            intent.putExtra(EXTRA_ERROR, error);
-            intent.putExtra(EXTRA_CHAT_ID, chatId);
-            LocalBroadcastManager.getInstance(ChatService.this)
-                .sendBroadcast(intent);
+    private void sendStartBroadcast(long chatId) {
+        Intent startIntent = new Intent(ACTION_CHAT_START);
+        startIntent.putExtra(EXTRA_CHAT_ID, chatId);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(startIntent);
+    }
+    
+    private void sendResponseBroadcast(long chatId, String aiResponse) {
+        Intent intent = new Intent(ACTION_CHAT_RESPONSE);
+        intent.putExtra(EXTRA_RESPONSE, aiResponse);
+        intent.putExtra(EXTRA_CHAT_ID, chatId);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+    }
+    
+    private void sendErrorBroadcast(long chatId, String errorMessage) {
+        Intent intent = new Intent(ACTION_CHAT_ERROR);
+        intent.putExtra(EXTRA_ERROR, errorMessage);
+        intent.putExtra(EXTRA_CHAT_ID, chatId);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+    }
+    
+    private String extractResponseContent(ChatResponse response) {
+        if (response.choices != null && response.choices.size() > 0 && response.choices.get(0).message != null) {
+            return response.choices.get(0).message.content;
         }
+        return null;
     }
     
     public boolean isThinking(long chatId) {
@@ -161,10 +176,10 @@ public class ChatService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        // 清理超时检查
         if (timeoutRunnable != null) {
             timeoutHandler.removeCallbacks(timeoutRunnable);
         }
+        retryHandler.removeCallbacksAndMessages(null);
         if (currentCall != null) {
             currentCall.cancel();
         }

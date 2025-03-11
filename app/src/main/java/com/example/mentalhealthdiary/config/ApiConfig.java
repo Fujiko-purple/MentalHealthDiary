@@ -21,8 +21,11 @@ public class ApiConfig {
             
         // 处理自定义 API 的路径
         if (prefs.getBoolean("use_custom_api", false)) {
-            // 移除末尾的斜杠和 v3/openai 部分
-            baseUrl = baseUrl.replaceAll("(/v3)?(/openai)?/*$", "");
+            // 移除末尾的斜杠
+            baseUrl = baseUrl.replaceAll("/+$", "");
+            
+            // 如果 URL 包含 v3/openai，移除它
+            baseUrl = baseUrl.replaceAll("/v3/openai/*$", "");
             
             // 确保以斜杠结尾
             if (!baseUrl.endsWith("/")) {
