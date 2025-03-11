@@ -5,12 +5,12 @@ import android.content.SharedPreferences;
 import androidx.preference.PreferenceManager;
 
 public class ApiConfig {
-    private static final String DEFAULT_BASE_URL = "https://api.siliconflow.cn/";
-    private static final String DEFAULT_MODEL = "deepseek-ai/DeepSeek-R1";
+    private static final String DEFAULT_BASE_URL = "https://api.ppinfra.com/v3/openai/";
+    private static final String DEFAULT_MODEL = "deepseek/deepseek-r1-turbo";
     
     public static String getApiKey(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getString("custom_api_key", "");
+        return prefs.getString("custom_api_key", "sk_sugjpsC0Bk8C__-Dokz2WIW4D125z5qxDZh28mcSNu4");
     }
     
     public static String getBaseUrl(Context context) {
@@ -19,18 +19,9 @@ public class ApiConfig {
             ? prefs.getString("custom_api_base", DEFAULT_BASE_URL)
             : DEFAULT_BASE_URL;
             
-        // 处理自定义 API 的路径
-        if (prefs.getBoolean("use_custom_api", false)) {
-            // 移除末尾的斜杠
-            baseUrl = baseUrl.replaceAll("/+$", "");
-            
-            // 如果 URL 包含 v3/openai，移除它
-            baseUrl = baseUrl.replaceAll("/v3/openai/*$", "");
-            
-            // 确保以斜杠结尾
-            if (!baseUrl.endsWith("/")) {
-                baseUrl += "/";
-            }
+        // 确保 URL 以斜杠结尾
+        if (!baseUrl.endsWith("/")) {
+            baseUrl += "/";
         }
         
         return baseUrl;

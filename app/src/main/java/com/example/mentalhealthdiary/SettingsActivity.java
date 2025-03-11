@@ -81,6 +81,8 @@ public class SettingsActivity extends AppCompatActivity {
     }
     
     public static class SettingsFragment extends PreferenceFragmentCompat {
+        private ProgressDialog dialog;
+        
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferencesFromResource(R.xml.preferences, rootKey);
@@ -142,40 +144,65 @@ public class SettingsActivity extends AppCompatActivity {
                     return true;
                 }
                 
-                ProgressDialog dialog = new ProgressDialog(getActivity());
+                if (dialog != null && dialog.isShowing()) {
+                    try {
+                        dialog.dismiss();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                
+                dialog = new ProgressDialog(getActivity());
                 dialog.setMessage("正在测试API连接...");
                 dialog.setCancelable(false);
-                dialog.show();
                 
-                // 创建测试请求
-                ChatRequest testRequest = new ChatRequest(
-                    Collections.singletonList(
-                        new ChatRequest.Message("user", "测试消息")
-                    ),
-                    ApiConfig.getModelName(getActivity())
-                );
-                
-                // 执行API测试
-                Call<ChatResponse> call = ChatApiClient.getInstance(getActivity())
-                    .sendMessage(testRequest);
+                try {
+                    dialog.show();
                     
-                call.enqueue(new Callback<ChatResponse>() {
-                    @Override
-                    public void onResponse(Call<ChatResponse> call, Response<ChatResponse> response) {
-                        dialog.dismiss();
-                        if (response.isSuccessful() && response.body() != null) {
-                            showSuccess("API连接测试成功！");
-                        } else {
-                            showError("API测试失败: " + response.code());
+                    // 创建测试请求
+                    ChatRequest testRequest = new ChatRequest(
+                        Collections.singletonList(
+                            new ChatRequest.Message("user", "测试消息")
+                        ),
+                        ApiConfig.getModelName(getActivity())
+                    );
+                    
+                    // 执行API测试
+                    Call<ChatResponse> call = ChatApiClient.getInstance(getActivity())
+                        .sendMessage(testRequest);
+                        
+                    call.enqueue(new Callback<ChatResponse>() {
+                        @Override
+                        public void onResponse(Call<ChatResponse> call, Response<ChatResponse> response) {
+                            if (getActivity() == null || getActivity().isFinishing()) {
+                                safelyDismissDialog();
+                                return;
+                            }
+                            
+                            safelyDismissDialog();
+                            
+                            if (response.isSuccessful() && response.body() != null) {
+                                safelyShowSuccess("API连接测试成功！");
+                            } else {
+                                safelyShowError("API测试失败: " + response.code());
+                            }
                         }
-                    }
-                    
-                    @Override
-                    public void onFailure(Call<ChatResponse> call, Throwable t) {
-                        dialog.dismiss();
-                        showError("API连接失败: " + t.getMessage());
-                    }
-                });
+                        
+                        @Override
+                        public void onFailure(Call<ChatResponse> call, Throwable t) {
+                            if (getActivity() == null || getActivity().isFinishing()) {
+                                safelyDismissDialog();
+                                return;
+                            }
+                            
+                            safelyDismissDialog();
+                            safelyShowError("API连接失败: " + t.getMessage());
+                        }
+                    });
+                } catch (Exception e) {
+                    safelyDismissDialog();
+                    safelyShowError("发生错误: " + e.getMessage());
+                }
                 
                 return true;
             });
@@ -229,6 +256,55 @@ public class SettingsActivity extends AppCompatActivity {
                     .setPositiveButton("确定", null)
                     .show();
             }
+        }
+
+        private void safelyDismissDialog() {
+            if (dialog != null && dialog.isShowing()) {
+                try {
+                    dialog.dismiss();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            dialog = null;
+        }
+        
+        private void safelyShowError(final String message) {
+            if (getActivity() != null && !getActivity().isFinishing()) {
+                getActivity().runOnUiThread(() -> {
+                    try {
+                        new AlertDialog.Builder(getActivity())
+                            .setTitle("错误")
+                            .setMessage(message)
+                            .setPositiveButton("确定", null)
+                            .show();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+            }
+        }
+        
+        private void safelyShowSuccess(final String message) {
+            if (getActivity() != null && !getActivity().isFinishing()) {
+                getActivity().runOnUiThread(() -> {
+                    try {
+                        new AlertDialog.Builder(getActivity())
+                            .setTitle("成功")
+                            .setMessage(message)
+                            .setPositiveButton("确定", null)
+                            .show();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+            }
+        }
+        
+        @Override
+        public void onDestroy() {
+            super.onDestroy();
+            safelyDismissDialog();
         }
     }
 } 

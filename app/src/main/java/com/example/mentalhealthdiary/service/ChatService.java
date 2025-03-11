@@ -11,10 +11,11 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.example.mentalhealthdiary.api.ChatApiClient;
-import com.example.mentalhealthdiary.api.model.ChatRequest;
-import com.example.mentalhealthdiary.api.model.ChatResponse;
+import com.example.mentalhealthdiary.service.ChatApiClient;
+import com.example.mentalhealthdiary.service.ChatRequest;
+import com.example.mentalhealthdiary.service.ChatResponse;
 import com.example.mentalhealthdiary.config.ApiConfig;
+import com.example.mentalhealthdiary.service.ChatResponse.Choice;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -104,16 +105,32 @@ public class ChatService extends Service {
         retryCount++;
         Log.d("ChatService", "发送请求，尝试次数：" + retryCount);
         
+        // 打印请求内容
+        Log.d("ChatService", "请求模型: " + request.model);
+        Log.d("ChatService", "请求消息: " + request.messages.get(0).content);
+        
         currentCall = ChatApiClient.getInstance(this).sendMessage(request);
         currentCall.enqueue(new Callback<ChatResponse>() {
             @Override
             public void onResponse(Call<ChatResponse> call, Response<ChatResponse> response) {
                 if (call.isCanceled()) {
-                    return; // 如果请求已被取消，不做任何处理
+                    return;
+                }
+                
+                // 打印响应状态和内容
+                Log.d("ChatService", "响应码: " + response.code());
+                if (!response.isSuccessful()) {
+                    try {
+                        Log.e("ChatService", "错误响应: " + response.errorBody().string());
+                    } catch (Exception e) {
+                        Log.e("ChatService", "读取错误响应失败", e);
+                    }
                 }
                 
                 if (response.isSuccessful() && response.body() != null) {
                     String aiResponse = extractResponseContent(response.body());
+                    Log.d("ChatService", "AI响应: " + aiResponse);
+                    
                     if (aiResponse != null) {
                         if (timeoutRunnable != null) {
                             timeoutHandler.removeCallbacks(timeoutRunnable);
@@ -123,11 +140,11 @@ public class ChatService extends Service {
                         currentChatId = -1;
                         currentCall = null;
                     } else {
-                        // 响应为空，进行重试
+                        Log.e("ChatService", "AI响应为空");
                         retryHandler.postDelayed(() -> sendRequest(request, chatId), RETRY_DELAY);
                     }
                 } else {
-                    // 请求不成功，进行重试
+                    Log.e("ChatService", "响应不成功或为空");
                     retryHandler.postDelayed(() -> sendRequest(request, chatId), RETRY_DELAY);
                 }
             }
@@ -135,7 +152,7 @@ public class ChatService extends Service {
             @Override
             public void onFailure(Call<ChatResponse> call, Throwable t) {
                 if (!call.isCanceled()) {
-                    // 请求失败，进行重试
+                    Log.e("ChatService", "请求失败", t);
                     retryHandler.postDelayed(() -> sendRequest(request, chatId), RETRY_DELAY);
                 }
             }
@@ -163,8 +180,17 @@ public class ChatService extends Service {
     }
     
     private String extractResponseContent(ChatResponse response) {
-        if (response.choices != null && response.choices.size() > 0 && response.choices.get(0).message != null) {
-            return response.choices.get(0).message.content;
+        Log.d("ChatService", "解析响应: " + response);
+        if (response != null) {
+            Log.d("ChatService", "choices: " + response.choices);
+            if (response.choices != null && !response.choices.isEmpty()) {
+                ChatResponse.Choice choice = response.choices.get(0);
+                Log.d("ChatService", "choice: " + choice);
+                if (choice.message != null) {
+                    Log.d("ChatService", "message: " + choice.message.content);
+                    return choice.message.content;
+                }
+            }
         }
         return null;
     }

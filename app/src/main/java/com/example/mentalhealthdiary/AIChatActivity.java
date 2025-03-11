@@ -23,15 +23,15 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.mentalhealthdiary.adapter.ChatAdapter;
-import com.example.mentalhealthdiary.api.ChatApiClient;
-import com.example.mentalhealthdiary.api.model.ChatRequest;
-import com.example.mentalhealthdiary.api.model.ChatResponse;
 import com.example.mentalhealthdiary.config.RemoteConfig;
+import com.example.mentalhealthdiary.config.ApiConfig;
 import com.example.mentalhealthdiary.config.AIPersonalityConfig;
 import com.example.mentalhealthdiary.database.AppDatabase;
 import com.example.mentalhealthdiary.model.ChatHistory;
 import com.example.mentalhealthdiary.model.ChatMessage;
 import com.example.mentalhealthdiary.model.AIPersonality;
+import com.example.mentalhealthdiary.service.ChatRequest;
+import com.example.mentalhealthdiary.service.ChatResponse;
 import com.example.mentalhealthdiary.service.ChatService;
 import com.example.mentalhealthdiary.utils.PreferenceManager;
 import com.google.android.material.button.MaterialButton;
@@ -224,7 +224,7 @@ public class AIChatActivity extends AppCompatActivity {
                 
                 chatRecyclerView.scrollToPosition(loadingPos);
                 
-                sendToAI(userMessage, loadingPos);
+                sendMessage(userMessage);
             }
         });
 
@@ -287,44 +287,40 @@ public class AIChatActivity extends AppCompatActivity {
         createNewChat();
     }
 
-    private void sendToAI(String userMessage, int loadingPos) {
-        Log.d("AIChatActivity", "Sending message with personality: " + 
-              currentPersonality.getName() + ", ID: " + currentPersonality.getId());
-        
-        saveMessage(userMessage, true, currentPersonality.getId());
-
-        List<ChatRequest.Message> apiMessages = new ArrayList<>();
-        
-        for (ChatMessage msg : messages) {
-            if (!msg.isLoading()) {
-                AIPersonality messagePersonality = msg.getPersonalityId() != null ?
-                        AIPersonalityConfig.getPersonalityById(msg.getPersonalityId()) :
-                        currentPersonality;
-                        
-                if (!msg.isUser() && apiMessages.isEmpty()) {
-                    apiMessages.add(new ChatRequest.Message(
-                        "system", 
-                        messagePersonality.getSystemPrompt()
-                    ));
-                }
-                
+    private void sendMessage(String message) {
+        if (chatService != null) {
+            // 保存用户消息
+            saveMessage(message, true, currentPersonality.getId());
+            
+            // 构建消息历史
+            List<ChatRequest.Message> apiMessages = new ArrayList<>();
+            
+            // 添加系统提示语
+            if (currentPersonality != null) {
                 apiMessages.add(new ChatRequest.Message(
-                    msg.isUser() ? "user" : "assistant",
-                    msg.getMessage()
+                    "system",
+                    currentPersonality.getSystemPrompt()
                 ));
             }
-        }
-        
-        String modelName = RemoteConfig.getModelName();
-        ChatRequest request = new ChatRequest(apiMessages, modelName);
-        
-        if (serviceBound && chatService != null) {
+            
+            // 添加用户消息
+            apiMessages.add(new ChatRequest.Message("user", message));
+            
+            // 创建请求，确保模型名称不为空
+            String modelName = currentPersonality != null ? 
+                currentPersonality.getModelName() : 
+                "deepseek/deepseek-r1-turbo";  // 提供默认值
+                
+            Log.d("AIChatActivity", "Using model: " + modelName);  // 添加日志
+            
+            ChatRequest request = new ChatRequest(
+                apiMessages,
+                modelName
+            );
+            
+            // 发送请求
             chatService.sendChatRequest(request, currentHistoryId);
-        } else {
-            messages.remove(loadingPos);
-            adapter.notifyItemRemoved(loadingPos);
-            showError("服务未准备好，请稍后再试");
-            sendButton.setEnabled(true);
+            messageInput.setText("");
         }
     }
 

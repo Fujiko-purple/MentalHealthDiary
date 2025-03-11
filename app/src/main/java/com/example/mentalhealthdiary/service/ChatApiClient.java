@@ -27,8 +27,14 @@ public class ChatApiClient {
     private ChatApiClient(Context context) {
         this.context = context.getApplicationContext();
         
-        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+        // 修改日志拦截器的配置
+        HttpLoggingInterceptor logging = new HttpLoggingInterceptor(new HttpLoggingInterceptor.Logger() {
+            @Override
+            public void log(String message) {
+                Log.d("ChatApiClient", message);
+            }
+        });
+        logging.setLevel(HttpLoggingInterceptor.Level.BASIC); // 改为 BASIC 级别
         
         // 创建重试拦截器
         Interceptor retryInterceptor = chain -> {
@@ -38,18 +44,20 @@ public class ChatApiClient {
             
             for (int retryCount = 0; retryCount < 3; retryCount++) {
                 try {
-                    response = chain.proceed(request);
-                    if (response.isSuccessful()) {
-                        return response;
+                    if (response != null) {
+                        response.close();
                     }
+                    response = chain.proceed(request.newBuilder().build());
+                    return response;
                 } catch (IOException e) {
                     exception = e;
                     if (response != null) {
                         response.close();
                     }
-                    Log.d("ChatApiClient", "重试请求，次数: " + (retryCount + 1));
+                    if (retryCount == 2) throw e; // 最后一次重试失败时抛出异常
+                    
                     try {
-                        Thread.sleep(5000); // 等待5秒后重试
+                        Thread.sleep(2000); // 等待2秒后重试
                     } catch (InterruptedException ie) {
                         Thread.currentThread().interrupt();
                         throw new IOException("重试被中断", ie);
@@ -57,19 +65,16 @@ public class ChatApiClient {
                 }
             }
             
-            if (exception != null) {
-                throw exception;
-            }
-            return response;
+            throw new IOException("所有重试都失败了");
         };
         
         OkHttpClient client = new OkHttpClient.Builder()
-            .addInterceptor(logging)
-            .addInterceptor(retryInterceptor)
-            .connectTimeout(60, TimeUnit.SECONDS)     // 连接超时
-            .readTimeout(60, TimeUnit.SECONDS)        // 读取超时
-            .writeTimeout(60, TimeUnit.SECONDS)       // 写入超时
-            .retryOnConnectionFailure(true)           // 允许重试
+            .addInterceptor(retryInterceptor)  // 先添加重试拦截器
+            .addInterceptor(logging)           // 再添加日志拦截器
+            .connectTimeout(60, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
             .build();
             
         String baseUrl = ApiConfig.getBaseUrl(context);
@@ -98,7 +103,7 @@ public class ChatApiClient {
         String apiKey = ApiConfig.getApiKey(context);
         
         Log.d("ChatApiClient", "发送请求到: " + baseUrl);
-        Log.d("ChatApiClient", "使用的 API Key: " + apiKey.substring(0, 4) + "****");
+        Log.d("ChatApiClient", "使用的 API Key: " + (apiKey.length() > 4 ? apiKey.substring(0, 4) + "****" : "****"));
         
         return chatApi.chat(
             "Bearer " + apiKey,

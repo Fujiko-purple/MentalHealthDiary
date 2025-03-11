@@ -7,16 +7,18 @@ public class AIPersonality {
     private String description; // 性格描述
     private String systemPrompt; // 系统提示词
     private String welcomeMessage; // 欢迎消息
+    private String modelName;   // 假设已有 modelName 字段
 
     public AIPersonality(String id, String name, String avatar, 
                         String description, String systemPrompt, 
-                        String welcomeMessage) {
+                        String welcomeMessage, String modelName) {
         this.id = id;
         this.name = name;
         this.avatar = avatar;
         this.description = description;
         this.systemPrompt = systemPrompt;
         this.welcomeMessage = welcomeMessage;
+        this.modelName = modelName;
     }
 
     // Getters
@@ -26,4 +28,7 @@ public class AIPersonality {
     public String getDescription() { return description; }
     public String getSystemPrompt() { return systemPrompt; }
     public String getWelcomeMessage() { return welcomeMessage; }
+    public String getModelName() {
+        return modelName != null ? modelName : "deepseek/deepseek-r1-turbo";
+    }
 } 
