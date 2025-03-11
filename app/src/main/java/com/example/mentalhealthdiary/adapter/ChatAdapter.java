@@ -1,6 +1,7 @@
 package com.example.mentalhealthdiary.adapter;
 
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -26,9 +27,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private static final int TYPE_LOADING = 2;
     private List<ChatMessage> messages;
     private AIPersonality currentPersonality;
-    private Handler loadingAnimationHandler = new Handler();
-    private int loadingDots = 0;
-    private TextView currentLoadingView;
+    private Handler mainHandler = new Handler(Looper.getMainLooper());
+    private long thinkingStartTime = 0;
+    private static final int ANIMATION_INTERVAL = 3000;
+    private static final int FADE_DURATION = 600;
 
     public ChatAdapter(List<ChatMessage> messages, AIPersonality personality) {
         this.messages = messages;
@@ -61,28 +63,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         
         if (holder instanceof LoadingViewHolder) {
             ((LoadingViewHolder) holder).bind(message);
-            if (loadingAnimationHandler == null) {
-                loadingAnimationHandler = new Handler();
-                loadingAnimationHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        updateLoadingDots();
-                        loadingAnimationHandler.postDelayed(this, 500);
-                    }
-                }, 500);
-            }
         } else {
             MessageViewHolder messageHolder = (MessageViewHolder) holder;
-
-            Log.d("ChatAdapter", String.format(
-                "Binding message at position %d: content='%s', isUser=%b, personalityId='%s'",
-                position,
-                message.getMessage(),
-                message.isUser(),
-                message.getPersonalityId()
-            ));
-
-            messageHolder.messageText.setText(message.getMessage());
+            messageHolder.bindMessage(message, currentPersonality);
             
             if (message.isUser()) {
                 messageHolder.messageText.setBackgroundResource(R.drawable.chat_bubble_sent);
@@ -133,30 +116,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public void onViewRecycled(@NonNull RecyclerView.ViewHolder holder) {
         super.onViewRecycled(holder);
         if (holder.getItemViewType() == TYPE_LOADING) {
-            stopLoadingAnimation();
+            // 删除旧的加载动画代码
         }
-    }
-
-    private void startLoadingAnimation(TextView dotsView) {
-        currentLoadingView = dotsView;
-        loadingDots = 0;
-        updateLoadingDots();
-    }
-
-    private void stopLoadingAnimation() {
-        loadingAnimationHandler.removeCallbacksAndMessages(null);
-        currentLoadingView = null;
-    }
-
-    private void updateLoadingDots() {
-        if (loadingDots == 0) {
-            currentLoadingView.setText(".");
-        } else if (loadingDots == 1) {
-            currentLoadingView.setText("..");
-        } else {
-            currentLoadingView.setText("...");
-        }
-        loadingDots = (loadingDots + 1) % 3;
     }
 
     @Override
@@ -166,19 +127,95 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private class LoadingViewHolder extends RecyclerView.ViewHolder {
         TextView loadingText;
-        TextView loadingDots;
+        TextView timerText;
+        private Runnable animationRunnable;
+        private Runnable timerRunnable;
         
         LoadingViewHolder(View itemView) {
             super(itemView);
             loadingText = itemView.findViewById(R.id.loadingText);
-            loadingDots = itemView.findViewById(R.id.loadingDots);
+            timerText = itemView.findViewById(R.id.timerText);
         }
         
         void bind(ChatMessage message) {
-            loadingText.setText(message.getMessage().isEmpty() ? 
-                "AI思考中" : message.getMessage());
-            currentLoadingView = loadingDots;
-            updateLoadingDots();
+            if (currentPersonality != null) {
+                if (thinkingStartTime == 0) {
+                    thinkingStartTime = System.currentTimeMillis();
+                }
+                startThinkingAnimation(currentPersonality.getId());
+                startTimer();
+            }
+        }
+
+        private void startTimer() {
+            stopTimer();
+            timerRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        if (timerText != null && itemView.getWindowToken() != null) {
+                            long elapsedTime = (System.currentTimeMillis() - thinkingStartTime) / 1000;
+                            timerText.setText(String.format("思考用时: %ds", elapsedTime));
+                            mainHandler.postDelayed(this, 1000);
+                        }
+                    } catch (Exception e) {
+                        Log.e("ChatAdapter", "Timer error", e);
+                    }
+                }
+            };
+            mainHandler.post(timerRunnable);
+        }
+
+        private void startThinkingAnimation(final String personalityId) {
+            stopThinkingAnimation();
+            
+            animationRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        if (loadingText != null && itemView.getWindowToken() != null) {
+                            loadingText.animate()
+                                .alpha(0f)
+                                .setDuration(FADE_DURATION)
+                                .withEndAction(() -> {
+                                    try {
+                                        String thinkingFrame = ChatMessage.getNextThinkingFrame(personalityId);
+                                        loadingText.setText(thinkingFrame);
+                                        loadingText.animate()
+                                            .alpha(1f)
+                                            .setDuration(FADE_DURATION)
+                                            .start();
+                                    } catch (Exception e) {
+                                        Log.e("ChatAdapter", "Animation error", e);
+                                    }
+                                })
+                                .start();
+                            
+                            mainHandler.postDelayed(this, ANIMATION_INTERVAL);
+                        }
+                    } catch (Exception e) {
+                        Log.e("ChatAdapter", "Animation error", e);
+                    }
+                }
+            };
+            
+            loadingText.setAlpha(1f);
+            mainHandler.post(animationRunnable);
+        }
+        
+        private void stopTimer() {
+            if (timerRunnable != null) {
+                mainHandler.removeCallbacks(timerRunnable);
+                timerRunnable = null;
+            }
+        }
+        
+        private void stopThinkingAnimation() {
+            if (animationRunnable != null) {
+                mainHandler.removeCallbacks(animationRunnable);
+                animationRunnable = null;
+            }
+            stopTimer();
         }
     }
 
@@ -186,12 +223,50 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         TextView messageText;
         ImageView avatarImage;
         LinearLayout messageContainer;
-
+        private final AIPersonality currentPersonality;
+        
         MessageViewHolder(View itemView) {
             super(itemView);
             messageText = itemView.findViewById(R.id.messageText);
             avatarImage = itemView.findViewById(R.id.avatarImage);
             messageContainer = itemView.findViewById(R.id.messageContainer);
+            currentPersonality = null;
+        }
+        
+        void bindMessage(ChatMessage message, AIPersonality personality) {
+            messageText.setText(message.getMessage());
+            
+            if (message.isUser()) {
+                messageContainer.setGravity(Gravity.END);
+                avatarImage.setVisibility(View.GONE);
+            } else {
+                messageContainer.setGravity(Gravity.START);
+                avatarImage.setVisibility(View.VISIBLE);
+                
+                AIPersonality messagePersonality = message.getPersonalityId() != null ?
+                        AIPersonalityConfig.getPersonalityById(message.getPersonalityId()) :
+                        personality;
+                
+                try {
+                    String avatarName = messagePersonality.getAvatar();
+                    int resourceId = itemView.getContext().getResources()
+                            .getIdentifier(avatarName, "drawable", 
+                                    itemView.getContext().getPackageName());
+                    
+                    if (resourceId != 0) {
+                        Glide.with(itemView.getContext())
+                            .load(resourceId)
+                            .circleCrop()
+                            .into(avatarImage);
+                    } else {
+                        Log.e("ChatAdapter", "  Avatar resource not found: " + avatarName);
+                        avatarImage.setImageResource(R.drawable.ic_ai_assistant);
+                    }
+                } catch (Exception e) {
+                    Log.e("ChatAdapter", "Error loading avatar", e);
+                    avatarImage.setImageResource(R.drawable.ic_ai_assistant);
+                }
+            }
         }
     }
 
@@ -199,5 +274,36 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         Log.d("ChatAdapter", "Setting personality: " + 
               (personality != null ? personality.getName() + ", ID: " + personality.getId() : "null"));
         this.currentPersonality = personality;
+    }
+
+    // 在收到 AI 响应时停止动画
+    public void stopThinkingAnimation() {
+        if (messages != null && !messages.isEmpty()) {
+            int lastIndex = messages.size() - 1;
+            if (messages.get(lastIndex).isLoading()) {
+                messages.remove(lastIndex);
+                notifyItemRemoved(lastIndex);
+            }
+        }
+        thinkingStartTime = 0;
+    }
+
+    @Override
+    public void onViewDetachedFromWindow(@NonNull RecyclerView.ViewHolder holder) {
+        super.onViewDetachedFromWindow(holder);
+        if (holder instanceof LoadingViewHolder) {
+            ((LoadingViewHolder) holder).stopThinkingAnimation();
+        }
+    }
+    
+    @Override
+    public void onDetachedFromRecyclerView(@NonNull RecyclerView recyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView);
+        mainHandler.removeCallbacksAndMessages(null);
+    }
+
+    // 添加获取思考开始时间的方法
+    public long getThinkingStartTime() {
+        return thinkingStartTime;
     }
 } 

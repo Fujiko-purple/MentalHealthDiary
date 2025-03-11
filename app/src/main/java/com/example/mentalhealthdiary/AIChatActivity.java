@@ -67,67 +67,57 @@ public class AIChatActivity extends AppCompatActivity {
     private Runnable thinkingTimeRunnable;
     private long thinkingStartTime;
     private BroadcastReceiver chatReceiver = new BroadcastReceiver() {
-        private long originalStartTime = 0;
-        
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            long chatId = intent.getLongExtra(ChatService.EXTRA_CHAT_ID, -1);
-            
-            if (chatId != currentHistoryId) {
-                return;
-            }
-            
-            if (ChatService.ACTION_CHAT_START.equals(action)) {
-                if (originalStartTime == 0) {
-                    originalStartTime = System.currentTimeMillis();
+            if (action != null) {
+                switch (action) {
+                    case ChatService.ACTION_CHAT_RESPONSE:
+                        String response = intent.getStringExtra(ChatService.EXTRA_RESPONSE);
+                        long chatId = intent.getLongExtra(ChatService.EXTRA_CHAT_ID, -1);
+                        
+                        // 获取思考用时
+                        long thinkingTime = (System.currentTimeMillis() - adapter.getThinkingStartTime()) / 1000;
+                        
+                        // 移除加载消息并停止动画
+                        adapter.stopThinkingAnimation();
+                        
+                        // 在响应前添加思考用时
+                        String responseWithTime = String.format("(思考用时：%d秒)\n\n%s", thinkingTime, response);
+                        
+                        // 添加 AI 响应
+                        messages.add(new ChatMessage(responseWithTime, false, currentPersonality.getId()));
+                        adapter.notifyItemInserted(messages.size() - 1);
+                        
+                        // 保存消息
+                        saveMessage(responseWithTime, false, currentPersonality.getId());
+                        sendButton.setEnabled(true);
+                        
+                        // 滚动到底部
+                        chatRecyclerView.post(() -> {
+                            chatRecyclerView.smoothScrollToPosition(messages.size() - 1);
+                        });
+                        break;
+                        
+                    case ChatService.ACTION_CHAT_ERROR:
+                        // 获取思考用时
+                        thinkingTime = (System.currentTimeMillis() - adapter.getThinkingStartTime()) / 1000;
+                        
+                        // 错误时也要停止动画
+                        adapter.stopThinkingAnimation();
+                        String error = intent.getStringExtra(ChatService.EXTRA_ERROR);
+                        
+                        // 在错误信息前添加思考用时
+                        String errorWithTime = String.format("(思考用时：%d秒)\n\n❌ %s", thinkingTime, error);
+                        showError(errorWithTime);
+                        sendButton.setEnabled(true);
+                        
+                        // 滚动到底部
+                        chatRecyclerView.post(() -> {
+                            chatRecyclerView.smoothScrollToPosition(messages.size() - 1);
+                        });
+                        break;
                 }
-                thinkingStartTime = originalStartTime;
-                sendButton.setEnabled(false);
-                startThinkingTimeUpdate();
-                
-                removeThinkingMessage();
-                messages.add(new ChatMessage("AI思考中...", false, currentPersonality.getId(), true));
-                adapter.notifyItemInserted(messages.size() - 1);
-                chatRecyclerView.scrollToPosition(messages.size() - 1);
-                
-            } else if (ChatService.ACTION_CHAT_RESPONSE.equals(action)) {
-                String response = intent.getStringExtra(ChatService.EXTRA_RESPONSE);
-                
-                long totalThinkingTime = System.currentTimeMillis() - originalStartTime;
-                int totalSeconds = (int) (totalThinkingTime / 1000);
-                
-                stopThinkingTimeUpdate();
-                originalStartTime = 0;
-                
-                removeThinkingMessage();
-                
-                String responseWithTime = String.format("(思考用时：%d秒)\n\n%s", totalSeconds, response);
-                messages.add(new ChatMessage(responseWithTime, false, currentPersonality.getId()));
-                adapter.notifyDataSetChanged();
-                
-                chatRecyclerView.post(() -> {
-                    chatRecyclerView.smoothScrollToPosition(messages.size() - 1);
-                });
-                
-                saveMessage(responseWithTime, false, currentPersonality.getId());
-                sendButton.setEnabled(true);
-            } else if (ChatService.ACTION_CHAT_ERROR.equals(action)) {
-                String error = intent.getStringExtra(ChatService.EXTRA_ERROR);
-                
-                long totalThinkingTime = System.currentTimeMillis() - originalStartTime;
-                int totalSeconds = (int) (totalThinkingTime / 1000);
-                
-                stopThinkingTimeUpdate();
-                originalStartTime = 0;
-                
-                error = String.format("(思考用时：%d秒)\n%s", totalSeconds, error);
-                clearLoadingStates();
-                showError(error);
-                chatRecyclerView.post(() -> {
-                    chatRecyclerView.smoothScrollToPosition(messages.size() - 1);
-                });
-                sendButton.setEnabled(true);
             }
         }
     };
@@ -317,6 +307,12 @@ public class AIChatActivity extends AppCompatActivity {
                 apiMessages,
                 modelName
             );
+            
+            // 添加加载消息
+            ChatMessage loadingMessage = ChatMessage.createLoadingMessage();
+            messages.add(loadingMessage);
+            adapter.stopThinkingAnimation();  // 使用 stopThinkingAnimation 替代 resetThinkingTimer
+            adapter.notifyItemInserted(messages.size() - 1);
             
             // 发送请求
             chatService.sendChatRequest(request, currentHistoryId);
