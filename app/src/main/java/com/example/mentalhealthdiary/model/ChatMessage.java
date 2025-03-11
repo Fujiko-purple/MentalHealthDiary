@@ -9,6 +9,7 @@ import androidx.room.Index;
 import com.google.gson.annotations.SerializedName;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 @Entity(
     tableName = "chat_message",
@@ -118,17 +119,36 @@ public class ChatMessage {
                 "🔮预言：「三天后你会笑看此刻」 🌠",
                 "✨剧场大幕拉开！请领取您的星际票根 🎟️💥"
         });
+
+        // 添加迪迦的思考动画
+        put("tiga_divine", new String[]{
+            "⚡光之巨人意识链接中... ███████",
+            "🌟形态切换：复合型（紫银光辉）启动",
+            "✨光子分析：探测到心灵阴影 ▷◁",
+            "💫启动「超古代净化协议」v3.0...",
+            "⚔️光粒子共鸣强度：■■■■□ 85%",
+            "🛡️构筑「心灵防线」：能量稳定 ✧",
+            "🌈哉佩利敖光线充能完毕！━━━━━━━",
+            "🏛️露露耶遗迹数据库检索中...",
+            "🔮超古代预言解析：「光明终将驱散黑暗」",
+            "⭐光之意志传递：准备就绪！",
+            "🌠形态切换：空中型（蓝光波动）",
+            "💎启动金字塔「心灵共鸣」程序",
+            "🎭检测到黑暗支配者入侵痕迹...",
+            "✨光之国中央处理器连接成功！",
+            "🛸超古代文明数据解密：■■■□□",
+            "⚔️战斗数据分析完毕！装备切换中..."
+        });
     }};
     
+    private static final Random random = new Random();
+    
     public static String getNextThinkingFrame(String personalityId) {
-        String[] animations = PERSONALITY_THINKING_ANIMATIONS.getOrDefault(
-            personalityId,
-            THINKING_ANIMATIONS
-        );
-        
-        String frame = animations[currentThinkingFrame];
-        currentThinkingFrame = (currentThinkingFrame + 1) % animations.length;
-        return frame;
+        String[] frames = PERSONALITY_THINKING_ANIMATIONS.get(personalityId);
+        if (frames == null) {
+            frames = PERSONALITY_THINKING_ANIMATIONS.get("default");
+        }
+        return frames[random.nextInt(frames.length)];
     }
 
     // 主构造函数 - Room 将使用这个

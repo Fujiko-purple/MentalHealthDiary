@@ -40,15 +40,17 @@ public class AIPersonality {
     // 新增方法：根据字符串ID获取数字ID
     public static int getNumericId(String strId) {
         switch (strId) {
-            case "ganyu_cbt":  // 甘雨
+            case "ganyu_cbt":         // 甘雨
                 return 1;
             case "natsume_narrative_pro":  // 夏目
                 return 2;
-            case "cat_girl":  // 猫娘
+            case "cat_girl":          // 猫娘
                 return 3;
-            case "kafka_rebt":  // 卡芙卡
+            case "kafka_rebt":        // 卡芙卡
                 return 4;
-            case "default":  // 默认心理咨询师
+            case "tiga_divine":       // 迪迦
+                return 5;
+            case "default":           // 默认心理咨询师
                 return 0;
             default:
                 return 0;
@@ -59,22 +61,25 @@ public class AIPersonality {
         String resourceName;
         switch (personalityId) {
             case 0:  // default
-                resourceName = "ic_counselor";  // 默认心理咨询师头像
+                resourceName = "ic_counselor";       // 默认心理咨询师头像
                 break;
             case 1:  // ganyu_cbt
-                resourceName = "ic_ganyu_counselor";  // 甘雨头像
+                resourceName = "ic_ganyu_counselor"; // 甘雨头像
                 break;
-            case 2:  // natsume
-                resourceName = "ic_natsume";  // 夏目头像
+            case 2:  // natsume_narrative_pro
+                resourceName = "ic_natsume";         // 夏目头像
                 break;
             case 3:  // cat_girl
-                resourceName = "ic_cat_girl";  // 猫娘头像
+                resourceName = "ic_cat_girl";        // 猫娘头像
                 break;
-            case 4:  // kafka
-                resourceName = "ic_kafka";  // 卡芙卡头像
+            case 4:  // kafka_rebt
+                resourceName = "ic_kafka";           // 卡芙卡头像
+                break;
+            case 5:  // tiga_divine
+                resourceName = "ic_tiga_divine";     // 迪迦头像
                 break;
             default:
-                resourceName = "ic_ai_assistant";  // 默认头像
+                resourceName = "ic_ai_assistant";    // 默认头像
                 break;
         }
         
