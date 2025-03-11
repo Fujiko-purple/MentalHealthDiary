@@ -103,6 +103,7 @@ public class SettingsActivity extends AppCompatActivity {
             useCustomApiPref.setOnPreferenceChangeListener((preference, newValue) -> {
                 boolean enabled = (Boolean) newValue;
                 updateApiPreferencesState(enabled);
+                ChatApiClient.resetInstance();  // 重置实例
                 return true;
             });
             
@@ -113,6 +114,7 @@ public class SettingsActivity extends AppCompatActivity {
                     showError("API密钥不能为空");
                     return false;
                 }
+                ChatApiClient.resetInstance();  // 重置实例
                 return true;
             });
             
@@ -130,6 +132,7 @@ public class SettingsActivity extends AppCompatActivity {
                 if (!url.endsWith("/")) {
                     url += "/";
                 }
+                ChatApiClient.resetInstance();  // 重置实例
                 return true;
             });
             

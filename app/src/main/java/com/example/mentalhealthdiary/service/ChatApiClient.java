@@ -15,13 +15,21 @@ public class ChatApiClient {
     private final Context context;
     private final ChatApi chatApi;
     
+    public static void resetInstance() {
+        instance = null;
+    }
+    
     private ChatApiClient(Context context) {
         this.context = context.getApplicationContext();
         
+        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+        
         OkHttpClient client = new OkHttpClient.Builder()
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS)
+            .addInterceptor(logging)
+            .connectTimeout(60, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
             .build();
             
         String baseUrl = ApiConfig.getBaseUrl(context);
@@ -50,6 +58,12 @@ public class ChatApiClient {
             "Bearer " + ApiConfig.getApiKey(context),
             request
         );
+        
+        // 打印完整的请求信息
+        System.out.println("完整请求URL: " + call.request().url());
+        System.out.println("请求方法: " + call.request().method());
+        System.out.println("请求头: " + call.request().headers());
+        System.out.println("请求体: " + request.toString());
         
         call.enqueue(callback);
     }

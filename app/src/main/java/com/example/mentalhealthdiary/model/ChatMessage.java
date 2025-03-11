@@ -68,6 +68,14 @@ public class ChatMessage {
         return new ChatMessage("", false, true);
     }
 
+    // 添加新的构造函数
+    public ChatMessage(String message, boolean isUser, String personalityId, boolean isLoading) {
+        this.message = message;
+        this.isUser = isUser;
+        this.personalityId = personalityId;
+        this.isLoading = isLoading;
+    }
+
     // Getters and Setters
     public long getId() { return id; }
     public void setId(long id) { this.id = id; }

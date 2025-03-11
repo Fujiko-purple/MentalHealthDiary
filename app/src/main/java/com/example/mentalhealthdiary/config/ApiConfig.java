@@ -15,9 +15,22 @@ public class ApiConfig {
     
     public static String getBaseUrl(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getBoolean("use_custom_api", false) 
+        String baseUrl = prefs.getBoolean("use_custom_api", false) 
             ? prefs.getString("custom_api_base", DEFAULT_BASE_URL)
             : DEFAULT_BASE_URL;
+            
+        // 处理自定义 API 的路径
+        if (prefs.getBoolean("use_custom_api", false)) {
+            // 移除末尾的斜杠和 v3/openai 部分
+            baseUrl = baseUrl.replaceAll("(/v3)?(/openai)?/*$", "");
+            
+            // 确保以斜杠结尾
+            if (!baseUrl.endsWith("/")) {
+                baseUrl += "/";
+            }
+        }
+        
+        return baseUrl;
     }
     
     public static String getModelName(Context context) {
