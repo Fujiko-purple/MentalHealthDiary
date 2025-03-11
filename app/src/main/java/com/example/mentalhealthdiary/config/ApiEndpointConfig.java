@@ -14,6 +14,13 @@ public class ApiEndpointConfig {
             true,
             "claude-3-5-sonnet-20241022"
         ));
+        put("ppinfra", new ApiEndpoint(
+            "api.ppinfra.com",
+            new String[]{"43.153.7.49", "43.153.7.50"},
+            "Bearer %s",
+            true,
+            "deepseek-r1-turbo"
+        ));
     }};
 
     public static ApiEndpoint getEndpoint(String baseUrl) {

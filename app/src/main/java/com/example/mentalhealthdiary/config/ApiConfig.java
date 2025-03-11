@@ -5,9 +5,9 @@ import android.content.SharedPreferences;
 import androidx.preference.PreferenceManager;
 
 public class ApiConfig {
-    private static final String DEFAULT_BASE_URL = "https://love.qinyan.xyz/v1";
-    private static final String DEFAULT_API_KEY = "sk-Lp3wOKexoo6cXZ78844857D9Dc1946F18385A83cB24eB3A0";
-    private static final String DEFAULT_MODEL = "claude-3-5-sonnet-20241022";
+    private static final String DEFAULT_BASE_URL = "";
+    private static final String DEFAULT_API_KEY = "";
+    private static final String DEFAULT_MODEL = "";
     
     public static String getApiKey(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);

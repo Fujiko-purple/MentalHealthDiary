@@ -61,6 +61,32 @@ public class MainActivity extends AppCompatActivity {
                 "https://api.ppinfra.com/v3/openai",
                 "deepseek/deepseek-r1-turbo"
 
+//                克劳德
+//                "sk-Lp3wOKexoo6cXZ78844857D9Dc1946F18385A83cB24eB3A0",
+//                "https://love.qinyan.xyz/v1",
+//                "claude-3-5-sonnet-20241022"
+//
+//                欧派云
+//                "sk_sugjpsC0Bk8C__-Dokz2WIW4D125z5qxDZh28mcSNu4",
+//                "https://api.ppinfra.com/v3/openai",
+//                "deepseek/deepseek-r1-turbo"
+//
+//                "sk-Lp3wOKexoo6cXZ78844857D9Dc1946F18385A83cB24eB3A0",
+//                "https://love.qinyan.xyz/v1",
+//                "grok-3"
+//
+//                硅基流动
+//                "sk-rcqdbrkvekqbaanjqwnvnnxbgkjkqyqxcuxkwrerfcslkecj",
+//                "https://api.siliconflow.cn/",
+//                "deepseek-ai/DeepSeek-R1"
+//
+//                ds
+//                "sk-0b2c4f7788fd4cbc95be50aa2cb5b9b9",
+//                "https://api.deepseek.com/v1",
+//                "deepseek-reasoner"
+
+
+
         );
 
         // 请求通知权限（Android 13及以上需要）
