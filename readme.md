@@ -97,7 +97,7 @@ app/src/main/java/com/example/mentalhealthdiary/
 - [ ] ai对话后台运行功能
 - [ ] ai对话历史管理ui优化
 - [ ]手机上ai对话中 滑倒屏幕上面后计时器停止计时 思考过程停止问题
-- [ ]
+- [ ]角色性格 提示词优化
 - [ ]
 - [ ]
 - [ ]

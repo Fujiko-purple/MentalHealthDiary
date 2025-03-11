@@ -1,19 +1,23 @@
 package com.example.mentalhealthdiary.adapter;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.example.mentalhealthdiary.R;
 import com.example.mentalhealthdiary.model.ChatHistory;
+import com.example.mentalhealthdiary.model.AIPersonality;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -131,12 +135,14 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
 
     public class ViewHolder extends RecyclerView.ViewHolder {
         private CheckBox checkBox;
+        private ImageView avatarImage;
         private TextView titleText;
         private TextView timeText;
 
         public ViewHolder(View view) {
             super(view);
             checkBox = view.findViewById(R.id.checkBox);
+            avatarImage = view.findViewById(R.id.avatarImage);
             titleText = view.findViewById(R.id.titleText);
             timeText = view.findViewById(R.id.timeText);
 
@@ -160,6 +166,18 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
             titleText.setText(chatHistory.getTitle());
             timeText.setText(dateFormat.format(chatHistory.getTimestamp()));
             checkBox.setChecked(selectedItems.contains(chatHistory.getId()));
+            
+            // 添加日志
+            int personalityId = chatHistory.getPersonalityId();
+            Log.d("ChatHistory", "Personality ID: " + personalityId);
+            int avatarResId = AIPersonality.getAvatarResourceById(personalityId);
+            Log.d("ChatHistory", "Avatar Resource ID: " + avatarResId);
+            
+            // 使用 Glide 加载圆形头像
+            Glide.with(itemView.getContext())
+                .load(avatarResId)
+                .circleCrop()  // 将图片裁剪成圆形
+                .into(avatarImage);
         }
     }
 } 

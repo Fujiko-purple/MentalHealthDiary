@@ -123,7 +123,7 @@ public class ChatMessage {
     public static String getNextThinkingFrame(String personalityId) {
         String[] animations = PERSONALITY_THINKING_ANIMATIONS.getOrDefault(
             personalityId,
-            THINKING_ANIMATIONS  // 默认动画
+            THINKING_ANIMATIONS
         );
         
         String frame = animations[currentThinkingFrame];
@@ -145,7 +145,7 @@ public class ChatMessage {
         this.message = message;
         this.isUser = isUser;
         this.isLoading = isLoading;
-        this.personalityId = null;
+        this.personalityId = "";
     }
 
     @Ignore

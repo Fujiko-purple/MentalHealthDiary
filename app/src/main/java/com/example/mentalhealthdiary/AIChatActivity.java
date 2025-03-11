@@ -403,7 +403,12 @@ public class AIChatActivity extends AppCompatActivity {
     private void createNewChat() {
         executorService.execute(() -> {
             try {
-                ChatHistory newHistory = new ChatHistory(new Date(), "新对话", "");
+                ChatHistory newHistory = new ChatHistory(
+                    new Date(), 
+                    "新对话", 
+                    "",
+                    AIPersonality.getNumericId(currentPersonality.getId())  // 转换为数字ID
+                );
                 currentHistoryId = database.chatHistoryDao().insert(newHistory);
                 
                 PreferenceManager.saveLastChatId(this, currentHistoryId);
@@ -435,18 +440,15 @@ public class AIChatActivity extends AppCompatActivity {
         if (currentHistoryId != -1 && messages != null && !messages.isEmpty()) {
             executorService.execute(() -> {
                 try {
-                    for (ChatMessage msg : messages) {
-                        if (!msg.isUser()) {
-                            Log.d("ChatDebug", "Saving AI message with personality ID: " + msg.getPersonalityId());
-                        }
-                    }
-
                     String title = generateChatTitle();
                     String messagesJson = convertMessagesToJson(messages);
                     
-                    Log.d("ChatDebug", "Messages JSON: " + messagesJson);
-
-                    ChatHistory history = new ChatHistory(new Date(), title, messagesJson);
+                    ChatHistory history = new ChatHistory(
+                        new Date(), 
+                        title, 
+                        messagesJson,
+                        AIPersonality.getNumericId(currentPersonality.getId())  // 转换为数字ID
+                    );
                     history.setId(currentHistoryId);
                     database.chatHistoryDao().update(history);
                     
@@ -532,7 +534,7 @@ public class AIChatActivity extends AppCompatActivity {
 
     private void saveMessage(String content, boolean isUser, String personalityId) {
         try {
-            ChatMessage message = new ChatMessage(content, isUser, personalityId);
+            ChatMessage message = new ChatMessage(content, isUser, personalityId);  // 直接使用字符串ID
             message.setChatId(currentHistoryId);
             message.setTimestamp(System.currentTimeMillis());
             

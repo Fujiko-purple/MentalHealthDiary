@@ -21,7 +21,7 @@ import com.example.mentalhealthdiary.dao.ChatMessageDao;
         ChatHistory.class,
         ChatMessage.class
     }, 
-    version = 5,
+    version = 7,
     exportSchema = false
 )
 @TypeConverters({DateConverter.class})
@@ -34,35 +34,22 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract ChatHistoryDao chatHistoryDao();
     public abstract ChatMessageDao chatMessageDao();
 
-    static final Migration MIGRATION_4_5 = new Migration(4, 5) {
+    private static final Migration MIGRATION_6_7 = new Migration(6, 7) {
         @Override
         public void migrate(SupportSQLiteDatabase database) {
-            database.execSQL("DROP INDEX IF EXISTS index_chat_message_chat_id");
-            database.execSQL("DROP TABLE IF EXISTS chat_message");
-            database.execSQL("DROP TABLE IF EXISTS chat_history");
-            
-            database.execSQL(
-                "CREATE TABLE IF NOT EXISTS `chat_history` " +
+            database.execSQL("CREATE TABLE IF NOT EXISTS chat_history_new " +
                 "(`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
-                "`timestamp` INTEGER NOT NULL DEFAULT 0, " +
+                "`timestamp` INTEGER, " +
                 "`title` TEXT, " +
-                "`messages` TEXT)"
-            );
-            
-            database.execSQL(
-                "CREATE TABLE IF NOT EXISTS `chat_message` " +
-                "(`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
-                "`chat_id` INTEGER NOT NULL DEFAULT 0, " +
-                "`message` TEXT DEFAULT '', " +
-                "`is_user` INTEGER NOT NULL DEFAULT 0, " +
-                "`timestamp` INTEGER NOT NULL DEFAULT 0, " +
-                "FOREIGN KEY(`chat_id`) REFERENCES `chat_history`(`id`) ON DELETE CASCADE)"
-            );
-            
-            database.execSQL(
-                "CREATE INDEX IF NOT EXISTS `index_chat_message_chat_id` " +
-                "ON `chat_message` (`chat_id`)"
-            );
+                "`messages` TEXT, " +
+                "`personality_id` INTEGER NOT NULL DEFAULT 0)");
+
+            database.execSQL("INSERT INTO chat_history_new " +
+                "SELECT * FROM chat_history");
+
+            database.execSQL("DROP TABLE chat_history");
+
+            database.execSQL("ALTER TABLE chat_history_new RENAME TO chat_history");
         }
     };
 
@@ -73,6 +60,7 @@ public abstract class AppDatabase extends RoomDatabase {
                 AppDatabase.class, 
                 "mental_health_diary.db"
             )
+            .addMigrations(MIGRATION_6_7)
             .fallbackToDestructiveMigration()
             .build();
         }

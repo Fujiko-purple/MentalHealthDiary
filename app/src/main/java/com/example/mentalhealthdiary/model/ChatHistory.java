@@ -19,10 +19,14 @@ public class ChatHistory {
     private String title;
     private String messages;
     
-    public ChatHistory(Date timestamp, String title, String messages) {
+    @ColumnInfo(name = "personality_id")
+    private int personalityId;
+    
+    public ChatHistory(Date timestamp, String title, String messages, int personalityId) {
         this.timestamp = timestamp;
         this.title = title;
         this.messages = messages;
+        this.personalityId = personalityId;
     }
     
     // Getters and Setters
@@ -56,5 +60,13 @@ public class ChatHistory {
     
     public void setMessages(String messages) {
         this.messages = messages;
+    }
+    
+    public int getPersonalityId() {
+        return personalityId;
+    }
+    
+    public void setPersonalityId(int personalityId) {
+        this.personalityId = personalityId;
     }
 } 
