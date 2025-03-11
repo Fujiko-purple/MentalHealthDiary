@@ -29,8 +29,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private AIPersonality currentPersonality;
     private Handler mainHandler = new Handler(Looper.getMainLooper());
     private long thinkingStartTime = 0;
-    private static final int ANIMATION_INTERVAL = 3000;
-    private static final int FADE_DURATION = 600;
+    private static final int ANIMATION_INTERVAL = 1500;
+    private static final int FADE_DURATION = 300;
 
     public ChatAdapter(List<ChatMessage> messages, AIPersonality personality) {
         this.messages = messages;
