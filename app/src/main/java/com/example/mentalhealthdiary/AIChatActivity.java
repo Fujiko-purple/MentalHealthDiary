@@ -61,7 +61,51 @@ public class AIChatActivity extends AppCompatActivity {
     private AIPersonality currentPersonality;
     private ChatService chatService;
     private boolean serviceBound = false;
-    private BroadcastReceiver chatReceiver;
+    private BroadcastReceiver chatReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            long chatId = intent.getLongExtra(ChatService.EXTRA_CHAT_ID, -1);
+            
+            // 只处理与当前聊天相关的广播
+            if (chatId != currentHistoryId) {
+                return;
+            }
+            
+            if (ChatService.ACTION_CHAT_START.equals(action)) {
+                // AI 开始思考时禁用发送按钮
+                sendButton.setEnabled(false);
+            } else if (ChatService.ACTION_CHAT_RESPONSE.equals(action)) {
+                String response = intent.getStringExtra(ChatService.EXTRA_RESPONSE);
+                
+                // 移除加载状态
+                clearLoadingStates();
+                
+                // 添加AI回复
+                messages.add(new ChatMessage(response, false, currentPersonality.getId()));
+                adapter.notifyItemInserted(messages.size() - 1);
+                chatRecyclerView.scrollToPosition(messages.size() - 1);
+                
+                // 保存AI回复
+                saveMessage(response, false, currentPersonality.getId());
+                
+                // 收到回复后启用发送按钮
+                sendButton.setEnabled(true);
+                
+            } else if (ChatService.ACTION_CHAT_ERROR.equals(action)) {
+                String error = intent.getStringExtra(ChatService.EXTRA_ERROR);
+                
+                // 移除加载状态
+                clearLoadingStates();
+                
+                // 显示错误
+                showError(error);
+                
+                // 发生错误时也要启用发送按钮
+                sendButton.setEnabled(true);
+            }
+        }
+    };
 
     // 添加ServiceConnection
     private ServiceConnection serviceConnection = new ServiceConnection() {
@@ -151,7 +195,6 @@ public class AIChatActivity extends AppCompatActivity {
 
         // 设置发送按钮点击事件
         sendButton.setOnClickListener(v -> {
-            sendButton.setEnabled(false);  // 禁用按钮防止重复点击
             String userMessage = messageInput.getText().toString().trim();
             if (!userMessage.isEmpty()) {
                 // 清理所有旧的加载状态
@@ -180,44 +223,8 @@ public class AIChatActivity extends AppCompatActivity {
         bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
         
         // 注册广播接收器
-        chatReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                String action = intent.getAction();
-                long chatId = intent.getLongExtra(ChatService.EXTRA_CHAT_ID, -1);
-                
-                // 只处理与当前聊天相关的广播
-                if (chatId != currentHistoryId) {
-                    return;
-                }
-                
-                if (ChatService.ACTION_CHAT_RESPONSE.equals(action)) {
-                    String response = intent.getStringExtra(ChatService.EXTRA_RESPONSE);
-                    
-                    // 移除加载状态
-                    clearLoadingStates();
-                    
-                    // 添加AI回复
-                    messages.add(new ChatMessage(response, false, currentPersonality.getId()));
-                    adapter.notifyItemInserted(messages.size() - 1);
-                    chatRecyclerView.scrollToPosition(messages.size() - 1);
-                    
-                    // 保存AI回复
-                    saveMessage(response, false, currentPersonality.getId());
-                    
-                } else if (ChatService.ACTION_CHAT_ERROR.equals(action)) {
-                    String error = intent.getStringExtra(ChatService.EXTRA_ERROR);
-                    
-                    // 移除加载状态
-                    clearLoadingStates();
-                    
-                    // 显示错误
-                    showError(error);
-                }
-            }
-        };
-        
         IntentFilter filter = new IntentFilter();
+        filter.addAction(ChatService.ACTION_CHAT_START);
         filter.addAction(ChatService.ACTION_CHAT_RESPONSE);
         filter.addAction(ChatService.ACTION_CHAT_ERROR);
         LocalBroadcastManager.getInstance(this).registerReceiver(chatReceiver, filter);
@@ -318,13 +325,12 @@ public class AIChatActivity extends AppCompatActivity {
         // 使用Service发送请求
         if (serviceBound && chatService != null) {
             chatService.sendChatRequest(request, currentHistoryId);
-            sendButton.setEnabled(true);  // 启用发送按钮
         } else {
             // 如果Service未绑定，显示错误
             messages.remove(loadingPos);
             adapter.notifyItemRemoved(loadingPos);
             showError("服务未准备好，请稍后再试");
-            sendButton.setEnabled(true);
+            sendButton.setEnabled(true);  // 这行保留，因为是即时错误
         }
     }
 
