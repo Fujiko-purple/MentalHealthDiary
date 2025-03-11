@@ -165,9 +165,34 @@ public class ChatService extends Service {
         LocalBroadcastManager.getInstance(this).sendBroadcast(startIntent);
     }
     
+    private String processAIResponse(String response) {
+        if (response == null) return null;
+        
+        // 移除思考时间
+        response = response.replaceAll("\\(思考用时：.*?秒\\)\n*", "");
+        
+        // 移除 <think> 标签及其内容，添加 Pattern.DOTALL 标志
+        response = response.replaceAll("(?s)<think>.*?</think>\n*", "");
+        
+        // 移除其他可能的思考过程标记
+        response = response.replaceAll("(?s)\\[思考中\\].*?\\[/思考中\\]\n*", "");
+        response = response.replaceAll("(?s)\\(思考中\\).*?\\(/思考中\\)\n*", "");
+        response = response.replaceAll("(?s)【思考】.*?【/思考】\n*", "");
+        
+        // 移除多余的空行
+        response = response.replaceAll("(?m)^\\s*$[\n\r]{1,}", "\n");
+        response = response.trim();
+        
+        Log.d("ChatService", "处理后的响应: " + response);
+        return response;
+    }
+    
     private void sendResponseBroadcast(long chatId, String aiResponse) {
+        // 处理 AI 响应
+        String processedResponse = processAIResponse(aiResponse);
+        
         Intent intent = new Intent(ACTION_CHAT_RESPONSE);
-        intent.putExtra(EXTRA_RESPONSE, aiResponse);
+        intent.putExtra(EXTRA_RESPONSE, processedResponse);
         intent.putExtra(EXTRA_CHAT_ID, chatId);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
