@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Handler;
@@ -258,7 +259,13 @@ public class AIChatActivity extends AppCompatActivity {
             }
         });
 
+        // 启动并绑定服务
         Intent serviceIntent = new Intent(this, ChatService.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent);
+        } else {
+            startService(serviceIntent);
+        }
         bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
         
         IntentFilter filter = new IntentFilter();

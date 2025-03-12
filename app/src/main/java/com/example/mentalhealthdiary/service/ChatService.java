@@ -7,6 +7,11 @@ import android.os.IBinder;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.os.Build;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import androidx.core.app.NotificationCompat;
 
 import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -16,10 +21,14 @@ import com.example.mentalhealthdiary.service.ChatRequest;
 import com.example.mentalhealthdiary.service.ChatResponse;
 import com.example.mentalhealthdiary.config.ApiConfig;
 import com.example.mentalhealthdiary.service.ChatResponse.Choice;
+import com.example.mentalhealthdiary.R;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class ChatService extends Service {
     // 广播动作常量
@@ -45,6 +54,13 @@ public class ChatService extends Service {
     private Runnable timeoutRunnable;
     private int retryCount = 0;
     
+    private static final int NOTIFICATION_ID = 1;
+    private static final String CHANNEL_ID = "chat_service_channel";
+    private static final String CHANNEL_NAME = "AI Chat Service";
+    
+    private Map<Long, Boolean> thinkingStates = new HashMap<>();
+    private Map<Long, Call<ChatResponse>> activeRequests = new HashMap<>();
+
     public class ChatBinder extends Binder {
         public ChatService getService() {
             return ChatService.this;
@@ -57,64 +73,65 @@ public class ChatService extends Service {
         return binder;
     }
     
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        createNotificationChannel();
+        // 创建服务时就启动前台服务
+        startForegroundService();
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        // 确保服务启动时就进入前台模式
+        startForegroundService();
+        return START_STICKY;
+    }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                CHANNEL_ID,
+                CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_LOW
+            );
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            manager.createNotificationChannel(channel);
+        }
+    }
+
+    private void startForegroundService() {
+        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("AI 助手")
+            .setContentText("服务正在运行中...")
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .build();
+
+        startForeground(NOTIFICATION_ID, notification);
+    }
+
     public void sendChatRequest(ChatRequest request, long chatId) {
-        if (currentCall != null) {
-            currentCall.cancel();
-        }
+        // 更新通知显示正在思考
+        updateNotification("AI 助手正在思考", "正在生成回复...");
         
-        // 取消之前的超时检查（如果有的话）
-        if (timeoutRunnable != null) {
-            timeoutHandler.removeCallbacks(timeoutRunnable);
-        }
+        thinkingStates.put(chatId, true);
         
-        handleChatRequest(request, chatId);
-    }
-    
-    private void handleChatRequest(ChatRequest request, long chatId) {
-        sendStartBroadcast(chatId);
-        currentChatId = chatId;
-        retryCount = 0;
+        // 创建新的请求
+        Call<ChatResponse> call = ChatApiClient.getInstance(this).sendMessage(request);
         
-        // 设置总体超时
-        timeoutRunnable = () -> {
-            if (currentCall != null && !currentCall.isCanceled()) {
-                currentCall.cancel();
-                retryHandler.removeCallbacksAndMessages(null); // 清除所有等待的重试
-                currentChatId = -1;
-                currentCall = null;
-                sendErrorBroadcast(chatId, "请求超时，请重试");
-            }
-        };
-        timeoutHandler.postDelayed(timeoutRunnable, THINKING_TIMEOUT);
+        // 保存活动请求
+        activeRequests.put(chatId, call);
         
-        // 发送请求
-        sendRequest(request, chatId);
-    }
-    
-    private void sendRequest(ChatRequest request, long chatId) {
-        if (retryCount >= MAX_RETRIES) {
-            if (timeoutRunnable != null) {
-                timeoutHandler.removeCallbacks(timeoutRunnable);
-            }
-            currentChatId = -1;
-            currentCall = null;
-            sendErrorBroadcast(chatId, "请求失败，请重试");
-            return;
-        }
-        
-        retryCount++;
-        Log.d("ChatService", "发送请求，尝试次数：" + retryCount);
-        
-        // 打印请求内容
-        Log.d("ChatService", "请求模型: " + request.model);
-        Log.d("ChatService", "请求消息: " + request.messages.get(0).content);
-        
-        currentCall = ChatApiClient.getInstance(this).sendMessage(request);
-        currentCall.enqueue(new Callback<ChatResponse>() {
+        call.enqueue(new Callback<ChatResponse>() {
             @Override
             public void onResponse(Call<ChatResponse> call, Response<ChatResponse> response) {
-                if (call.isCanceled()) {
-                    return;
+                thinkingStates.remove(chatId);
+                activeRequests.remove(chatId);
+                
+                // 如果没有正在进行的请求，更新通知
+                if (activeRequests.isEmpty()) {
+                    updateNotification("AI 助手", "服务正在运行中...");
                 }
                 
                 // 打印响应状态和内容
@@ -152,6 +169,14 @@ public class ChatService extends Service {
             @Override
             public void onFailure(Call<ChatResponse> call, Throwable t) {
                 if (!call.isCanceled()) {
+                    thinkingStates.remove(chatId);
+                    activeRequests.remove(chatId);
+                    
+                    // 如果没有正在进行的请求，更新通知
+                    if (activeRequests.isEmpty()) {
+                        updateNotification("AI 助手", "服务正在运行中...");
+                    }
+                    
                     Log.e("ChatService", "请求失败", t);
                     retryHandler.postDelayed(() -> sendRequest(request, chatId), RETRY_DELAY);
                 }
@@ -221,7 +246,19 @@ public class ChatService extends Service {
     }
     
     public boolean isThinking(long chatId) {
-        return currentChatId == chatId && currentCall != null && !currentCall.isCanceled();
+        return thinkingStates.containsKey(chatId) && thinkingStates.get(chatId);
+    }
+    
+    private void updateNotification(String title, String content) {
+        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle(title)
+            .setContentText(content)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .build();
+
+        NotificationManager notificationManager = getSystemService(NotificationManager.class);
+        notificationManager.notify(NOTIFICATION_ID, notification);
     }
     
     @Override
@@ -234,5 +271,97 @@ public class ChatService extends Service {
         if (currentCall != null) {
             currentCall.cancel();
         }
+        // 取消所有正在进行的请求
+        for (Call<ChatResponse> call : activeRequests.values()) {
+            call.cancel();
+        }
+        activeRequests.clear();
+        thinkingStates.clear();
+        stopForeground(true);
+    }
+
+    private void sendRequest(ChatRequest request, long chatId) {
+        if (retryCount >= MAX_RETRIES) {
+            if (timeoutRunnable != null) {
+                timeoutHandler.removeCallbacks(timeoutRunnable);
+            }
+            currentChatId = -1;
+            currentCall = null;
+            sendErrorBroadcast(chatId, "请求失败，请重试");
+            return;
+        }
+        
+        retryCount++;
+        Log.d("ChatService", "发送请求，尝试次数：" + retryCount);
+        
+        // 打印请求内容
+        Log.d("ChatService", "请求模型: " + request.model);
+        Log.d("ChatService", "请求消息: " + request.messages.get(0).content);
+        
+        // 创建新的请求
+        Call<ChatResponse> call = ChatApiClient.getInstance(this).sendMessage(request);
+        
+        // 保存活动请求
+        activeRequests.put(chatId, call);
+        
+        call.enqueue(new Callback<ChatResponse>() {
+            @Override
+            public void onResponse(Call<ChatResponse> call, Response<ChatResponse> response) {
+                thinkingStates.remove(chatId);
+                activeRequests.remove(chatId);
+                
+                // 如果没有正在进行的请求，更新通知
+                if (activeRequests.isEmpty()) {
+                    updateNotification("AI 助手", "服务正在运行中...");
+                }
+                
+                // 打印响应状态和内容
+                Log.d("ChatService", "响应码: " + response.code());
+                if (!response.isSuccessful()) {
+                    try {
+                        Log.e("ChatService", "错误响应: " + response.errorBody().string());
+                    } catch (Exception e) {
+                        Log.e("ChatService", "读取错误响应失败", e);
+                    }
+                }
+                
+                if (response.isSuccessful() && response.body() != null) {
+                    String aiResponse = extractResponseContent(response.body());
+                    Log.d("ChatService", "AI响应: " + aiResponse);
+                    
+                    if (aiResponse != null) {
+                        if (timeoutRunnable != null) {
+                            timeoutHandler.removeCallbacks(timeoutRunnable);
+                        }
+                        retryHandler.removeCallbacksAndMessages(null);
+                        sendResponseBroadcast(chatId, aiResponse);
+                        currentChatId = -1;
+                        currentCall = null;
+                    } else {
+                        Log.e("ChatService", "AI响应为空");
+                        retryHandler.postDelayed(() -> sendRequest(request, chatId), RETRY_DELAY);
+                    }
+                } else {
+                    Log.e("ChatService", "响应不成功或为空");
+                    retryHandler.postDelayed(() -> sendRequest(request, chatId), RETRY_DELAY);
+                }
+            }
+            
+            @Override
+            public void onFailure(Call<ChatResponse> call, Throwable t) {
+                if (!call.isCanceled()) {
+                    thinkingStates.remove(chatId);
+                    activeRequests.remove(chatId);
+                    
+                    // 如果没有正在进行的请求，更新通知
+                    if (activeRequests.isEmpty()) {
+                        updateNotification("AI 助手", "服务正在运行中...");
+                    }
+                    
+                    Log.e("ChatService", "请求失败", t);
+                    retryHandler.postDelayed(() -> sendRequest(request, chatId), RETRY_DELAY);
+                }
+            }
+        });
     }
 } 
