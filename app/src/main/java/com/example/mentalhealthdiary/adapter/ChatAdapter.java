@@ -28,7 +28,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private List<ChatMessage> messages;
     private AIPersonality currentPersonality;
     private Handler mainHandler = new Handler(Looper.getMainLooper());
-    private long thinkingStartTime = 0;
     private static final int ANIMATION_INTERVAL = 1000;
     private static final int FADE_DURATION = 300;
 
@@ -139,22 +138,22 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         
         void bind(ChatMessage message) {
             if (currentPersonality != null) {
-                if (thinkingStartTime == 0) {
-                    thinkingStartTime = System.currentTimeMillis();
+                if (message.getThinkingStartTime() == 0) {
+                    message.setThinkingStartTime(System.currentTimeMillis());
                 }
                 startThinkingAnimation(currentPersonality.getId());
-                startTimer();
+                startTimer(message);
             }
         }
 
-        private void startTimer() {
+        private void startTimer(ChatMessage message) {
             stopTimer();
             timerRunnable = new Runnable() {
                 @Override
                 public void run() {
                     try {
                         if (timerText != null && itemView.getWindowToken() != null) {
-                            long elapsedTime = (System.currentTimeMillis() - thinkingStartTime) / 1000;
+                            long elapsedTime = (System.currentTimeMillis() - message.getThinkingStartTime()) / 1000;
                             timerText.setText(String.format("思考用时: %ds", elapsedTime));
                             mainHandler.postDelayed(this, 1000);
                         }
@@ -201,14 +200,12 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
 
         private void updateLoadingMessage(LoadingViewHolder holder, ChatMessage message) {
-            if (System.currentTimeMillis() - thinkingStartTime >= ANIMATION_INTERVAL) {
-                // 添加日志
+            if (System.currentTimeMillis() - message.getThinkingStartTime() >= ANIMATION_INTERVAL) {
                 Log.d("ChatAdapter", "Updating thinking animation for personality: " + message.getPersonalityId());
                 String newFrame = ChatMessage.getNextThinkingFrame(message.getPersonalityId());
                 Log.d("ChatAdapter", "Got new frame: " + newFrame);
                 
                 holder.loadingText.setText(newFrame);
-                thinkingStartTime = System.currentTimeMillis();
             }
         }
     }
@@ -279,7 +276,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 notifyItemRemoved(lastIndex);
             }
         }
-        thinkingStartTime = 0;
     }
 
     @Override
@@ -298,11 +294,13 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     // 添加获取思考开始时间的方法
     public long getThinkingStartTime() {
-        return thinkingStartTime;
+        return messages.get(messages.size() - 1).getThinkingStartTime();
     }
 
     // 添加 setter 方法
     public void setThinkingStartTime(long time) {
-        this.thinkingStartTime = time;
+        for (ChatMessage message : messages) {
+            message.setThinkingStartTime(time);
+        }
     }
 } 

@@ -16,12 +16,12 @@ import com.example.mentalhealthdiary.dao.ChatMessageDao;
 
 @Database(
     entities = {
-        MoodEntry.class, 
-        BreathingSession.class, 
+        MoodEntry.class,
         ChatHistory.class,
-        ChatMessage.class
-    }, 
-    version = 8,
+        ChatMessage.class,
+        BreathingSession.class
+    },
+    version = 2,
     exportSchema = false
 )
 @TypeConverters({DateConverter.class})
@@ -72,10 +72,11 @@ public abstract class AppDatabase extends RoomDatabase {
         }
     };
 
-    static final Migration MIGRATION_1_2 = new Migration(1, 2) {
+    private static final Migration MIGRATION_1_2 = new Migration(1, 2) {
         @Override
         public void migrate(SupportSQLiteDatabase database) {
-            database.execSQL("ALTER TABLE chat_history ADD COLUMN personality_id TEXT");
+            // thinkingStartTime 是一个临时字段，不需要存储到数据库
+            // 所以这里不需要实际的数据库修改
         }
     };
 
@@ -83,11 +84,10 @@ public abstract class AppDatabase extends RoomDatabase {
         if (instance == null) {
             instance = Room.databaseBuilder(
                 context.getApplicationContext(),
-                AppDatabase.class, 
-                "mental_health_diary.db"
+                AppDatabase.class,
+                "mental_health_db"
             )
-            .addMigrations(MIGRATION_6_7, MIGRATION_7_8)
-            .fallbackToDestructiveMigration()
+            .addMigrations(MIGRATION_1_2)
             .build();
         }
         return instance;

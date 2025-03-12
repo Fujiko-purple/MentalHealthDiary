@@ -45,6 +45,9 @@ public class ChatMessage {
     @SerializedName("personality_id")
     private String personalityId;
 
+    @Ignore
+    private long thinkingStartTime;
+
     private static final String[] THINKING_ANIMATIONS = {
         "思考中...",
         "思考中 •",
@@ -298,4 +301,12 @@ public class ChatMessage {
 
     public String getPersonalityId() { return personalityId; }
     public void setPersonalityId(String personalityId) { this.personalityId = personalityId; }
+
+    public long getThinkingStartTime() {
+        return thinkingStartTime;
+    }
+    
+    public void setThinkingStartTime(long time) {
+        this.thinkingStartTime = time;
+    }
 } 
