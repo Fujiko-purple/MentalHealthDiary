@@ -300,4 +300,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public long getThinkingStartTime() {
         return thinkingStartTime;
     }
+
+    // 添加 setter 方法
+    public void setThinkingStartTime(long time) {
+        this.thinkingStartTime = time;
+    }
 } 

@@ -77,10 +77,11 @@ public class AIChatActivity extends AppCompatActivity {
                         long chatId = intent.getLongExtra(ChatService.EXTRA_CHAT_ID, -1);
                         
                         // 获取思考用时
-                        long thinkingTime = (System.currentTimeMillis() - adapter.getThinkingStartTime()) / 1000;
+                        long thinkingTime = (System.currentTimeMillis() - thinkingStartTime) / 1000;
                         
                         // 移除加载消息并停止动画
-                        adapter.stopThinkingAnimation();
+                        removeThinkingMessage();
+                        stopThinkingTimeUpdate();
                         
                         // 在响应前添加思考用时
                         String responseWithTime = String.format("(思考用时：%d秒)\n\n%s", thinkingTime, response);
@@ -91,7 +92,10 @@ public class AIChatActivity extends AppCompatActivity {
                         
                         // 保存消息
                         saveMessage(responseWithTime, false, currentPersonality.getId());
-                        sendButton.setEnabled(true);
+                        
+                        // 重置等待状态
+                        isWaitingResponse = false;
+                        updateSendButtonState();
                         
                         // 滚动到底部
                         chatRecyclerView.post(() -> {
@@ -101,7 +105,7 @@ public class AIChatActivity extends AppCompatActivity {
                         
                     case ChatService.ACTION_CHAT_ERROR:
                         // 获取思考用时
-                        thinkingTime = (System.currentTimeMillis() - adapter.getThinkingStartTime()) / 1000;
+                        thinkingTime = (System.currentTimeMillis() - thinkingStartTime) / 1000;
                         
                         // 错误时也要停止动画
                         adapter.stopThinkingAnimation();
@@ -153,6 +157,8 @@ public class AIChatActivity extends AppCompatActivity {
         }
     };
 
+    private boolean isWaitingResponse = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -200,21 +206,25 @@ public class AIChatActivity extends AppCompatActivity {
         }
 
         sendButton.setOnClickListener(v -> {
-            String userMessage = messageInput.getText().toString().trim();
-            if (!userMessage.isEmpty()) {
-                clearLoadingStates();
-                
-                messages.add(new ChatMessage(userMessage, true));
+            String message = messageInput.getText().toString().trim();
+            if (!message.isEmpty() && !isWaitingResponse) {
+                // 先添加用户消息到界面
+                messages.add(new ChatMessage(message, true));
                 adapter.notifyItemInserted(messages.size() - 1);
-                messageInput.setText("");
                 
-                messages.add(new ChatMessage("", false, true));
+                // 添加思考动画消息
+                messages.add(new ChatMessage("", false, currentPersonality.getId(), true));
                 int loadingPos = messages.size() - 1;
                 adapter.notifyItemInserted(loadingPos);
                 
+                // 滚动到底部
                 chatRecyclerView.scrollToPosition(loadingPos);
                 
-                sendMessage(userMessage);
+                // 发送消息
+                sendMessage(message);
+                messageInput.setText("");
+                isWaitingResponse = true;
+                updateSendButtonState();
             }
         });
 
@@ -318,15 +328,14 @@ public class AIChatActivity extends AppCompatActivity {
                 modelName
             );
             
-            // 创建加载消息时包含当前性格ID
-            ChatMessage loadingMessage = new ChatMessage("", false, currentPersonality.getId(), true);
-            messages.add(loadingMessage);
-            adapter.stopThinkingAnimation();
-            adapter.notifyItemInserted(messages.size() - 1);
+            // 记录思考开始时间
+            thinkingStartTime = System.currentTimeMillis();
+            
+            // 开始思考时间更新
+            startThinkingTimeUpdate();
             
             // 发送请求
             chatService.sendChatRequest(request, currentHistoryId);
-            messageInput.setText("");
         }
     }
 
@@ -630,5 +639,10 @@ public class AIChatActivity extends AppCompatActivity {
                 break;
             }
         }
+    }
+
+    private void updateSendButtonState() {
+        sendButton.setEnabled(!isWaitingResponse);
+        sendButton.setAlpha(isWaitingResponse ? 0.5f : 1.0f);
     }
 } 
