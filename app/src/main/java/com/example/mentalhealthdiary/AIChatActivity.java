@@ -8,14 +8,13 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -24,15 +23,13 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.mentalhealthdiary.adapter.ChatAdapter;
-import com.example.mentalhealthdiary.config.RemoteConfig;
-import com.example.mentalhealthdiary.config.ApiConfig;
 import com.example.mentalhealthdiary.config.AIPersonalityConfig;
+import com.example.mentalhealthdiary.config.ApiConfig;
 import com.example.mentalhealthdiary.database.AppDatabase;
+import com.example.mentalhealthdiary.model.AIPersonality;
 import com.example.mentalhealthdiary.model.ChatHistory;
 import com.example.mentalhealthdiary.model.ChatMessage;
-import com.example.mentalhealthdiary.model.AIPersonality;
 import com.example.mentalhealthdiary.service.ChatRequest;
-import com.example.mentalhealthdiary.service.ChatResponse;
 import com.example.mentalhealthdiary.service.ChatService;
 import com.example.mentalhealthdiary.utils.PreferenceManager;
 import com.google.android.material.button.MaterialButton;
@@ -46,10 +43,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class AIChatActivity extends AppCompatActivity {
     private RecyclerView chatRecyclerView;
@@ -691,5 +684,23 @@ public class AIChatActivity extends AppCompatActivity {
     private void updateSendButtonState() {
         sendButton.setEnabled(!isWaitingResponse);
         sendButton.setAlpha(isWaitingResponse ? 0.5f : 1.0f);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        
+        // 检查消息列表中是否有正在加载的消息
+        boolean hasLoadingMessage = false;
+        for (ChatMessage msg : messages) {
+            if (msg.isLoading()) {
+                hasLoadingMessage = true;
+                break;
+            }
+        }
+        
+        // 根据是否有加载消息来设置等待状态
+        isWaitingResponse = hasLoadingMessage;
+        updateSendButtonState();
     }
 } 
