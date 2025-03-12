@@ -219,9 +219,8 @@ public class AIChatActivity extends AppCompatActivity {
                 adapter.notifyItemInserted(messages.size() - 1);
                 
                 // 添加思考动画消息，并立即设置开始时间
-                ChatMessage loadingMessage = new ChatMessage("", false, currentPersonality.getId(), true);
-                loadingMessage.setThinkingStartTime(System.currentTimeMillis()); // 设置开始时间
-                loadingMessage.setMessage("AI思考中 (0秒)"); // 设置初始消息
+                ChatMessage loadingMessage = ChatMessage.createLoadingMessage(currentPersonality.getId());
+                loadingMessage.setThinkingStartTime(System.currentTimeMillis());
                 messages.add(loadingMessage);
                 int loadingPos = messages.size() - 1;
                 adapter.notifyItemInserted(loadingPos);
@@ -636,8 +635,9 @@ public class AIChatActivity extends AppCompatActivity {
         // 重置开始时间为当前时间
         loadingMessage.setThinkingStartTime(System.currentTimeMillis());
         
-        // 立即更新第一帧
-        loadingMessage.setMessage("AI思考中 (0秒)");
+        // 使用个性化的思考动画
+        String thinkingFrame = ChatMessage.getNextThinkingFrame(loadingMessage.getPersonalityId());
+        loadingMessage.setMessage(thinkingFrame + " (0秒)");
         adapter.notifyItemChanged(messages.indexOf(loadingMessage));
         
         thinkingTimeRunnable = new Runnable() {
@@ -646,10 +646,12 @@ public class AIChatActivity extends AppCompatActivity {
                 if (!messages.isEmpty() && messages.contains(loadingMessage)) {
                     long elapsedTime = System.currentTimeMillis() - loadingMessage.getThinkingStartTime();
                     int seconds = (int) (elapsedTime / 1000);
-                    loadingMessage.setMessage(String.format("AI思考中 (%d秒)", seconds));
+                    // 获取新的思考帧
+                    String newThinkingFrame = ChatMessage.getNextThinkingFrame(loadingMessage.getPersonalityId());
+                    loadingMessage.setMessage(String.format("%s (%d秒)", newThinkingFrame, seconds));
                     adapter.notifyItemChanged(messages.indexOf(loadingMessage));
-                    if (messages.contains(loadingMessage)) {  // 再次检查消息是否还存在
-                        thinkingTimeHandler.postDelayed(this, 1000);
+                    if (messages.contains(loadingMessage)) {
+                        thinkingTimeHandler.postDelayed(this, 2000); // 每2秒更新一次动画帧
                     }
                 }
             }

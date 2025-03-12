@@ -137,13 +137,18 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
         
         void bind(ChatMessage message) {
-            if (currentPersonality != null) {
-                if (message.getThinkingStartTime() == 0) {
-                    message.setThinkingStartTime(System.currentTimeMillis());
-                }
-                startThinkingAnimation(currentPersonality.getId());
-                startTimer(message);
+            if (message.getThinkingStartTime() == 0) {
+                message.setThinkingStartTime(System.currentTimeMillis());
             }
+            
+            // 使用消息中保存的 personalityId，而不是当前的 personality
+            String personalityId = message.getPersonalityId();
+            if (personalityId == null || personalityId.isEmpty()) {
+                personalityId = currentPersonality != null ? currentPersonality.getId() : "default";
+            }
+            
+            startThinkingAnimation(personalityId);
+            startTimer(message);
         }
 
         private void startTimer(ChatMessage message) {
@@ -167,14 +172,15 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         private void startThinkingAnimation(String personalityId) {
             stopThinkingAnimation();
+            
             animationRunnable = new Runnable() {
                 @Override
                 public void run() {
                     try {
                         if (loadingText != null && itemView.getWindowToken() != null) {
-                            String frame = ChatMessage.getNextThinkingFrame(personalityId);
-                            loadingText.setText(frame);
-                            mainHandler.postDelayed(this, 2000);
+                            String thinkingFrame = ChatMessage.getNextThinkingFrame(personalityId);
+                            loadingText.setText(thinkingFrame);
+                            mainHandler.postDelayed(this, 2000); // 每2秒更新一次动画帧
                         }
                     } catch (Exception e) {
                         Log.e("ChatAdapter", "Animation error", e);
@@ -184,28 +190,18 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             mainHandler.post(animationRunnable);
         }
         
-        private void stopTimer() {
-            if (timerRunnable != null) {
-                mainHandler.removeCallbacks(timerRunnable);
-                timerRunnable = null;
-            }
-        }
-        
-        private void stopThinkingAnimation() {
+        void stopThinkingAnimation() {
             if (animationRunnable != null) {
                 mainHandler.removeCallbacks(animationRunnable);
                 animationRunnable = null;
             }
             stopTimer();
         }
-
-        private void updateLoadingMessage(LoadingViewHolder holder, ChatMessage message) {
-            if (System.currentTimeMillis() - message.getThinkingStartTime() >= ANIMATION_INTERVAL) {
-                Log.d("ChatAdapter", "Updating thinking animation for personality: " + message.getPersonalityId());
-                String newFrame = ChatMessage.getNextThinkingFrame(message.getPersonalityId());
-                Log.d("ChatAdapter", "Got new frame: " + newFrame);
-                
-                holder.loadingText.setText(newFrame);
+        
+        private void stopTimer() {
+            if (timerRunnable != null) {
+                mainHandler.removeCallbacks(timerRunnable);
+                timerRunnable = null;
             }
         }
     }
