@@ -16,7 +16,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:text="测试推送"
-        style="@style/Widget.MaterialComponents.Button"/>
+        android:text="测试每日心理小贴士"
+        android:textColor="@android:color/white"
+        android:background="@drawable/rounded_button"/>
 
 </LinearLayout> 

@@ -31,12 +31,25 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_settings_container);  // 使用包含容器的布局
         
         // 添加设置片段
         getSupportFragmentManager()
             .beginTransaction()
-            .replace(android.R.id.content, new SettingsFragment())
+            .replace(R.id.settings_container, new SettingsFragment())
             .commit();
+        
+        // 设置返回按钮
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setTitle("设置");
+        }
+
+        // 添加测试按钮点击事件
+        findViewById(R.id.test_notification_button).setOnClickListener(v -> {
+            // 立即发送一条测试通知
+            sendTestNotification();
+        });
     }
 
     private void sendTestNotification() {
