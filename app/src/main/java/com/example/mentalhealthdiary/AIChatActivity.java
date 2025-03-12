@@ -651,7 +651,7 @@ public class AIChatActivity extends AppCompatActivity {
                     loadingMessage.setMessage(String.format("%s (%d秒)", newThinkingFrame, seconds));
                     adapter.notifyItemChanged(messages.indexOf(loadingMessage));
                     if (messages.contains(loadingMessage)) {
-                        thinkingTimeHandler.postDelayed(this, 2000); // 每2秒更新一次动画帧
+                        thinkingTimeHandler.postDelayed(this, 500); // 每0.5秒更新一次动画帧
                     }
                 }
             }

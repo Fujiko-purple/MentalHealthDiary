@@ -180,7 +180,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         if (loadingText != null && itemView.getWindowToken() != null) {
                             String thinkingFrame = ChatMessage.getNextThinkingFrame(personalityId);
                             loadingText.setText(thinkingFrame);
-                            mainHandler.postDelayed(this, 2000); // 每2秒更新一次动画帧
+                            mainHandler.postDelayed(this, 500); // 每0.5秒更新一次动画帧
                         }
                     } catch (Exception e) {
                         Log.e("ChatAdapter", "Animation error", e);
