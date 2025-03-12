@@ -299,6 +299,15 @@ public class AIChatActivity extends AppCompatActivity {
 
     private void sendMessage(String message) {
         if (chatService != null) {
+            // 检查是否启用了自定义API且配置有效
+            if (!ApiConfig.isCustomApiEnabled(this) || 
+                ApiConfig.getApiKey(this).isEmpty() || 
+                ApiConfig.getBaseUrl(this).isEmpty() || 
+                ApiConfig.getModelName(this).isEmpty()) {
+                showError("请先在设置中配置并启用 API");
+                return;
+            }
+            
             // 保存用户消息
             saveMessage(message, true, currentPersonality.getId());
             
@@ -342,7 +351,7 @@ public class AIChatActivity extends AppCompatActivity {
     private void showError(String message) {
         removeThinkingMessage();
         
-        messages.add(new ChatMessage("❌ " + message, false));
+        messages.add(new ChatMessage("❌ " + message, false, currentPersonality.getId()));
         adapter.notifyItemInserted(messages.size() - 1);
         
         chatRecyclerView.post(() -> {

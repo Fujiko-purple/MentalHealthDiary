@@ -31,26 +31,12 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_settings_container);
         
-        if (savedInstanceState == null) {
-            getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.settings_container, new SettingsFragment())
-                .commit();
-        }
-        
-        // 设置返回按钮
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setTitle("设置");
-        }
-
-        // 添加测试按钮点击事件
-        findViewById(R.id.test_notification_button).setOnClickListener(v -> {
-            // 立即发送一条测试通知
-            sendTestNotification();
-        });
+        // 添加设置片段
+        getSupportFragmentManager()
+            .beginTransaction()
+            .replace(android.R.id.content, new SettingsFragment())
+            .commit();
     }
 
     private void sendTestNotification() {
@@ -88,6 +74,39 @@ public class SettingsActivity extends AppCompatActivity {
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferencesFromResource(R.xml.preferences, rootKey);
+            
+            // 获取自定义API开关
+            SwitchPreference customApiSwitch = findPreference("use_custom_api");
+            if (customApiSwitch != null) {
+                // 设置初始状态
+                customApiSwitch.setChecked(ApiConfig.isCustomApiEnabled(getContext()));
+                
+                // 监听开关状态变化
+                customApiSwitch.setOnPreferenceChangeListener((preference, newValue) -> {
+                    boolean enabled = (Boolean) newValue;
+                    // 保存状态
+                    ApiConfig.setCustomApiEnabled(getContext(), enabled);
+                    
+                    // 更新其他相关设置的可用状态
+                    updateDependentPreferences(enabled);
+                    
+                    // 重置API客户端
+                    ChatApiClient.resetInstance();
+                    return true;
+                });
+            }
+        }
+        
+        private void updateDependentPreferences(boolean enabled) {
+            Preference apiKeyPref = findPreference("custom_api_key");
+            Preference apiBasePref = findPreference("custom_api_base");
+            Preference modelNamePref = findPreference("custom_model_name");
+            Preference testApiPref = findPreference("test_api");
+            
+            if (apiKeyPref != null) apiKeyPref.setEnabled(enabled);
+            if (apiBasePref != null) apiBasePref.setEnabled(enabled);
+            if (modelNamePref != null) modelNamePref.setEnabled(enabled);
+            if (testApiPref != null) testApiPref.setEnabled(enabled);
         }
 
         @Override
@@ -112,14 +131,6 @@ public class SettingsActivity extends AppCompatActivity {
             EditTextPreference modelNamePref = findPreference("custom_model_name");
             SwitchPreference useCustomApiPref = findPreference("use_custom_api");
             Preference testApiPref = findPreference("test_api");
-            
-            // API开关监听
-            useCustomApiPref.setOnPreferenceChangeListener((preference, newValue) -> {
-                boolean enabled = (Boolean) newValue;
-                updateApiPreferencesState(enabled);
-                ChatApiClient.resetInstance();  // 重置实例
-                return true;
-            });
             
             // API密钥验证
             apiKeyPref.setOnPreferenceChangeListener((preference, newValue) -> {
@@ -218,13 +229,6 @@ public class SettingsActivity extends AppCompatActivity {
                 
                 return true;
             });
-        }
-
-        private void updateApiPreferencesState(boolean enabled) {
-            findPreference("custom_api_key").setEnabled(enabled);
-            findPreference("custom_api_base").setEnabled(enabled);
-            findPreference("custom_model_name").setEnabled(enabled);
-            findPreference("test_api").setEnabled(enabled);
         }
 
         private boolean validateApiSettings() {

@@ -28,4 +28,10 @@ public class ApiConfig {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         return prefs.getBoolean("use_custom_api", false);
     }
+    
+    public static void setCustomApiEnabled(Context context, boolean enabled) {
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
+        editor.putBoolean("use_custom_api", enabled);
+        editor.apply();
+    }
 } 

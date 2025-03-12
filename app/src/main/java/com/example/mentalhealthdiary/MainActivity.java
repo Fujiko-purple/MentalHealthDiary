@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.mentalhealthdiary.adapter.MoodEntryAdapter;
+import com.example.mentalhealthdiary.config.ApiConfig;
 import com.example.mentalhealthdiary.config.RemoteConfig;
 import com.example.mentalhealthdiary.database.AppDatabase;
 import com.example.mentalhealthdiary.model.MoodEntry;
@@ -56,38 +57,15 @@ public class MainActivity extends AppCompatActivity {
 
         // 初始化远程配置
         RemoteConfig.init(getApplicationContext());
-        RemoteConfig.updateConfig(
-                "sk_sugjpsC0Bk8C__-Dokz2WIW4D125z5qxDZh28mcSNu4",
-                "https://api.ppinfra.com/v3/openai",
-                "deepseek/deepseek-r1-turbo"
-
-//                克劳德
-//                "sk-Lp3wOKexoo6cXZ78844857D9Dc1946F18385A83cB24eB3A0",
-//                "https://love.qinyan.xyz/v1",
-//                "claude-3-5-sonnet-20241022"
-//
-//                欧派云
-//                "sk_sugjpsC0Bk8C__-Dokz2WIW4D125z5qxDZh28mcSNu4",
-//                "https://api.ppinfra.com/v3/openai",
-//                "deepseek/deepseek-r1-turbo"
-//
-//                "sk-Lp3wOKexoo6cXZ78844857D9Dc1946F18385A83cB24eB3A0",
-//                "https://love.qinyan.xyz/v1",
-//                "grok-3"
-//
-//                硅基流动
-//                "sk-rcqdbrkvekqbaanjqwnvnnxbgkjkqyqxcuxkwrerfcslkecj",
-//                "https://api.siliconflow.cn/",
-//                "deepseek-ai/DeepSeek-R1"
-//
-//                ds
-//                "sk-0b2c4f7788fd4cbc95be50aa2cb5b9b9",
-//                "https://api.deepseek.com/v1",
-//                "deepseek-reasoner"
-
-
-
-        );
+        
+        // 如果没有启用自定义API，则使用默认配置
+        if (!ApiConfig.isCustomApiEnabled(this)) {
+            RemoteConfig.updateConfig(
+                "",  // 清空 API Key
+                "",  // 清空 API Base URL
+                ""   // 清空 Model Name
+            );
+        }
 
         // 请求通知权限（Android 13及以上需要）
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
