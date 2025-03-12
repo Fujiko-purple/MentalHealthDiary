@@ -151,21 +151,9 @@ public class AIChatActivity extends AppCompatActivity {
             chatService = binder.getService();
             serviceBound = true;
             
-            if (currentHistoryId != -1 && chatService.isThinking(currentHistoryId)) {
-                boolean hasLoading = false;
-                for (ChatMessage msg : messages) {
-                    if (msg.isLoading()) {
-                        hasLoading = true;
-                        break;
-                    }
-                }
-                
-                if (!hasLoading) {
-                    messages.add(new ChatMessage("", false, true));
-                    adapter.notifyItemInserted(messages.size() - 1);
-                    chatRecyclerView.scrollToPosition(messages.size() - 1);
-                }
-            }
+            // 服务连接后，立即更新状态
+            updateWaitingState();
+            updateSendButtonState();
         }
 
         @Override
@@ -558,6 +546,13 @@ public class AIChatActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        
+        // 在 onPause 中解绑服务
+        if (serviceBound) {
+            unbindService(serviceConnection);
+            serviceBound = false;
+        }
+        
         PreferenceManager.saveLastChatId(this, currentHistoryId);
         saveCurrentChat();
     }
@@ -690,17 +685,51 @@ public class AIChatActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         
-        // 检查消息列表中是否有正在加载的消息
-        boolean hasLoadingMessage = false;
-        for (ChatMessage msg : messages) {
-            if (msg.isLoading()) {
-                hasLoadingMessage = true;
-                break;
-            }
+        Log.d("ChatDebug", "onResume: 开始检查状态");
+        
+        // 检查服务是否已绑定
+        if (!serviceBound) {
+            Log.d("ChatDebug", "服务未绑定，重新绑定服务");
+            // 重新绑定服务
+            Intent serviceIntent = new Intent(this, ChatService.class);
+            bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+            
+            // 由于服务绑定是异步的，此时直接使用消息列表状态
+            boolean hasLoadingMessage = checkLoadingMessage();
+            isWaitingResponse = hasLoadingMessage;
+            Log.d("ChatDebug", "服务绑定中，使用消息列表状态: " + hasLoadingMessage);
+        } else {
+            // 服务已绑定，正常检查状态
+            updateWaitingState();
         }
         
-        // 根据是否有加载消息来设置等待状态
-        isWaitingResponse = hasLoadingMessage;
         updateSendButtonState();
+        Log.d("ChatDebug", "按钮状态更新完成: " + (isWaitingResponse ? "禁用" : "启用"));
+    }
+
+    // 新增方法：检查是否有加载消息
+    private boolean checkLoadingMessage() {
+        if (!messages.isEmpty()) {
+            ChatMessage lastMessage = messages.get(messages.size() - 1);
+            if (lastMessage.isLoading()) {
+                Log.d("ChatDebug", "最后一条消息是加载消息");
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // 新增方法：更新等待状态
+    private void updateWaitingState() {
+        boolean hasLoadingMessage = checkLoadingMessage();
+        
+        if (serviceBound && chatService != null && currentHistoryId != -1) {
+            boolean serviceThinking = chatService.isThinking(currentHistoryId);
+            Log.d("ChatDebug", "服务状态: " + (serviceThinking ? "思考中" : "空闲"));
+            isWaitingResponse = serviceThinking;
+        } else {
+            Log.d("ChatDebug", "使用消息列表状态: " + hasLoadingMessage);
+            isWaitingResponse = hasLoadingMessage;
+        }
     }
 } 
