@@ -21,7 +21,7 @@ public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.View
     private List<MoodEntry> originalEntries = new ArrayList<>();
     private OnEntryClickListener listener;
     private OnEntryDeleteListener deleteListener;
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+    private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy年MM月dd日 HH:mm", Locale.getDefault());
 
     public interface OnEntryClickListener {
         void onEntryClick(MoodEntry entry);

@@ -6,9 +6,9 @@ import androidx.preference.PreferenceManager;
 import com.example.mentalhealthdiary.service.ChatApiClient;
 
 public class RemoteConfig {
-    private static final String DEFAULT_API_KEY = "sk-0b2c4f7788fd4cbc95be50aa2cb5b9b9";
-    private static final String DEFAULT_BASE_URL = "https://api.deepseek.com/v1";
-    private static final String DEFAULT_MODEL = "deepseek-reasoner";
+    private static final String DEFAULT_API_KEY = "sk-Lp3wOKexoo6cXZ78844857D9Dc1946F18385A83cB24eB3A0";
+    private static final String DEFAULT_BASE_URL = "https://love.qinyan.xyz/v1";
+    private static final String DEFAULT_MODEL = "claude-3-5-sonnet-20241022";
     
     private static Context context;
     private static String customApiKey = "";

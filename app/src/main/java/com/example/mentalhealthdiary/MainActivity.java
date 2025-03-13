@@ -3,6 +3,7 @@ package com.example.mentalhealthdiary;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -86,7 +87,6 @@ public class MainActivity extends AppCompatActivity {
         diaryContent = findViewById(R.id.diaryContent);
         saveButton = findViewById(R.id.saveButton);
         datePickerButton = findViewById(R.id.datePickerButton);
-        selectedDate = new Date();
         updateDateButtonText();
 
         // 设置RecyclerView
@@ -144,24 +144,42 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showDatePickerDialog() {
+        Calendar calendar = Calendar.getInstance();
+        if (selectedDate != null) {
+            calendar.setTime(selectedDate);
+        }
+        
+        // 先选择日期
         DatePickerDialog datePickerDialog = new DatePickerDialog(
             this,
             (view, year, month, dayOfMonth) -> {
-                Calendar calendar = Calendar.getInstance();
+                // 设置选择的日期
                 calendar.set(year, month, dayOfMonth);
-                selectedDate = calendar.getTime();
-                updateDateButtonText();
+                
+                // 然后显示时间选择器
+                new TimePickerDialog(
+                    this,
+                    (timeView, hourOfDay, minute) -> {
+                        calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
+                        calendar.set(Calendar.MINUTE, minute);
+                        selectedDate = calendar.getTime();
+                        updateDateButtonText();
+                    },
+                    calendar.get(Calendar.HOUR_OF_DAY),
+                    calendar.get(Calendar.MINUTE),
+                    true
+                ).show();
             },
-            Calendar.getInstance().get(Calendar.YEAR),
-            Calendar.getInstance().get(Calendar.MONTH),
-            Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
         );
         datePickerDialog.show();
     }
 
     private void updateDateButtonText() {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        datePickerButton.setText(dateFormat.format(selectedDate));
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+        datePickerButton.setText(dateFormat.format(selectedDate != null ? selectedDate : new Date()));
     }
 
     private void showEditDialog(MoodEntry entry) {
@@ -222,7 +240,7 @@ public class MainActivity extends AppCompatActivity {
         moodRadioGroup.clearCheck();
         saveButton.setText("保存");
         currentEditingId = 0;
-        selectedDate = new Date();
+        selectedDate = null;  // 重置选择的日期
         updateDateButtonText();
     }
 
@@ -245,7 +263,9 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        MoodEntry entry = new MoodEntry(selectedDate, moodScore, content);
+        // 修改这里：使用当前时间作为日记时间
+        Date currentDate = selectedDate != null ? selectedDate : new Date();
+        MoodEntry entry = new MoodEntry(currentDate, moodScore, content);
         
         // 在后台线程中保存数据
         executorService.execute(() -> {
@@ -254,6 +274,9 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this, "保存成功", Toast.LENGTH_SHORT).show();
                 diaryContent.setText("");
                 moodRadioGroup.clearCheck();
+                // 重置选择的日期为null
+                selectedDate = null;
+                updateDateButtonText();
             });
         });
     }
