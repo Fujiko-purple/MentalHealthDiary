@@ -96,11 +96,11 @@ public class AIChatActivity extends AppCompatActivity {
                         messages.add(new ChatMessage(responseWithTime, false, currentPersonality.getId()));
                         adapter.notifyItemInserted(messages.size() - 1);
                         
-                        // 保存消息
                         saveMessage(responseWithTime, false, currentPersonality.getId());
                         
                         // 重置等待状态
                         isWaitingResponse = false;
+                        adapter.setWaitingResponse(false);
                         updateSendButtonState();
                         
                         // 滚动到底部
@@ -138,6 +138,11 @@ public class AIChatActivity extends AppCompatActivity {
                         chatRecyclerView.post(() -> {
                             chatRecyclerView.smoothScrollToPosition(messages.size() - 1);
                         });
+                        
+                        // 同样需要重置状态
+                        isWaitingResponse = false;
+                        adapter.setWaitingResponse(false);
+                        updateSendButtonState();
                         break;
                 }
             }
@@ -184,40 +189,8 @@ public class AIChatActivity extends AppCompatActivity {
 
         adapter = new ChatAdapter(messages, currentPersonality, this);
         adapter.setOnMessageEditListener((position, newMessage) -> {
-            // 获取原始消息
-            ChatMessage originalMessage = messages.get(position);
-            
-            // 更新消息内容
-            originalMessage.setMessage(newMessage);
-            adapter.notifyItemChanged(position);
-            
-            // 如果不是最后一条消息，需要重新请求AI回复
-            if (position < messages.size() - 1) {
-                // 移除该消息之后的所有消息
-                int count = messages.size() - position - 1;
-                for (int i = 0; i < count; i++) {
-                    messages.remove(position + 1);
-                }
-                adapter.notifyItemRangeRemoved(position + 1, count);
-                
-                // 添加新的思考动画消息
-                ChatMessage loadingMessage = ChatMessage.createLoadingMessage(currentPersonality.getId());
-                loadingMessage.setThinkingStartTime(System.currentTimeMillis());
-                messages.add(loadingMessage);
-                adapter.notifyItemInserted(messages.size() - 1);
-                
-                // 开始思考时间更新
-                startThinkingTimeUpdate(loadingMessage);
-                
-                // 重新发送消息
-                sendMessage(newMessage);
-                isWaitingResponse = true;
-                updateSendButtonState();
-            }
-            
-            // 保存更新后的消息
-            saveMessage(newMessage, true, currentPersonality.getId());
-            saveCurrentChat();
+            // 不需要删除后续消息，直接请求AI回复
+            requestAIResponse(position);
         });
         chatRecyclerView.setAdapter(adapter);
         chatRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -768,6 +741,44 @@ public class AIChatActivity extends AppCompatActivity {
         } else {
             Log.d("ChatDebug", "使用消息列表状态: " + hasLoadingMessage);
             isWaitingResponse = hasLoadingMessage;
+        }
+        
+        // 更新适配器的等待状态
+        adapter.setWaitingResponse(isWaitingResponse);
+        updateSendButtonState();
+    }
+
+    private void requestAIResponse(int position) {
+        // 获取编辑后的消息
+        ChatMessage editedMessage = messages.get(messages.size() - 2); // 倒数第二条是编辑后的消息
+        
+        // 保存消息
+        saveMessage(editedMessage.getMessage(), true, currentPersonality.getId());
+        
+        // 请求AI回复
+        if (serviceBound && chatService != null) {
+            // 添加加载状态
+            ChatMessage loadingMessage = new ChatMessage("", false);
+            loadingMessage.setLoading(true);
+            loadingMessage.setThinkingStartTime(System.currentTimeMillis());
+            messages.add(loadingMessage);
+            adapter.notifyItemInserted(messages.size() - 1);
+            
+            // 滚动到底部
+            chatRecyclerView.post(() -> {
+                chatRecyclerView.smoothScrollToPosition(messages.size() - 1);
+            });
+
+            // 开始思考时间更新
+            startThinkingTimeUpdate(loadingMessage);
+            
+            // 设置等待状态
+            isWaitingResponse = true;
+            adapter.setWaitingResponse(true);
+            updateSendButtonState();
+            
+            // 发送消息
+            sendMessage(editedMessage.getMessage());
         }
     }
 } 
