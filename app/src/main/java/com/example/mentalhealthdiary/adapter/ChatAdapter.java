@@ -1,15 +1,22 @@
 package com.example.mentalhealthdiary.adapter;
 
+import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.view.inputmethod.InputMethodManager;
+import android.view.inputmethod.EditorInfo;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -25,21 +32,40 @@ import java.util.List;
 public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private static final int TYPE_MESSAGE = 1;
     private static final int TYPE_LOADING = 2;
+    private static final int TYPE_MESSAGE_USER = 3;
     private List<ChatMessage> messages;
     private AIPersonality currentPersonality;
     private Handler mainHandler = new Handler(Looper.getMainLooper());
     private static final int ANIMATION_INTERVAL = 1000;
     private static final int FADE_DURATION = 300;
+    private Context context;
+    private OnMessageEditListener messageEditListener;
 
-    public ChatAdapter(List<ChatMessage> messages, AIPersonality personality) {
+    // 添加接口定义
+    public interface OnMessageEditListener {
+        void onMessageEdited(int position, String newMessage);
+    }
+
+    public ChatAdapter(List<ChatMessage> messages, AIPersonality personality, Context context) {
         this.messages = messages;
         this.currentPersonality = personality;
+        this.context = context;
+    }
+
+    public void setOnMessageEditListener(OnMessageEditListener listener) {
+        this.messageEditListener = listener;
     }
 
     @Override
     public int getItemViewType(int position) {
         ChatMessage message = messages.get(position);
-        return message.isLoading() ? TYPE_LOADING : TYPE_MESSAGE;
+        if (message.isLoading()) {
+            return TYPE_LOADING;
+        } else if (message.isUser()) {
+            return TYPE_MESSAGE_USER;
+        } else {
+            return TYPE_MESSAGE;
+        }
     }
 
     @NonNull
@@ -50,8 +76,12 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     .inflate(R.layout.item_chat_loading, parent, false);
             return new LoadingViewHolder(view);
         } else {
+            // 根据消息类型选择不同的布局
+            int layoutRes = viewType == TYPE_MESSAGE_USER ? 
+                    R.layout.item_chat_message_user : 
+                    R.layout.item_chat_message;
             View view = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.item_chat_message, parent, false);
+                    .inflate(layoutRes, parent, false);
             return new MessageViewHolder(view);
         }
     }
@@ -68,45 +98,54 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             
             if (message.isUser()) {
                 messageHolder.messageText.setBackgroundResource(R.drawable.chat_bubble_sent);
-                messageHolder.messageContainer.setGravity(Gravity.END);
-                messageHolder.avatarImage.setVisibility(View.GONE);
+                
+                // 设置长按监听
+                messageHolder.messageText.setOnLongClickListener(v -> {
+                    // 显示编辑框，隐藏文本框
+                    messageHolder.messageText.setVisibility(View.GONE);
+                    messageHolder.messageEditText.setVisibility(View.VISIBLE);
+                    messageHolder.messageEditText.requestFocus();
+                    messageHolder.messageEditText.setSelection(
+                        messageHolder.messageEditText.getText().length()
+                    );
+                    
+                    // 显示软键盘
+                    InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.showSoftInput(messageHolder.messageEditText, InputMethodManager.SHOW_IMPLICIT);
+                    
+                    return true;
+                });
+                
+                // 禁用EditText的点击事件，只允许长按编辑
+                messageHolder.messageEditText.setOnClickListener(null);
+                messageHolder.messageEditText.setFocusable(false);
+                messageHolder.messageEditText.setFocusableInTouchMode(true);
+                
+                // 设置编辑完成监听
+                messageHolder.messageEditText.setOnEditorActionListener((v, actionId, event) -> {
+                    if (actionId == EditorInfo.IME_ACTION_DONE) {
+                        String newMessage = messageHolder.messageEditText.getText().toString().trim();
+                        if (!newMessage.isEmpty() && !newMessage.equals(message.getMessage())) {
+                            // 通知编辑完成
+                            if (messageEditListener != null) {
+                                messageEditListener.onMessageEdited(position, newMessage);
+                            }
+                        }
+                        
+                        // 隐藏编辑框，显示文本框
+                        messageHolder.messageText.setVisibility(View.VISIBLE);
+                        messageHolder.messageEditText.setVisibility(View.GONE);
+                        
+                        // 隐藏软键盘
+                        InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+                        imm.hideSoftInputFromWindow(messageHolder.messageEditText.getWindowToken(), 0);
+                        
+                        return true;
+                    }
+                    return false;
+                });
             } else {
                 messageHolder.messageText.setBackgroundResource(R.drawable.chat_bubble_received);
-                messageHolder.messageContainer.setGravity(Gravity.START);
-                messageHolder.avatarImage.setVisibility(View.VISIBLE);
-                
-                Log.d("ChatAdapter", "Message position " + position + ":");
-                Log.d("ChatAdapter", "  Message: " + message.getMessage());
-                Log.d("ChatAdapter", "  Personality ID: " + message.getPersonalityId());
-                
-                AIPersonality messagePersonality = message.getPersonalityId() != null ?
-                        AIPersonalityConfig.getPersonalityById(message.getPersonalityId()) :
-                        currentPersonality;
-                
-                Log.d("ChatAdapter", "  Using personality: " + messagePersonality.getName());
-                Log.d("ChatAdapter", "  Avatar: " + messagePersonality.getAvatar());
-                
-                try {
-                    String avatarName = messagePersonality.getAvatar();
-                    int resourceId = holder.itemView.getContext().getResources()
-                            .getIdentifier(avatarName, "drawable", 
-                                    holder.itemView.getContext().getPackageName());
-                    
-                    Log.d("ChatAdapter", "  Resource ID: " + resourceId);
-                    
-                    if (resourceId != 0) {
-                        Glide.with(holder.itemView.getContext())
-                            .load(resourceId)
-                            .circleCrop()
-                            .into(messageHolder.avatarImage);
-                    } else {
-                        Log.e("ChatAdapter", "  Avatar resource not found: " + avatarName);
-                        messageHolder.avatarImage.setImageResource(R.drawable.ic_ai_assistant);
-                    }
-                } catch (Exception e) {
-                    Log.e("ChatAdapter", "Error loading avatar", e);
-                    messageHolder.avatarImage.setImageResource(R.drawable.ic_ai_assistant);
-                }
             }
         }
     }
@@ -208,50 +247,55 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     static class MessageViewHolder extends RecyclerView.ViewHolder {
         TextView messageText;
+        EditText messageEditText;
         ImageView avatarImage;
-        LinearLayout messageContainer;
-        private final AIPersonality currentPersonality;
         
         MessageViewHolder(View itemView) {
             super(itemView);
             messageText = itemView.findViewById(R.id.messageText);
-            avatarImage = itemView.findViewById(R.id.avatarImage);
-            messageContainer = itemView.findViewById(R.id.messageContainer);
-            currentPersonality = null;
+            messageEditText = itemView.findViewById(R.id.messageEditText);
+            // 只在AI消息布局中查找头像
+            if (itemView.findViewById(R.id.avatarImage) != null) {
+                avatarImage = itemView.findViewById(R.id.avatarImage);
+            }
         }
         
         void bindMessage(ChatMessage message, AIPersonality personality) {
             messageText.setText(message.getMessage());
+            if (messageEditText != null) {
+                messageEditText.setText(message.getMessage());
+            }
             
             if (message.isUser()) {
-                messageContainer.setGravity(Gravity.END);
-                avatarImage.setVisibility(View.GONE);
+                if (avatarImage != null) {
+                    avatarImage.setVisibility(View.GONE);
+                }
             } else {
-                messageContainer.setGravity(Gravity.START);
-                avatarImage.setVisibility(View.VISIBLE);
-                
-                AIPersonality messagePersonality = message.getPersonalityId() != null ?
-                        AIPersonalityConfig.getPersonalityById(message.getPersonalityId()) :
-                        personality;
-                
-                try {
-                    String avatarName = messagePersonality.getAvatar();
-                    int resourceId = itemView.getContext().getResources()
-                            .getIdentifier(avatarName, "drawable", 
-                                    itemView.getContext().getPackageName());
+                if (avatarImage != null) {
+                    avatarImage.setVisibility(View.VISIBLE);
                     
-                    if (resourceId != 0) {
-                        Glide.with(itemView.getContext())
-                            .load(resourceId)
-                            .circleCrop()
-                            .into(avatarImage);
-                    } else {
-                        Log.e("ChatAdapter", "  Avatar resource not found: " + avatarName);
+                    AIPersonality messagePersonality = message.getPersonalityId() != null ?
+                            AIPersonalityConfig.getPersonalityById(message.getPersonalityId()) :
+                            personality;
+                    
+                    try {
+                        String avatarName = messagePersonality.getAvatar();
+                        int resourceId = itemView.getContext().getResources()
+                                .getIdentifier(avatarName, "drawable", 
+                                        itemView.getContext().getPackageName());
+                        
+                        if (resourceId != 0) {
+                            Glide.with(itemView.getContext())
+                                .load(resourceId)
+                                .circleCrop()
+                                .into(avatarImage);
+                        } else {
+                            avatarImage.setImageResource(R.drawable.ic_ai_assistant);
+                        }
+                    } catch (Exception e) {
+                        Log.e("ChatAdapter", "Error loading avatar", e);
                         avatarImage.setImageResource(R.drawable.ic_ai_assistant);
                     }
-                } catch (Exception e) {
-                    Log.e("ChatAdapter", "Error loading avatar", e);
-                    avatarImage.setImageResource(R.drawable.ic_ai_assistant);
                 }
             }
         }

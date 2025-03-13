@@ -182,7 +182,43 @@ public class AIChatActivity extends AppCompatActivity {
 
         loadCurrentPersonality();
 
-        adapter = new ChatAdapter(messages, currentPersonality);
+        adapter = new ChatAdapter(messages, currentPersonality, this);
+        adapter.setOnMessageEditListener((position, newMessage) -> {
+            // 获取原始消息
+            ChatMessage originalMessage = messages.get(position);
+            
+            // 更新消息内容
+            originalMessage.setMessage(newMessage);
+            adapter.notifyItemChanged(position);
+            
+            // 如果不是最后一条消息，需要重新请求AI回复
+            if (position < messages.size() - 1) {
+                // 移除该消息之后的所有消息
+                int count = messages.size() - position - 1;
+                for (int i = 0; i < count; i++) {
+                    messages.remove(position + 1);
+                }
+                adapter.notifyItemRangeRemoved(position + 1, count);
+                
+                // 添加新的思考动画消息
+                ChatMessage loadingMessage = ChatMessage.createLoadingMessage(currentPersonality.getId());
+                loadingMessage.setThinkingStartTime(System.currentTimeMillis());
+                messages.add(loadingMessage);
+                adapter.notifyItemInserted(messages.size() - 1);
+                
+                // 开始思考时间更新
+                startThinkingTimeUpdate(loadingMessage);
+                
+                // 重新发送消息
+                sendMessage(newMessage);
+                isWaitingResponse = true;
+                updateSendButtonState();
+            }
+            
+            // 保存更新后的消息
+            saveMessage(newMessage, true, currentPersonality.getId());
+            saveCurrentChat();
+        });
         chatRecyclerView.setAdapter(adapter);
         chatRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 

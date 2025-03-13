@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingStart="80dp"
+    android:paddingEnd="8dp"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp">
+
+    <TextView
+        android:id="@+id/messageText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:background="@drawable/chat_bubble_sent"
+        android:padding="12dp"
+        android:minWidth="0dp"
+        android:maxWidth="280dp"
+        android:textColor="@color/text_primary"
+        android:textSize="14sp"
+        android:textIsSelectable="true"
+        android:ellipsize="none"
+        android:singleLine="false"
+        android:maxLines="100"/>
+
+    <EditText
+        android:id="@+id/messageEditText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:background="@drawable/chat_bubble_sent_editing"
+        android:padding="12dp"
+        android:minWidth="0dp"
+        android:maxWidth="280dp"
+        android:textSize="14sp"
+        android:visibility="gone"
+        android:scrollbars="vertical"
+        android:scrollHorizontally="false"
+        android:maxLines="100"
+        android:imeOptions="actionDone"
+        android:inputType="textMultiLine|textLongMessage"/>
+
+</FrameLayout> 
