@@ -17,6 +17,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.view.inputmethod.InputMethodManager;
 import android.view.inputmethod.EditorInfo;
+import android.widget.ImageButton;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -101,9 +102,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 
                 // 设置长按监听
                 messageHolder.messageText.setOnLongClickListener(v -> {
-                    // 显示编辑框，隐藏文本框
+                    // 显示编辑框和确认按钮，隐藏文本框
                     messageHolder.messageText.setVisibility(View.GONE);
-                    messageHolder.messageEditText.setVisibility(View.VISIBLE);
+                    messageHolder.editContainer.setVisibility(View.VISIBLE);
                     messageHolder.messageEditText.requestFocus();
                     messageHolder.messageEditText.setSelection(
                         messageHolder.messageEditText.getText().length()
@@ -116,33 +117,42 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     return true;
                 });
                 
+                // 设置确认按钮点击监听
+                messageHolder.confirmEditButton.setOnClickListener(v -> {
+                    String newMessage = messageHolder.messageEditText.getText().toString().trim();
+                    if (!newMessage.isEmpty() && !newMessage.equals(message.getMessage())) {
+                        // 通知编辑完成
+                        if (messageEditListener != null) {
+                            messageEditListener.onMessageEdited(position, newMessage);
+                        }
+                    }
+                    
+                    // 隐藏编辑框和确认按钮，显示文本框
+                    messageHolder.messageText.setVisibility(View.VISIBLE);
+                    messageHolder.editContainer.setVisibility(View.GONE);
+                    
+                    // 隐藏软键盘
+                    InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(messageHolder.messageEditText.getWindowToken(), 0);
+                });
+                
                 // 禁用EditText的点击事件，只允许长按编辑
                 messageHolder.messageEditText.setOnClickListener(null);
                 messageHolder.messageEditText.setFocusable(false);
                 messageHolder.messageEditText.setFocusableInTouchMode(true);
-                
-                // 设置编辑完成监听
-                messageHolder.messageEditText.setOnEditorActionListener((v, actionId, event) -> {
-                    if (actionId == EditorInfo.IME_ACTION_DONE) {
-                        String newMessage = messageHolder.messageEditText.getText().toString().trim();
-                        if (!newMessage.isEmpty() && !newMessage.equals(message.getMessage())) {
-                            // 通知编辑完成
-                            if (messageEditListener != null) {
-                                messageEditListener.onMessageEdited(position, newMessage);
-                            }
-                        }
-                        
-                        // 隐藏编辑框，显示文本框
-                        messageHolder.messageText.setVisibility(View.VISIBLE);
-                        messageHolder.messageEditText.setVisibility(View.GONE);
-                        
-                        // 隐藏软键盘
-                        InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
-                        imm.hideSoftInputFromWindow(messageHolder.messageEditText.getWindowToken(), 0);
-                        
-                        return true;
-                    }
-                    return false;
+
+                // 设置取消按钮点击监听
+                messageHolder.cancelEditButton.setOnClickListener(v -> {
+                    // 恢复原始文本
+                    messageHolder.messageEditText.setText(message.getMessage());
+                    
+                    // 隐藏编辑框和按钮，显示文本框
+                    messageHolder.messageText.setVisibility(View.VISIBLE);
+                    messageHolder.editContainer.setVisibility(View.GONE);
+                    
+                    // 隐藏软键盘
+                    InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(messageHolder.messageEditText.getWindowToken(), 0);
                 });
             } else {
                 messageHolder.messageText.setBackgroundResource(R.drawable.chat_bubble_received);
@@ -249,12 +259,17 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         TextView messageText;
         EditText messageEditText;
         ImageView avatarImage;
+        View editContainer;
+        ImageButton confirmEditButton;
+        ImageButton cancelEditButton;
         
         MessageViewHolder(View itemView) {
             super(itemView);
             messageText = itemView.findViewById(R.id.messageText);
             messageEditText = itemView.findViewById(R.id.messageEditText);
-            // 只在AI消息布局中查找头像
+            editContainer = itemView.findViewById(R.id.editContainer);
+            confirmEditButton = itemView.findViewById(R.id.confirmEditButton);
+            cancelEditButton = itemView.findViewById(R.id.cancelEditButton);
             if (itemView.findViewById(R.id.avatarImage) != null) {
                 avatarImage = itemView.findViewById(R.id.avatarImage);
             }
