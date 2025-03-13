@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
@@ -19,7 +20,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.mentalhealthdiary.adapter.MoodEntryAdapter;
-import com.example.mentalhealthdiary.config.ApiConfig;
 import com.example.mentalhealthdiary.config.RemoteConfig;
 import com.example.mentalhealthdiary.database.AppDatabase;
 import com.example.mentalhealthdiary.model.MoodEntry;
@@ -58,15 +58,11 @@ public class MainActivity extends AppCompatActivity {
         // 初始化远程配置
         RemoteConfig.init(getApplicationContext());
         
-        // 如果没有启用自定义API，则使用默认配置
-        if (!ApiConfig.isCustomApiEnabled(this)) {
-            RemoteConfig.updateConfig(
-                "",  // 清空 API Key
-                "",  // 清空 API Base URL
-                ""   // 清空 Model Name
-            );
-        }
-
+        // 添加日志
+        Log.d("Config", "API Key: " + RemoteConfig.getApiKey());
+        Log.d("Config", "API Base: " + RemoteConfig.getApiBaseUrl());
+        Log.d("Config", "Model Name: " + RemoteConfig.getModelName());
+        
         // 请求通知权限（Android 13及以上需要）
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) 

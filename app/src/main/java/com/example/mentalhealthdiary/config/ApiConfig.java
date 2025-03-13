@@ -5,9 +5,9 @@ import android.content.SharedPreferences;
 import androidx.preference.PreferenceManager;
 
 public class ApiConfig {
-    private static final String DEFAULT_BASE_URL = "";
-    private static final String DEFAULT_API_KEY = "";
-    private static final String DEFAULT_MODEL = "";
+    public static final String DEFAULT_API_KEY = "";
+    public static final String DEFAULT_BASE_URL = "";
+    public static final String DEFAULT_MODEL = "";
     
     public static String getApiKey(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -26,7 +26,7 @@ public class ApiConfig {
     
     public static boolean isCustomApiEnabled(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getBoolean("use_custom_api", false);
+        return prefs.getBoolean("use_custom_api", true);
     }
     
     public static void setCustomApiEnabled(Context context, boolean enabled) {
