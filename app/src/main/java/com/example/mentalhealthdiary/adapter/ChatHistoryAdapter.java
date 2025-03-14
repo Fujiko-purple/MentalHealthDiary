@@ -32,6 +32,7 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
     private OnHistoryClickListener listener;
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy年MM月dd日 HH:mm", Locale.getDefault());
     private Set<Long> selectedItems = new HashSet<>();
+    private int selectedPosition = -1;
 
     public interface OnHistoryClickListener {
         void onHistoryClick(ChatHistory history);
@@ -61,6 +62,12 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
         });
 
         holder.itemView.setOnClickListener(v -> {
+            int oldPosition = selectedPosition;
+            selectedPosition = holder.getAdapterPosition();
+            
+            notifyItemChanged(oldPosition);
+            notifyItemChanged(selectedPosition);
+            
             if (listener != null) {
                 listener.onHistoryClick(history);
             }
@@ -70,6 +77,8 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
             showPopupMenu(v, history);
             return true;
         });
+
+        holder.itemView.setSelected(position == selectedPosition);
     }
 
     private void showPopupMenu(View view, ChatHistory history) {
@@ -126,8 +135,9 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
     }
 
     public void clearSelection() {
-        selectedItems.clear();
-        notifyDataSetChanged();
+        int oldPosition = selectedPosition;
+        selectedPosition = -1;
+        notifyItemChanged(oldPosition);
     }
 
     public Set<Long> getSelectedItems() {
