@@ -96,35 +96,36 @@ public class ChatHistoryActivity extends AppCompatActivity implements ChatHistor
                 .setTitle("删除记录")
                 .setMessage("确定要删除选中的 " + selectedIds.size() + " 条记录吗？")
                 .setPositiveButton("删除", (dialog, which) -> {
-                    executorService.execute(() -> {  // 使用已有的 executorService
+                    executorService.execute(() -> {
                         // 获取当前对话ID
                         long currentChatId = PreferenceManager.getLastChatId(this);
                         
                         // 执行批量删除
                         database.chatHistoryDao().deleteByIds(new ArrayList<>(selectedIds));
 
-                        // 如果删除的记录中包含当前对话，需要更新最后一次对话ID
-                        if (selectedIds.contains(currentChatId)) {
-                            List<ChatHistory> histories = database.chatHistoryDao().getAllHistoriesSync();
-                            
-                            runOnUiThread(() -> {
-                                if (histories.isEmpty()) {
-                                    PreferenceManager.saveLastChatId(this, -1);
-                                } else {
-                                    ChatHistory latest = histories.get(0);
+                        // 获取最新的历史记录列表
+                        List<ChatHistory> remainingHistories = database.chatHistoryDao().getAllHistoriesSync();
+                        
+                        runOnUiThread(() -> {
+                            // 更新UI
+                            if (remainingHistories.isEmpty()) {
+                                PreferenceManager.saveLastChatId(this, -1);
+                                findViewById(R.id.emptyView).setVisibility(View.VISIBLE);
+                                findViewById(R.id.chatHistoryRecyclerView).setVisibility(View.GONE);
+                            } else {
+                                if (selectedIds.contains(currentChatId)) {
+                                    ChatHistory latest = remainingHistories.get(0);
                                     PreferenceManager.saveLastChatId(this, latest.getId());
                                 }
-                                adapter.clearSelection();
-                                selectAllButton.setText("全选");
-                                Toast.makeText(this, "删除成功", Toast.LENGTH_SHORT).show();
-                            });
-                        } else {
-                            runOnUiThread(() -> {
-                                adapter.clearSelection();
-                                selectAllButton.setText("全选");
-                                Toast.makeText(this, "删除成功", Toast.LENGTH_SHORT).show();
-                            });
-                        }
+                                findViewById(R.id.emptyView).setVisibility(View.GONE);
+                                findViewById(R.id.chatHistoryRecyclerView).setVisibility(View.VISIBLE);
+                            }
+                            
+                            adapter.setHistories(remainingHistories);
+                            adapter.clearSelection();
+                            selectAllButton.setText("全选");
+                            Toast.makeText(this, "删除成功", Toast.LENGTH_SHORT).show();
+                        });
                     });
                 })
                 .setNegativeButton("取消", null)
@@ -133,11 +134,13 @@ public class ChatHistoryActivity extends AppCompatActivity implements ChatHistor
 
         // 观察聊天历史记录
         database.chatHistoryDao().getAllHistories().observe(this, histories -> {
-            if (histories != null && !histories.isEmpty()) {
+            if (histories != null) {
                 adapter.setHistories(histories);
-            } else {
-                // 显示空状态
-                findViewById(R.id.emptyView).setVisibility(View.VISIBLE);
+                
+                // 更新空状态视图
+                boolean isEmpty = histories.isEmpty();
+                findViewById(R.id.emptyView).setVisibility(isEmpty ? View.VISIBLE : View.GONE);
+                findViewById(R.id.chatHistoryRecyclerView).setVisibility(isEmpty ? View.GONE : View.VISIBLE);
             }
         });
 

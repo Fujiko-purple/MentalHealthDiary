@@ -109,7 +109,9 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
     }
 
     public void setHistories(List<ChatHistory> histories) {
-        this.histories = histories;
+        this.histories = histories != null ? histories : new ArrayList<>();
+        selectedItems.clear();
+        selectedPosition = -1;
         notifyDataSetChanged();
     }
 
