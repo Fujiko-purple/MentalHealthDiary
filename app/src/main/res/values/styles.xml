@@ -14,4 +14,22 @@
         <item name="android:windowEnterAnimation">@anim/dialog_enter</item>
         <item name="android:windowExitAnimation">@anim/dialog_exit</item>
     </style>
+    <style name="ExpandedTitleStyle" parent="TextAppearance.Design.CollapsingToolbar.Expanded">
+        <item name="android:textSize">32sp</item>
+        <item name="android:textColor">#F8F8F8</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:letterSpacing">0.1</item>
+        <item name="android:shadowColor">#50000000</item>
+        <item name="android:shadowDx">0</item>
+        <item name="android:shadowDy">3</item>
+        <item name="android:shadowRadius">6</item>
+        <item name="android:fontFamily">sans-serif-light</item>
+    </style>
+    <style name="CollapsedTitleStyle" parent="TextAppearance.AppCompat.Widget.ActionBar.Title">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:letterSpacing">0.05</item>
+        <item name="android:fontFamily">sans-serif-light</item>
+    </style>
 </resources> 

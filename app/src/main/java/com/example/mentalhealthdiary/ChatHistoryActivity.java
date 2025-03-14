@@ -46,7 +46,7 @@ public class ChatHistoryActivity extends AppCompatActivity implements ChatHistor
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setTitle("聊天记录");
+            getSupportActionBar().setTitle("「足迹」");
         }
         
         database = AppDatabase.getInstance(this);
@@ -56,18 +56,6 @@ public class ChatHistoryActivity extends AppCompatActivity implements ChatHistor
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         adapter = new ChatHistoryAdapter(this);
         recyclerView.setAdapter(adapter);
-
-        // 设置新对话按钮
-        FloatingActionButton newChatFab = findViewById(R.id.newChatFab);
-        newChatFab.setOnClickListener(v -> {
-            // 清除最后一次对话的ID
-            PreferenceManager.saveLastChatId(this, -1);
-            
-            // 启动新对话
-            Intent intent = new Intent(this, AIChatActivity.class);
-            startActivity(intent);
-            finish();
-        });
 
         // 初始化按钮
         selectAllButton = findViewById(R.id.selectAllButton);
