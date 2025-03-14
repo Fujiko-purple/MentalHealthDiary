@@ -215,13 +215,11 @@ public class ChatHistoryActivity extends AppCompatActivity implements ChatHistor
         // 保存最后一次对话ID
         PreferenceManager.saveLastChatId(this, history.getId());
         
-        // 延迟一小段时间再跳转，让用户能看到点击效果
-        recyclerView.postDelayed(() -> {
-            Intent intent = new Intent(this, AIChatActivity.class);
-            intent.putExtra("chat_history_id", history.getId());
-            startActivity(intent);
-            finish();
-        }, 100);
+        // 直接跳转，不使用延迟
+        Intent intent = new Intent(this, AIChatActivity.class);
+        intent.putExtra("chat_history_id", history.getId());
+        startActivity(intent);
+        finish();
     }
 
     @Override

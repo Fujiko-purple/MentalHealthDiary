@@ -62,13 +62,8 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
         });
 
         holder.itemView.setOnClickListener(v -> {
-            int oldPosition = selectedPosition;
-            selectedPosition = holder.getAdapterPosition();
-            
-            notifyItemChanged(oldPosition);
-            notifyItemChanged(selectedPosition);
-            
             if (listener != null) {
+                selectedPosition = holder.getAdapterPosition();
                 listener.onHistoryClick(history);
             }
         });
@@ -137,9 +132,9 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
     }
 
     public void clearSelection() {
-        int oldPosition = selectedPosition;
+        selectedItems.clear();
         selectedPosition = -1;
-        notifyItemChanged(oldPosition);
+        notifyDataSetChanged();
     }
 
     public Set<Long> getSelectedItems() {
