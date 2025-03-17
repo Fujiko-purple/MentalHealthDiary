@@ -6,10 +6,11 @@ import androidx.preference.PreferenceManager;
 import com.example.mentalhealthdiary.service.ChatApiClient;
 
 public class RemoteConfig {
-    private static final String DEFAULT_API_KEY = "sk-0b2c4f7788fd4cbc95be50aa2cb5b9b9";
-    private static final String DEFAULT_BASE_URL = "https://api.deepseek.com/v1";
-    private static final String DEFAULT_MODEL = "deepseek-reasoner";
-    
+    private static final String DEFAULT_API_KEY = "sk_MJSWP6reQeFVutaYaskScEwyUXAreZX0R_zZue8Vkx8";
+    private static final String DEFAULT_BASE_URL = "https://api.ppinfra.com/v3/openai";
+    private static final String DEFAULT_MODEL = "deepseek/deepseek-r1/community";
+
+
     private static Context context;
     private static String customApiKey = "";
     private static String customApiBase = "";
