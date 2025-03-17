@@ -1,6 +1,5 @@
 package com.example.mentalhealthdiary.model;
 
-import android.content.res.Resources;
 import com.example.mentalhealthdiary.R;
 
 public class AIPersonality {
@@ -52,6 +51,8 @@ public class AIPersonality {
                 return 5;
             case "yangjian_tactician": // 杨戬
                 return 6;
+            case "dt_music":
+                return 7;              //陶喆
             case "default":           // 默认心理咨询师
                 return 0;
             default:
@@ -82,6 +83,9 @@ public class AIPersonality {
                 break;
             case 6:  // yangjian_tactician
                 resourceName = "ic_yangjian";        // 杨戬头像
+                break;
+            case 7: //
+                resourceName = "ic_davidtao";        //陶喆头像
                 break;
             default:
                 resourceName = "ic_ai_assistant";    // 默认头像

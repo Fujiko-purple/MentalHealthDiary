@@ -2,8 +2,6 @@ package com.example.mentalhealthdiary.adapter;
 
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
@@ -17,15 +15,14 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.mentalhealthdiary.R;
 import com.example.mentalhealthdiary.model.ChatHistory;
-import com.example.mentalhealthdiary.model.AIPersonality;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.Date;
 
 public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.ViewHolder> {
     private List<ChatHistory> histories = new ArrayList<>();
@@ -218,6 +215,8 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
                 return "ic_tiga_divine";
             case "yangjian_tactician":
                 return "ic_yangjian";
+            case "dt_music":
+                return "ic_davidtao";
             case "default":
                 return "ic_counselor";
             default:
