@@ -51,8 +51,10 @@ public class AIPersonality {
                 return 5;
             case "yangjian_tactician": // 杨戬
                 return 6;
-            case "dt_music":
-                return 7;              //陶喆
+            case "dt_music":           //陶喆
+                return 7;
+            case "patrick_naive":      //派大星
+                return 8;
             case "default":           // 默认心理咨询师
                 return 0;
             default:
@@ -87,6 +89,8 @@ public class AIPersonality {
             case 7: //
                 resourceName = "ic_davidtao";        //陶喆头像
                 break;
+            case 8:
+                resourceName = "ic_patrick_wisdom";                //派大星头像
             default:
                 resourceName = "ic_ai_assistant";    // 默认头像
                 break;
