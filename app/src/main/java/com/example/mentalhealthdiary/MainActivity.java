@@ -322,7 +322,7 @@ public class MainActivity extends AppCompatActivity {
             .setIcon(R.drawable.ic_chart)
             .setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
         menu.add(Menu.NONE, R.id.action_breathing, Menu.NONE, "正念呼吸")
-            .setIcon(R.drawable.ic_breathing)
+            .setIcon(R.drawable.ic_achievement_beginner)
             .setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
         return true;
     }
