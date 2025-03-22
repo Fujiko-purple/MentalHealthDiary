@@ -462,7 +462,7 @@ public class AIChatActivity extends AppCompatActivity {
                     new Date(),
                     "新对话",
                     "[]",
-                    currentPersonality.getId()  // 使用当前选择的 AI 性格
+                    currentPersonality.getId()
                 );
                 
                 long newHistoryId = database.chatHistoryDao().insert(history);
@@ -477,7 +477,7 @@ public class AIChatActivity extends AppCompatActivity {
                     ChatMessage welcomeMessage = new ChatMessage(
                         currentPersonality.getWelcomeMessage(),
                         false,
-                        currentPersonality.getId()  // 使用当前选择的 AI 性格
+                        currentPersonality.getId()
                     );
                     messages.add(welcomeMessage);
                     adapter.notifyDataSetChanged();
@@ -487,6 +487,9 @@ public class AIChatActivity extends AppCompatActivity {
                     });
                     
                     saveMessage(welcomeMessage.getMessage(), false, currentPersonality.getId());
+                    
+                    // 为新对话设置预备消息
+                    setupQuickMessages();
                 });
             } catch (Exception e) {
                 Log.e("ChatDebug", "创建新对话失败", e);
@@ -709,26 +712,19 @@ public class AIChatActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         
-        Log.d("ChatDebug", "onResume: 开始检查状态");
-        
-        // 检查服务是否已绑定
+        // 检查服务状态
         if (!serviceBound) {
-            Log.d("ChatDebug", "服务未绑定，重新绑定服务");
-            // 重新绑定服务
             Intent serviceIntent = new Intent(this, ChatService.class);
             bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
-            
-            // 由于服务绑定是异步的，此时直接使用消息列表状态
-            boolean hasLoadingMessage = checkLoadingMessage();
-            isWaitingResponse = hasLoadingMessage;
-            Log.d("ChatDebug", "服务绑定中，使用消息列表状态: " + hasLoadingMessage);
-        } else {
-            // 服务已绑定，正常检查状态
-            updateWaitingState();
         }
         
+        updateWaitingState();
         updateSendButtonState();
-        Log.d("ChatDebug", "按钮状态更新完成: " + (isWaitingResponse ? "禁用" : "启用"));
+        
+        // 根据对话ID的使用状态决定是否显示预备消息
+        if (!PreferenceManager.isQuickMessageUsed(this, currentHistoryId)) {
+            setupQuickMessages();
+        }
     }
 
     // 新增方法：检查是否有加载消息
@@ -796,6 +792,12 @@ public class AIChatActivity extends AppCompatActivity {
     }
 
     private void setupQuickMessages() {
+        // 如果该对话已经使用过预备消息，则不显示
+        if (PreferenceManager.isQuickMessageUsed(this, currentHistoryId)) {
+            quickMessageGroup.removeAllViews();
+            return;
+        }
+        
         // 清除现有的 chips
         quickMessageGroup.removeAllViews();
         
@@ -811,11 +813,11 @@ public class AIChatActivity extends AppCompatActivity {
                     messageInput.setText(message);
                     sendButton.performClick();
                     
-                    // 移除所有预备消息,不再重新显示
-                    quickMessageGroup.removeAllViews();
+                    // 标记该对话已使用预备消息
+                    PreferenceManager.setQuickMessageUsed(this, currentHistoryId);
                     
-                    // 清空预备消息列表,防止后续重新显示
-                    quickMessages = new ArrayList<>();
+                    // 移除所有预备消息
+                    quickMessageGroup.removeAllViews();
                 }
             });
             
