@@ -33,12 +33,15 @@ import com.example.mentalhealthdiary.service.ChatRequest;
 import com.example.mentalhealthdiary.service.ChatService;
 import com.example.mentalhealthdiary.utils.PreferenceManager;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -169,6 +172,13 @@ public class AIChatActivity extends AppCompatActivity {
     };
 
     private boolean isWaitingResponse = false;
+    private ChipGroup quickMessageGroup;
+    private List<String> quickMessages = Arrays.asList(
+        "我今天心情很好",
+        "我今天心情一般",
+        "我今天心情不太好",
+        "我想找人聊聊"
+    );
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -262,6 +272,9 @@ public class AIChatActivity extends AppCompatActivity {
         filter.addAction(ChatService.ACTION_CHAT_RESPONSE);
         filter.addAction(ChatService.ACTION_CHAT_ERROR);
         LocalBroadcastManager.getInstance(this).registerReceiver(chatReceiver, filter);
+
+        quickMessageGroup = findViewById(R.id.quickMessageGroup);
+        setupQuickMessages();
     }
 
     private void loadCurrentPersonality() {
@@ -779,6 +792,34 @@ public class AIChatActivity extends AppCompatActivity {
             
             // 发送消息
             sendMessage(editedMessage.getMessage());
+        }
+    }
+
+    private void setupQuickMessages() {
+        // 清除现有的 chips
+        quickMessageGroup.removeAllViews();
+        
+        // 添加预备消息
+        for (String message : quickMessages) {
+            Chip chip = new Chip(this);
+            chip.setText(message);
+            chip.setCheckable(true);
+            
+            chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (isChecked) {
+                    // 发送选中的消息
+                    messageInput.setText(message);
+                    sendButton.performClick();
+                    
+                    // 移除所有预备消息,不再重新显示
+                    quickMessageGroup.removeAllViews();
+                    
+                    // 清空预备消息列表,防止后续重新显示
+                    quickMessages = new ArrayList<>();
+                }
+            });
+            
+            quickMessageGroup.addView(chip);
         }
     }
 } 

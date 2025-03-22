@@ -37,6 +37,18 @@
         app:layout_constraintTop_toBottomOf="@id/aiIntroText"
         app:layout_constraintBottom_toTopOf="@id/inputContainer"/>
 
+    <!-- 修改 ChipGroup 的位置和约束 -->
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/quickMessageGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        app:singleSelection="true"
+        app:selectionRequired="false"
+        app:layout_constraintBottom_toTopOf="@id/inputContainer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
     <!-- 输入区域 -->
     <LinearLayout
         android:id="@+id/inputContainer"
