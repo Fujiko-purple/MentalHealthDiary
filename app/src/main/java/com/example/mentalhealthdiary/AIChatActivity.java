@@ -836,14 +836,38 @@ public class AIChatActivity extends AppCompatActivity {
     private void generateMoodAnalysisMessage() {
         AppDatabase database = AppDatabase.getInstance(this);
         database.moodEntryDao().getAllEntries().observe(this, entries -> {
+            // 分离用户消息和系统提示词
+            String userMessage = "分析我的心情状况";
+            messageInput.setText(userMessage);
+
             if (entries == null || entries.isEmpty()) {
-                // 用户消息保持简单
-                messageInput.setText("分析我的心情状况");
+                // 构建无记录时的特殊系统提示词
+                String noDataPrompt = 
+                    "用户请求分析心情，但目前还没有任何心情记录。请：\n" +
+                    "1. 简单说明记录心情的重要性\n" +
+                    "2. 介绍如何开始记录心情（例如：每天用1-5分记录心情，5分最好）\n" +
+                    "3. 鼓励用户开始第一次心情记录\n" +
+                    "注意：回复要简短友善，限制100字以内";
+
+                // 更新当前性格的系统提示词
+                if (currentPersonality != null) {
+                    String originalPrompt = currentPersonality.getSystemPrompt();
+                    currentPersonality = new AIPersonality(
+                        currentPersonality.getId(),
+                        currentPersonality.getName(),
+                        currentPersonality.getAvatar(),
+                        currentPersonality.getDescription(),
+                        noDataPrompt + "\n\n" + originalPrompt,
+                        currentPersonality.getWelcomeMessage(),
+                        currentPersonality.getModelName()
+                    );
+                }
+                
                 sendButton.performClick();
                 return;
             }
 
-            // 计算数据部分保持不变...
+            // 原有的数据分析代码...
             long sevenDaysAgo = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000);
             float avgMood = 0;
             int count = 0;
@@ -859,10 +883,6 @@ public class AIChatActivity extends AppCompatActivity {
             for (MoodEntry entry : entries) {
                 // ... 现有的数据处理代码 ...
             }
-
-            // 分离用户消息和系统提示词
-            String userMessage = "分析我的心情状况";
-            messageInput.setText(userMessage);
 
             // 构建系统提示词
             String systemPrompt = String.format(
