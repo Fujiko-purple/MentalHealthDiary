@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -796,36 +798,74 @@ public class AIChatActivity extends AppCompatActivity {
     }
 
     private void setupQuickMessages() {
-        // 如果该对话已经使用过预备消息，则不显示
         if (PreferenceManager.isQuickMessageUsed(this, currentHistoryId)) {
             quickMessageGroup.removeAllViews();
             return;
         }
         
-        // 清除现有的 chips
         quickMessageGroup.removeAllViews();
         
-        // 添加预备消息
-        for (String message : quickMessages) {
+        // 定义每个预消息的样式配置
+        class QuickMessageStyle {
+            final String message;
+            final int textColor;
+            final int rippleColor;
+
+            QuickMessageStyle(String message, int textColor, int rippleColor) {
+                this.message = message;
+                this.textColor = textColor;
+                this.rippleColor = rippleColor;
+            }
+        }
+
+        // 配置每个预消息的样式
+        List<QuickMessageStyle> styles = Arrays.asList(
+            new QuickMessageStyle(
+                "😊 我今天心情很好",
+                getResources().getColor(R.color.mood_good_text),
+                getResources().getColor(R.color.mood_good_ripple)
+            ),
+            new QuickMessageStyle(
+                "😐 我今天心情一般",
+                getResources().getColor(R.color.mood_neutral_text),
+                getResources().getColor(R.color.mood_neutral_ripple)
+            ),
+            new QuickMessageStyle(
+                "😔 我今天心情不太好",
+                getResources().getColor(R.color.mood_bad_text),
+                getResources().getColor(R.color.mood_bad_ripple)
+            ),
+            new QuickMessageStyle(
+                "💭 我想找人聊聊",
+                getResources().getColor(R.color.chat_text),
+                getResources().getColor(R.color.chat_ripple)
+            ),
+            new QuickMessageStyle(
+                "📊 分析我最近的心情",
+                getResources().getColor(R.color.analysis_text_color),
+                getResources().getColor(R.color.analysis_ripple_color)
+            )
+        );
+
+        // 创建并添加Chips
+        for (QuickMessageStyle style : styles) {
             Chip chip = new Chip(this);
-            chip.setText(message);
+            chip.setText(style.message);
             chip.setCheckable(true);
             
+            // 应用样式
+            chip.setTextColor(style.textColor);
+            chip.setRippleColor(ColorStateList.valueOf(style.rippleColor));
+
             chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 if (isChecked) {
-                    if (message.equals("分析我最近的心情")) {
-                        // 获取最近的心情数据并生成分析消息
+                    if (style.message.equals("📊 分析我最近的心情")) {
                         generateMoodAnalysisMessage();
                     } else {
-                        // 原有的发送消息逻辑
-                        messageInput.setText(message);
+                        messageInput.setText(style.message);
                         sendButton.performClick();
                     }
-                    
-                    // 标记该对话已使用预备消息
                     PreferenceManager.setQuickMessageUsed(this, currentHistoryId);
-                    
-                    // 移除所有预备消息
                     quickMessageGroup.removeAllViews();
                 }
             });

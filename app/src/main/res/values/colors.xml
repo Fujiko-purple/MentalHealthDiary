@@ -23,4 +23,19 @@
     <color name="mindful_guide">#558B2F</color>
     <color name="primary">#4A90E2</color>
     <color name="nature_green">#81C784</color>
+    <color name="analysis_icon_tint">#5C6BC0</color>
+    <color name="analysis_text_color">#3949AB</color>
+    <color name="analysis_ripple_color">#E8EAF6</color>
+    <color name="mood_good_tint">#4CAF50</color>
+    <color name="mood_good_text">#2E7D32</color>
+    <color name="mood_good_ripple">#E8F5E9</color>
+    <color name="mood_neutral_tint">#FFA726</color>
+    <color name="mood_neutral_text">#F57C00</color>
+    <color name="mood_neutral_ripple">#FFF3E0</color>
+    <color name="mood_bad_tint">#EF5350</color>
+    <color name="mood_bad_text">#D32F2F</color>
+    <color name="mood_bad_ripple">#FFEBEE</color>
+    <color name="chat_tint">#26A69A</color>
+    <color name="chat_text">#00796B</color>
+    <color name="chat_ripple">#E0F2F1</color>
 </resources>
