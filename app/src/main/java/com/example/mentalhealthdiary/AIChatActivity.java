@@ -29,6 +29,7 @@ import com.example.mentalhealthdiary.database.AppDatabase;
 import com.example.mentalhealthdiary.model.AIPersonality;
 import com.example.mentalhealthdiary.model.ChatHistory;
 import com.example.mentalhealthdiary.model.ChatMessage;
+import com.example.mentalhealthdiary.model.MoodEntry;
 import com.example.mentalhealthdiary.service.ChatRequest;
 import com.example.mentalhealthdiary.service.ChatService;
 import com.example.mentalhealthdiary.utils.PreferenceManager;
@@ -177,7 +178,8 @@ public class AIChatActivity extends AppCompatActivity {
         "我今天心情很好",
         "我今天心情一般",
         "我今天心情不太好",
-        "我想找人聊聊"
+        "我想找人聊聊",
+        "分析我最近的心情"
     );
 
     @Override
@@ -809,9 +811,14 @@ public class AIChatActivity extends AppCompatActivity {
             
             chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 if (isChecked) {
-                    // 发送选中的消息
-                    messageInput.setText(message);
-                    sendButton.performClick();
+                    if (message.equals("分析我最近的心情")) {
+                        // 获取最近的心情数据并生成分析消息
+                        generateMoodAnalysisMessage();
+                    } else {
+                        // 原有的发送消息逻辑
+                        messageInput.setText(message);
+                        sendButton.performClick();
+                    }
                     
                     // 标记该对话已使用预备消息
                     PreferenceManager.setQuickMessageUsed(this, currentHistoryId);
@@ -823,5 +830,47 @@ public class AIChatActivity extends AppCompatActivity {
             
             quickMessageGroup.addView(chip);
         }
+    }
+
+    // 添加新方法用于生成心情分析消息
+    private void generateMoodAnalysisMessage() {
+        AppDatabase database = AppDatabase.getInstance(this);
+        database.moodEntryDao().getAllEntries().observe(this, entries -> {
+            if (entries == null || entries.isEmpty()) {
+                messageInput.setText("请帮我分析我最近的心情（目前还没有心情记录）");
+            } else {
+                // 计算最近7天的平均心情
+                long sevenDaysAgo = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000);
+                float avgMood = 0;
+                int count = 0;
+                int highestMood = 1;
+                int lowestMood = 5;
+                
+                for (MoodEntry entry : entries) {
+                    if (entry.getDate().getTime() >= sevenDaysAgo) {
+                        avgMood += entry.getMoodScore();
+                        count++;
+                        highestMood = Math.max(highestMood, entry.getMoodScore());
+                        lowestMood = Math.min(lowestMood, entry.getMoodScore());
+                    }
+                }
+                
+                String analysisRequest = String.format(
+                    "请分析我最近的心情状况：\n" +
+                    "- 最近7天的平均心情评分：%.1f\n" +
+                    "- 最高心情评分：%d\n" +
+                    "- 最低心情评分：%d\n" +
+                    "- 记录天数：%d天\n" +
+                    "请给出专业的分析和建议。",
+                    count > 0 ? avgMood / count : 0,
+                    highestMood,
+                    lowestMood,
+                    count
+                );
+                
+                messageInput.setText(analysisRequest);
+            }
+            sendButton.performClick();
+        });
     }
 } 
