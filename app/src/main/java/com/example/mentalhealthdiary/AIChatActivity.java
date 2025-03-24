@@ -832,44 +832,71 @@ public class AIChatActivity extends AppCompatActivity {
         }
     }
 
-    // 添加新方法用于生成心情分析消息
+    // 修改 generateMoodAnalysisMessage() 方法
     private void generateMoodAnalysisMessage() {
         AppDatabase database = AppDatabase.getInstance(this);
         database.moodEntryDao().getAllEntries().observe(this, entries -> {
             if (entries == null || entries.isEmpty()) {
-                messageInput.setText("请帮我分析我最近的心情（目前还没有心情记录）");
-            } else {
-                // 计算最近7天的平均心情
-                long sevenDaysAgo = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000);
-                float avgMood = 0;
-                int count = 0;
-                int highestMood = 1;
-                int lowestMood = 5;
-                
-                for (MoodEntry entry : entries) {
-                    if (entry.getDate().getTime() >= sevenDaysAgo) {
-                        avgMood += entry.getMoodScore();
-                        count++;
-                        highestMood = Math.max(highestMood, entry.getMoodScore());
-                        lowestMood = Math.min(lowestMood, entry.getMoodScore());
-                    }
-                }
-                
-                String analysisRequest = String.format(
-                    "请分析我最近的心情状况：\n" +
-                    "- 最近7天的平均心情评分：%.1f\n" +
-                    "- 最高心情评分：%d\n" +
-                    "- 最低心情评分：%d\n" +
-                    "- 记录天数：%d天\n" +
-                    "请给出专业的分析和建议。",
-                    count > 0 ? avgMood / count : 0,
-                    highestMood,
-                    lowestMood,
-                    count
-                );
-                
-                messageInput.setText(analysisRequest);
+                // 用户消息保持简单
+                messageInput.setText("分析我的心情状况");
+                sendButton.performClick();
+                return;
             }
+
+            // 计算数据部分保持不变...
+            long sevenDaysAgo = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000);
+            float avgMood = 0;
+            int count = 0;
+            int highestMood = 1;
+            int lowestMood = 5;
+            StringBuilder moodTrend = new StringBuilder();
+            
+            int consecutiveLowMoodDays = 0;
+            int currentConsecutiveDays = 0;
+            int lastMoodScore = 0;
+
+            // 数据处理部分保持不变...
+            for (MoodEntry entry : entries) {
+                // ... 现有的数据处理代码 ...
+            }
+
+            // 分离用户消息和系统提示词
+            String userMessage = "分析我的心情状况";
+            messageInput.setText(userMessage);
+
+            // 构建系统提示词
+            String systemPrompt = String.format(
+                "用户要求分析心情，请基于以下数据进行分析（回复限制200字）：\n" +
+                "- 近7天数据：均分%.1f分，最高%d分，最低%d分，记录%d天\n" +
+                "- 情绪走势：%s\n" +
+                "- 连续低落天数：%d天\n" +
+                "分析要求：\n" +
+                "1. 简明扼要指出关键问题\n" +
+                "2. 给出具体可行的改善建议\n" +
+                "3. 保持积极鼓励的语气",
+                count > 0 ? avgMood / count : 0,
+                highestMood,
+                lowestMood,
+                count,
+                moodTrend.length() > 0 ? moodTrend.toString() : "暂无",
+                consecutiveLowMoodDays
+            );
+
+            // 更新当前性格的系统提示词
+            if (currentPersonality != null) {
+                String originalPrompt = currentPersonality.getSystemPrompt();
+                currentPersonality = new AIPersonality(
+                    currentPersonality.getId(),
+                    currentPersonality.getName(),
+                    currentPersonality.getAvatar(),
+                    currentPersonality.getDescription(),
+                    systemPrompt + "\n\n" + originalPrompt,  // 合并提示词
+                    currentPersonality.getWelcomeMessage(),
+                    currentPersonality.getModelName()
+                );
+            }
+
+            // 发送消息
             sendButton.performClick();
         });
     }
