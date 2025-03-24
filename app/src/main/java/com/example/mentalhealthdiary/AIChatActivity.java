@@ -41,10 +41,12 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -836,12 +838,10 @@ public class AIChatActivity extends AppCompatActivity {
     private void generateMoodAnalysisMessage() {
         AppDatabase database = AppDatabase.getInstance(this);
         database.moodEntryDao().getAllEntries().observe(this, entries -> {
-            // 分离用户消息和系统提示词
             String userMessage = "分析我的心情状况";
             messageInput.setText(userMessage);
 
             if (entries == null || entries.isEmpty()) {
-                // 构建无记录时的特殊系统提示词
                 String noDataPrompt = 
                     "用户请求分析心情，但目前还没有任何心情记录。请：\n" +
                     "1. 简单说明记录心情的重要性\n" +
@@ -849,75 +849,113 @@ public class AIChatActivity extends AppCompatActivity {
                     "3. 鼓励用户开始第一次心情记录\n" +
                     "注意：回复要简短友善，限制100字以内";
 
-                // 更新当前性格的系统提示词
-                if (currentPersonality != null) {
-                    String originalPrompt = currentPersonality.getSystemPrompt();
-                    currentPersonality = new AIPersonality(
-                        currentPersonality.getId(),
-                        currentPersonality.getName(),
-                        currentPersonality.getAvatar(),
-                        currentPersonality.getDescription(),
-                        noDataPrompt + "\n\n" + originalPrompt,
-                        currentPersonality.getWelcomeMessage(),
-                        currentPersonality.getModelName()
-                    );
-                }
-                
+                updatePersonalityPrompt(noDataPrompt);
                 sendButton.performClick();
                 return;
             }
 
-            // 原有的数据分析代码...
+            // 分析最近7天的数据
             long sevenDaysAgo = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000);
             float avgMood = 0;
             int count = 0;
             int highestMood = 1;
             int lowestMood = 5;
             StringBuilder moodTrend = new StringBuilder();
+            StringBuilder recentDiaries = new StringBuilder();
             
             int consecutiveLowMoodDays = 0;
             int currentConsecutiveDays = 0;
             int lastMoodScore = 0;
 
-            // 数据处理部分保持不变...
+            // 收集最近的日记内容
+            List<String> keyPhrases = new ArrayList<>();
+            int diaryCount = 0;
+
             for (MoodEntry entry : entries) {
-                // ... 现有的数据处理代码 ...
+                if (entry.getDate().getTime() >= sevenDaysAgo) {
+                    int currentScore = entry.getMoodScore();
+                    avgMood += currentScore;
+                    count++;
+                    
+                    // 更新统计数据
+                    highestMood = Math.max(highestMood, currentScore);
+                    lowestMood = Math.min(lowestMood, currentScore);
+                    
+                    // 检查心情趋势
+                    if (currentScore <= 2) {
+                        currentConsecutiveDays++;
+                        consecutiveLowMoodDays = Math.max(consecutiveLowMoodDays, currentConsecutiveDays);
+                    } else {
+                        currentConsecutiveDays = 0;
+                    }
+                    
+                    // 记录变化趋势
+                    if (lastMoodScore != 0) {
+                        if (currentScore < lastMoodScore) {
+                            moodTrend.append("↓");
+                        } else if (currentScore > lastMoodScore) {
+                            moodTrend.append("↑");
+                        } else {
+                            moodTrend.append("→");
+                        }
+                    }
+                    lastMoodScore = currentScore;
+
+                    // 收集所有7天内的日记内容
+                    if (entry.getDiaryContent() != null && !entry.getDiaryContent().trim().isEmpty()) {
+                        keyPhrases.add(String.format(
+                            "- %s（心情%d分）：%s",
+                            new SimpleDateFormat("MM/dd", Locale.getDefault()).format(entry.getDate()),
+                            currentScore,
+                            // 如果内容超过100字则截断
+                            entry.getDiaryContent().length() > 100 ? 
+                                entry.getDiaryContent().substring(0, 100) + "..." : 
+                                entry.getDiaryContent()
+                        ));
+                    }
+                }
             }
 
             // 构建系统提示词
             String systemPrompt = String.format(
-                "用户要求分析心情，请基于以下数据进行分析（回复限制200字）：\n" +
+                "用户要求分析心情，请基于以下数据进行分析（回复限制300字）：\n\n" +
+                "【数据统计】\n" +
                 "- 近7天数据：均分%.1f分，最高%d分，最低%d分，记录%d天\n" +
                 "- 情绪走势：%s\n" +
-                "- 连续低落天数：%d天\n" +
+                "- 连续低落天数：%d天\n\n" +
+                "【近7天日记记录】\n%s\n\n" +
                 "分析要求：\n" +
-                "1. 简明扼要指出关键问题\n" +
-                "2. 给出具体可行的改善建议\n" +
-                "3. 保持积极鼓励的语气",
+                "1. 结合数据和日记内容，分析情绪变化的关键原因\n" +
+                "2. 找出日记中反复出现的情绪触发点\n" +
+                "3. 基于用户具体情况，给出针对性的改善建议\n" +
+                "4. 保持积极鼓励的语气，肯定用户的进步",
                 count > 0 ? avgMood / count : 0,
                 highestMood,
                 lowestMood,
                 count,
                 moodTrend.length() > 0 ? moodTrend.toString() : "暂无",
-                consecutiveLowMoodDays
+                consecutiveLowMoodDays,
+                keyPhrases.isEmpty() ? "暂无日记内容" : String.join("\n", keyPhrases)
             );
 
-            // 更新当前性格的系统提示词
-            if (currentPersonality != null) {
-                String originalPrompt = currentPersonality.getSystemPrompt();
-                currentPersonality = new AIPersonality(
-                    currentPersonality.getId(),
-                    currentPersonality.getName(),
-                    currentPersonality.getAvatar(),
-                    currentPersonality.getDescription(),
-                    systemPrompt + "\n\n" + originalPrompt,  // 合并提示词
-                    currentPersonality.getWelcomeMessage(),
-                    currentPersonality.getModelName()
-                );
-            }
-
-            // 发送消息
+            updatePersonalityPrompt(systemPrompt);
             sendButton.performClick();
         });
+    }
+
+    // 抽取更新性格提示词的方法
+    private void updatePersonalityPrompt(String newPrompt) {
+        if (currentPersonality != null) {
+            String originalPrompt = currentPersonality.getSystemPrompt();
+            currentPersonality = new AIPersonality(
+                currentPersonality.getId(),
+                currentPersonality.getName(),
+                currentPersonality.getAvatar(),
+                currentPersonality.getDescription(),
+                newPrompt + "\n\n" + originalPrompt,
+                currentPersonality.getWelcomeMessage(),
+                currentPersonality.getModelName()
+            );
+        }
     }
 } 
