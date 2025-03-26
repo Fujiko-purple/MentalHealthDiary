@@ -1238,7 +1238,7 @@ public class BreathingActivity extends AppCompatActivity {
         }
     }
 
-    // 开始音符动画
+    // 修改startMusicNoteAnimation方法，增加音符生成频率
     private void startMusicNoteAnimation() {
         if (rootLayout == null || isShowingNotes) return;
         
@@ -1251,192 +1251,189 @@ public class BreathingActivity extends AppCompatActivity {
             public void run() {
                 if (isBreathing && mediaPlayer != null && mediaPlayer.isPlaying()) {
                     // 一次添加多个音符，形成更丰富的效果
-                    int noteCount = random.nextInt(3) + 1; // 随机生成1-3个音符
+                    int noteCount = random.nextInt(3) + 2; // 确保至少生成2个音符，最多4个
+                    
                     for (int i = 0; i < noteCount; i++) {
-                        // 延迟一点时间添加每个音符，使其看起来更自然
-                        final int delay = i * 150;
-                        noteHandler.postDelayed(() -> addMusicNote(), delay);
+                        addMusicNote();
                     }
                     
-                    // 根据当前模式设置音符生成频率
-                    int delay;
-                    switch (currentMode) {
-                        case ENERGIZING:
-                            delay = 1200 + random.nextInt(800); // 更频繁
-                            break;
-                        case CALMING:
-                            delay = 2500 + random.nextInt(1000); // 较少
-                            break;
-                        default:
-                            delay = 1800 + random.nextInt(1000); // 中等
-                    }
-                    
-                    // 安排下一组音符
+                    // 减少时间间隔，增加音符生成频率
+                    // 原来可能是1500-3000ms，现在改为800-1500ms
+                    int delay = random.nextInt(700) + 800;
                     noteHandler.postDelayed(this, delay);
-                    Log.d("BreathingActivity", "安排下一组音符，延迟: " + delay + "ms");
                 } else {
                     isShowingNotes = false;
-                    Log.d("BreathingActivity", "停止音符动画");
                 }
             }
         };
         
-        // 立即添加第一组音符，然后开始定时生成
-        int initialNotes = random.nextInt(2) + 2; // 2-3个初始音符
-        for (int i = 0; i < initialNotes; i++) {
-            noteHandler.postDelayed(() -> addMusicNote(), i * 200);
-        }
-        
-        // 开始生成音符
-        noteHandler.postDelayed(noteRunnable, 1000);
+        // 立即开始第一次运行
+        noteHandler.post(noteRunnable);
     }
 
-    // 修改addMusicNote方法，创建大小不同的音符
+    // 修改addMusicNote方法，从音乐反馈文本周围生成音符
     private void addMusicNote() {
-        runOnUiThread(() -> {
-            try {
-                if (musicFeedbackText == null || !musicFeedbackText.isShown()) return;
-                
-                // 创建新的ImageView作为音符
-                ImageView noteView = new ImageView(this);
-                
-                // 随机选择音符图标 - 使用5种不同的音符图标
-                int noteType = random.nextInt(5);
-                int noteResId;
-                switch (noteType) {
-                    case 0:
-                        noteResId = R.drawable.ic_music_note_small;
-                        break;
-                    case 1:
-                        noteResId = R.drawable.ic_music_note_small2;
-                        break;
-                    case 2:
-                        noteResId = R.drawable.ic_music_note_small3;
-                        break;
-                    case 3:
-                        noteResId = R.drawable.ic_music_note_small4;
-                        break;
-                    case 4:
-                        noteResId = R.drawable.ic_music_note_small5;
-                        break;
-                    default:
-                        noteResId = R.drawable.ic_music_note_small;
-                }
-                noteView.setImageResource(noteResId);
-                
-                // 设置音符颜色（与当前呼吸模式匹配）
-                int noteColor;
-                switch (currentMode) {
-                    case NORMAL:
-                        noteColor = getResources().getColor(R.color.calm_breathing);
-                        break;
-                    case FOCUS:
-                        noteColor = getResources().getColor(R.color.focus_breathing);
-                        break;
-                    case ENERGIZING:
-                        noteColor = getResources().getColor(R.color.deep_breathing);
-                        break;
-                    case CALMING:
-                        noteColor = getResources().getColor(R.color.relax_breathing);
-                        break;
-                    default:
-                        noteColor = getResources().getColor(R.color.calm_breathing);
-                }
-                
-                // 随机调整颜色亮度，使音符颜色略有变化
-                float brightness = 0.8f + random.nextFloat() * 0.4f; // 0.8-1.2
-                noteColor = adjustBrightness(noteColor, brightness);
-                
-                noteView.setColorFilter(noteColor, PorterDuff.Mode.SRC_IN);
-                
-                // 随机大小 (50%-150% 的原始大小)
-                float scale = 0.5f + random.nextFloat(); // 0.5-1.5
-                noteView.setScaleX(scale);
-                noteView.setScaleY(scale);
-                
-                // 设置布局参数
-                ConstraintLayout.LayoutParams params = new ConstraintLayout.LayoutParams(
-                        ConstraintLayout.LayoutParams.WRAP_CONTENT,
-                        ConstraintLayout.LayoutParams.WRAP_CONTENT
-                );
-                
-                // 获取音乐反馈文本的位置
-                int[] location = new int[2];
-                musicFeedbackText.getLocationInWindow(location);
-                
-                // 设置音符的初始位置 - 从音乐反馈框内部或周围随机位置出现
-                int startX, startY;
-                boolean fromInside = random.nextBoolean(); // 50%几率从内部生成
-                
-                if (fromInside) {
-                    // 从音乐反馈框内部随机位置生成
-                    startX = location[0] + random.nextInt(musicFeedbackText.getWidth() - 20);
-                    startY = location[1] + random.nextInt(musicFeedbackText.getHeight() - 10);
-                } else {
-                    // 从音乐反馈框周围生成
-                    int side = random.nextInt(4); // 0:上, 1:右, 2:下, 3:左
-                    switch (side) {
-                        case 0: // 上方
-                            startX = location[0] + random.nextInt(musicFeedbackText.getWidth());
-                            startY = location[1] - 10 - random.nextInt(20);
-                            break;
-                        case 1: // 右侧
-                            startX = location[0] + musicFeedbackText.getWidth() + random.nextInt(20);
-                            startY = location[1] + random.nextInt(musicFeedbackText.getHeight());
-                            break;
-                        case 2: // 下方
-                            startX = location[0] + random.nextInt(musicFeedbackText.getWidth());
-                            startY = location[1] + musicFeedbackText.getHeight() + random.nextInt(20);
-                            break;
-                        default: // 左侧
-                            startX = location[0] - 10 - random.nextInt(20);
-                            startY = location[1] + random.nextInt(musicFeedbackText.getHeight());
-                            break;
+        if (rootLayout == null || musicFeedbackText == null || !musicFeedbackText.isShown()) return;
+        
+        try {
+            // 创建音符ImageView
+            ImageView noteView = new ImageView(this);
+            
+            // 随机选择音符图标
+            int[] noteResources = {
+                R.drawable.ic_music_note_small,
+                R.drawable.ic_music_note_small2,
+                R.drawable.ic_music_note_small3,
+                R.drawable.ic_music_note_small4,
+                R.drawable.ic_music_note_small5
+            };
+            
+            int noteResource = noteResources[random.nextInt(noteResources.length)];
+            noteView.setImageResource(noteResource);
+            
+            // 设置音符颜色
+            int noteColor;
+            switch (currentMode) {
+                case NORMAL:
+                    noteColor = getResources().getColor(R.color.calm_breathing);
+                    break;
+                case FOCUS:
+                    noteColor = getResources().getColor(R.color.focus_breathing);
+                    break;
+                case ENERGIZING:
+                    noteColor = getResources().getColor(R.color.deep_breathing);
+                    break;
+                case CALMING:
+                    noteColor = getResources().getColor(R.color.relax_breathing);
+                    break;
+                default:
+                    noteColor = getResources().getColor(R.color.calm_breathing);
+            }
+            
+            // 设置音符颜色滤镜
+            noteView.setColorFilter(noteColor, PorterDuff.Mode.SRC_IN);
+            
+            // 设置音符大小 - 随机大小使效果更自然
+            float scale = 0.7f + random.nextFloat() * 0.6f; // 0.7-1.3倍大小
+            int noteSize = (int)(20 * getResources().getDisplayMetrics().density * scale);
+            ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(noteSize, noteSize);
+            noteView.setLayoutParams(params);
+            
+            // 获取音乐反馈文本的位置和尺寸
+            int[] location = new int[2];
+            musicFeedbackText.getLocationInWindow(location);
+            int textX = location[0];
+            int textY = location[1];
+            int textWidth = musicFeedbackText.getWidth();
+            int textHeight = musicFeedbackText.getHeight();
+            
+            // 确定音符生成位置 - 从文本框周围生成
+            int startX, startY;
+            
+            // 决定从哪个方向生成音符
+            int direction = random.nextInt(4); // 0:上, 1:右, 2:下, 3:左
+            
+            switch (direction) {
+                case 0: // 上方
+                    startX = textX + random.nextInt(textWidth);
+                    startY = textY - noteSize - random.nextInt(10);
+                    break;
+                case 1: // 右侧
+                    startX = textX + textWidth + random.nextInt(10);
+                    startY = textY + random.nextInt(textHeight);
+                    break;
+                case 2: // 下方
+                    startX = textX + random.nextInt(textWidth);
+                    startY = textY + textHeight + random.nextInt(10);
+                    break;
+                default: // 左侧
+                    startX = textX - noteSize - random.nextInt(10);
+                    startY = textY + random.nextInt(textHeight);
+                    break;
+            }
+            
+            // 设置音符初始位置
+            noteView.setX(startX);
+            noteView.setY(startY);
+            
+            // 设置初始透明度为0
+            noteView.setAlpha(0f);
+            
+            // 添加到布局
+            rootLayout.addView(noteView);
+            
+            // 创建动画 - 音符向上飘动
+            float endX, endY;
+            
+            // 根据生成方向决定飘动方向
+            switch (direction) {
+                case 0: // 上方生成的音符继续向上飘
+                    endX = startX + (random.nextFloat() * 2 - 1) * 50; // 左右随机飘动
+                    endY = startY - 100 - random.nextInt(50); // 向上飘
+                    break;
+                case 1: // 右侧生成的音符向右上方飘
+                    endX = startX + 50 + random.nextInt(30); // 向右飘
+                    endY = startY - 50 - random.nextInt(30); // 向上飘
+                    break;
+                case 2: // 下方生成的音符向上飘
+                    endX = startX + (random.nextFloat() * 2 - 1) * 50; // 左右随机飘动
+                    endY = startY - 100 - random.nextInt(50); // 向上飘
+                    break;
+                default: // 左侧生成的音符向左上方飘
+                    endX = startX - 50 - random.nextInt(30); // 向左飘
+                    endY = startY - 50 - random.nextInt(30); // 向上飘
+                    break;
+            }
+            
+            // 添加随机旋转
+            float rotation = random.nextInt(40) - 20; // -20到20度的旋转
+            
+            // 设置动画时长
+            int duration = random.nextInt(1000) + 2000; // 2-3秒
+            
+            // 创建并启动动画
+            noteView.animate()
+                .x(endX)
+                .y(endY)
+                .rotation(rotation)
+                .alpha(0.8f) // 先淡入
+                .setDuration(duration / 3)
+                .withEndAction(() -> 
+                    noteView.animate()
+                        .alpha(0f) // 然后淡出
+                        .rotation(rotation * 2) // 继续旋转
+                        .setDuration(duration * 2 / 3)
+                        .withEndAction(() -> {
+                            // 动画结束后移除音符
+                            rootLayout.removeView(noteView);
+                        })
+                        .start()
+                )
+                .start();
+            
+        } catch (Exception e) {
+            Log.e("BreathingActivity", "添加音符失败", e);
+        }
+    }
+
+    // 修改stopMusicNoteAnimation方法，确保正确停止动画
+    private void stopMusicNoteAnimation() {
+        if (noteHandler != null && noteRunnable != null) {
+            noteHandler.removeCallbacks(noteRunnable);
+            isShowingNotes = false;
+            
+            // 清除所有现有音符
+            if (rootLayout != null) {
+                for (int i = 0; i < rootLayout.getChildCount(); i++) {
+                    View child = rootLayout.getChildAt(i);
+                    if (child instanceof ImageView && child.getTag() != null && 
+                        "music_note".equals(child.getTag())) {
+                        rootLayout.removeView(child);
+                        i--; // 调整索引，因为移除了一个元素
                     }
                 }
-                
-                params.leftToLeft = ConstraintLayout.LayoutParams.PARENT_ID;
-                params.topToTop = ConstraintLayout.LayoutParams.PARENT_ID;
-                params.leftMargin = startX;
-                params.topMargin = startY;
-                
-                noteView.setLayoutParams(params);
-                noteView.setAlpha(0f);
-                
-                // 添加到布局
-                rootLayout.addView(noteView);
-                
-                // 创建随机的上升路径、旋转和淡出动画
-                float xOffset = random.nextInt(80) - 40; // -40到40
-                float yOffset = -80 - random.nextInt(60); // -80到-140
-                int duration = 1500 + random.nextInt(1500); // 1.5-3秒
-                
-                // 添加随机旋转
-                float rotation = random.nextInt(40) - 20; // -20到20度的旋转
-                
-                noteView.animate()
-                        .alpha(0.7f)
-                        .translationYBy(yOffset)
-                        .translationXBy(xOffset)
-                        .rotation(rotation)
-                        .setDuration(duration)
-                        .withEndAction(() -> {
-                            // 淡出并移除
-                            noteView.animate()
-                                    .alpha(0f)
-                                    .translationYBy(yOffset/2)
-                                    .rotation(rotation/2) // 继续旋转
-                                    .setDuration(duration/2)
-                                    .withEndAction(() -> rootLayout.removeView(noteView))
-                                    .start();
-                        })
-                        .start();
-                    
-                Log.d("BreathingActivity", "音符已添加到屏幕");
-            } catch (Exception e) {
-                Log.e("BreathingActivity", "添加音符失败", e);
             }
-        });
+        }
     }
 
     // 调整颜色亮度的辅助方法
