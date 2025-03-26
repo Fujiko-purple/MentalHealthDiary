@@ -212,6 +212,17 @@ public class BreathingActivity extends AppCompatActivity {
 
         // 改为使用系统默认字体
         guidanceText.setTypeface(Typeface.DEFAULT_BOLD);
+
+        // 在onCreate方法中
+        View rhythmIndicator = findViewById(R.id.rhythmIndicator);
+        TextView rhythmIndicatorHint = findViewById(R.id.rhythmIndicatorHint);
+
+        // 初始状态下设置为半透明
+        rhythmIndicator.setAlpha(0.5f);
+        rhythmIndicatorHint.setAlpha(0.7f);
+
+        // 在onCreate方法中添加
+        setupInitialRhythmIndicator();
     }
 
     private void setupBreathingAnimation() {
@@ -278,6 +289,13 @@ public class BreathingActivity extends AppCompatActivity {
                 }
             }
         }.start();
+
+        // 使节奏指示器完全可见
+        View rhythmIndicator = findViewById(R.id.rhythmIndicator);
+        TextView rhythmIndicatorHint = findViewById(R.id.rhythmIndicatorHint);
+        
+        rhythmIndicator.animate().alpha(1.0f).setDuration(500).start();
+        rhythmIndicatorHint.animate().alpha(0.0f).setDuration(500).start(); // 隐藏提示文本
     }
 
     private void startBreathingExercise() {
@@ -365,6 +383,13 @@ public class BreathingActivity extends AppCompatActivity {
         guidanceText.setText("跟随圆圈呼吸\n吸气4秒，呼气4秒");
         sessionSeconds = 0;
         timerText.setText("");
+
+        // 恢复节奏指示器的初始状态
+        View rhythmIndicator = findViewById(R.id.rhythmIndicator);
+        TextView rhythmIndicatorHint = findViewById(R.id.rhythmIndicatorHint);
+        
+        rhythmIndicator.animate().alpha(0.5f).setDuration(500).start();
+        rhythmIndicatorHint.animate().alpha(0.7f).setDuration(500).start(); // 显示提示文本
     }
 
     private void saveBreathingSession() {
@@ -1519,12 +1544,12 @@ public class BreathingActivity extends AppCompatActivity {
         }
     }
 
-    // 添加节奏指示器更新方法
+    // 修改updateRhythmIndicator方法
     private void updateRhythmIndicator(boolean isInhaling) {
-        View rhythmDot1 = findViewById(R.id.rhythmDot1);
-        View rhythmDot2 = findViewById(R.id.rhythmDot2);
-        View rhythmDot3 = findViewById(R.id.rhythmDot3);
-        View rhythmDot4 = findViewById(R.id.rhythmDot4);
+        ImageView rhythmDot1 = findViewById(R.id.rhythmDot1);
+        ImageView rhythmDot2 = findViewById(R.id.rhythmDot2);
+        ImageView rhythmDot3 = findViewById(R.id.rhythmDot3);
+        ImageView rhythmDot4 = findViewById(R.id.rhythmDot4);
         
         // 根据当前模式设置颜色
         int activeColor;
@@ -1547,10 +1572,10 @@ public class BreathingActivity extends AppCompatActivity {
         
         if (isInhaling) {
             // 吸气阶段 - 第一个点高亮并放大，其他点逐渐变暗
-            rhythmDot1.getBackground().setColorFilter(activeColor, PorterDuff.Mode.SRC_IN);
-            rhythmDot2.getBackground().setColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC_IN);
-            rhythmDot3.getBackground().setColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC_IN);
-            rhythmDot4.getBackground().setColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC_IN);
+            rhythmDot1.setColorFilter(activeColor, PorterDuff.Mode.SRC_IN);
+            rhythmDot2.setColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC_IN);
+            rhythmDot3.setColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC_IN);
+            rhythmDot4.setColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC_IN);
             
             rhythmDot1.animate().alpha(1f).scaleX(1.5f).scaleY(1.5f).setDuration(300).start();
             rhythmDot2.animate().alpha(0.7f).scaleX(1.0f).scaleY(1.0f).setDuration(300).start();
@@ -1558,10 +1583,10 @@ public class BreathingActivity extends AppCompatActivity {
             rhythmDot4.animate().alpha(0.3f).scaleX(1.0f).scaleY(1.0f).setDuration(300).start();
         } else {
             // 呼气阶段 - 第四个点高亮并放大，其他点逐渐变暗
-            rhythmDot1.getBackground().setColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC_IN);
-            rhythmDot2.getBackground().setColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC_IN);
-            rhythmDot3.getBackground().setColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC_IN);
-            rhythmDot4.getBackground().setColorFilter(activeColor, PorterDuff.Mode.SRC_IN);
+            rhythmDot1.setColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC_IN);
+            rhythmDot2.setColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC_IN);
+            rhythmDot3.setColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC_IN);
+            rhythmDot4.setColorFilter(activeColor, PorterDuff.Mode.SRC_IN);
             
             rhythmDot1.animate().alpha(0.3f).scaleX(1.0f).scaleY(1.0f).setDuration(300).start();
             rhythmDot2.animate().alpha(0.5f).scaleX(1.0f).scaleY(1.0f).setDuration(300).start();
@@ -1644,5 +1669,48 @@ public class BreathingActivity extends AppCompatActivity {
                     .setDuration(500)
                     .start();
         }
+    }
+
+    // 在onCreate方法末尾调用
+    private void setupInitialRhythmIndicator() {
+        ImageView rhythmDot1 = findViewById(R.id.rhythmDot1);
+        ImageView rhythmDot2 = findViewById(R.id.rhythmDot2);
+        ImageView rhythmDot3 = findViewById(R.id.rhythmDot3);
+        ImageView rhythmDot4 = findViewById(R.id.rhythmDot4);
+        
+        // 设置初始颜色 - 直接对ImageView设置颜色过滤器
+        int defaultColor = Color.LTGRAY;
+        rhythmDot1.setColorFilter(defaultColor, PorterDuff.Mode.SRC_IN);
+        rhythmDot2.setColorFilter(defaultColor, PorterDuff.Mode.SRC_IN);
+        rhythmDot3.setColorFilter(defaultColor, PorterDuff.Mode.SRC_IN);
+        rhythmDot4.setColorFilter(defaultColor, PorterDuff.Mode.SRC_IN);
+        
+        // 创建一个简单的演示动画，在用户开始练习前展示节奏指示器的作用
+        new Handler().postDelayed(() -> {
+            // 只在用户尚未开始呼吸练习时展示
+            if (!isBreathing) {
+                // 简单地展示一次呼吸周期
+                rhythmDot1.animate().alpha(1f).scaleX(1.2f).scaleY(1.2f).setDuration(500).start();
+                
+                new Handler().postDelayed(() -> {
+                    rhythmDot1.animate().alpha(0.5f).scaleX(1.0f).scaleY(1.0f).setDuration(300).start();
+                    rhythmDot2.animate().alpha(1f).scaleX(1.2f).scaleY(1.2f).setDuration(500).start();
+                    
+                    new Handler().postDelayed(() -> {
+                        rhythmDot2.animate().alpha(0.5f).scaleX(1.0f).scaleY(1.0f).setDuration(300).start();
+                        rhythmDot3.animate().alpha(1f).scaleX(1.2f).scaleY(1.2f).setDuration(500).start();
+                        
+                        new Handler().postDelayed(() -> {
+                            rhythmDot3.animate().alpha(0.5f).scaleX(1.0f).scaleY(1.0f).setDuration(300).start();
+                            rhythmDot4.animate().alpha(1f).scaleX(1.2f).scaleY(1.2f).setDuration(500).start();
+                            
+                            new Handler().postDelayed(() -> {
+                                rhythmDot4.animate().alpha(0.5f).scaleX(1.0f).scaleY(1.0f).setDuration(300).start();
+                            }, 500);
+                        }, 500);
+                    }, 500);
+                }, 500);
+            }
+        }, 2000); // 在页面加载2秒后展示演示动画
     }
 } 
