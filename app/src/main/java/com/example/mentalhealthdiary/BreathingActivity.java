@@ -1271,40 +1271,7 @@ public class BreathingActivity extends AppCompatActivity {
         }
     }
 
-    // 修改startMusicNoteAnimation方法，增加音符生成频率
-    private void startMusicNoteAnimation() {
-        if (rootLayout == null || isShowingNotes) return;
-        
-        isShowingNotes = true;
-        Log.d("BreathingActivity", "开始音符动画");
-        
-        // 创建定时任务，随机生成音符
-        noteRunnable = new Runnable() {
-            @Override
-            public void run() {
-                if (isBreathing && mediaPlayer != null && mediaPlayer.isPlaying()) {
-                    // 一次添加多个音符，形成更丰富的效果
-                    int noteCount = random.nextInt(3) + 2; // 确保至少生成2个音符，最多4个
-                    
-                    for (int i = 0; i < noteCount; i++) {
-                        addMusicNote();
-                    }
-                    
-                    // 减少时间间隔，增加音符生成频率
-                    // 原来可能是1500-3000ms，现在改为800-1500ms
-                    int delay = random.nextInt(700) + 800;
-                    noteHandler.postDelayed(this, delay);
-                } else {
-                    isShowingNotes = false;
-                }
-            }
-        };
-        
-        // 立即开始第一次运行
-        noteHandler.post(noteRunnable);
-    }
-
-    // 修改addMusicNote方法，从音乐反馈文本周围生成音符
+    // 修改addMusicNote方法，减少抖动并降低上升速度
     private void addMusicNote() {
         if (rootLayout == null || musicFeedbackText == null || !musicFeedbackText.isShown()) return;
         
@@ -1347,7 +1314,7 @@ public class BreathingActivity extends AppCompatActivity {
             noteView.setColorFilter(noteColor, PorterDuff.Mode.SRC_IN);
             
             // 设置音符大小 - 随机大小使效果更自然
-            float scale = 0.7f + random.nextFloat() * 0.6f; // 0.7-1.3倍大小
+            float scale = 0.6f + random.nextFloat() * 0.4f; // 0.6-1.0倍大小，更小的音符
             int noteSize = (int)(20 * getResources().getDisplayMetrics().density * scale);
             ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(noteSize, noteSize);
             noteView.setLayoutParams(params);
@@ -1363,90 +1330,142 @@ public class BreathingActivity extends AppCompatActivity {
             // 确定音符生成位置 - 从文本框周围生成
             int startX, startY;
             
-            // 决定从哪个方向生成音符
-            int direction = random.nextInt(4); // 0:上, 1:右, 2:下, 3:左
-            
-            switch (direction) {
-                case 0: // 上方
-                    startX = textX + random.nextInt(textWidth);
-                    startY = textY - noteSize - random.nextInt(10);
-                    break;
-                case 1: // 右侧
-                    startX = textX + textWidth + random.nextInt(10);
-                    startY = textY + random.nextInt(textHeight);
-                    break;
-                case 2: // 下方
-                    startX = textX + random.nextInt(textWidth);
-                    startY = textY + textHeight + random.nextInt(10);
-                    break;
-                default: // 左侧
-                    startX = textX - noteSize - random.nextInt(10);
-                    startY = textY + random.nextInt(textHeight);
-                    break;
+            // 主要从文本框上方和两侧生成音符，像气泡一样
+            int position = random.nextInt(10);
+            if (position < 6) { // 60%几率从上方生成
+                startX = textX + random.nextInt(textWidth);
+                startY = textY - noteSize - random.nextInt(5);
+            } else if (position < 8) { // 20%几率从左侧生成
+                startX = textX - noteSize - random.nextInt(5);
+                startY = textY + random.nextInt(textHeight);
+            } else { // 20%几率从右侧生成
+                startX = textX + textWidth + random.nextInt(5);
+                startY = textY + random.nextInt(textHeight);
             }
             
             // 设置音符初始位置
             noteView.setX(startX);
             noteView.setY(startY);
             
-            // 设置初始透明度为0
-            noteView.setAlpha(0f);
+            // 设置初始透明度为0.1f，轻微可见
+            noteView.setAlpha(0.1f);
             
             // 添加到布局
             rootLayout.addView(noteView);
             
-            // 创建动画 - 音符向上飘动
-            float endX, endY;
-            
-            // 根据生成方向决定飘动方向
-            switch (direction) {
-                case 0: // 上方生成的音符继续向上飘
-                    endX = startX + (random.nextFloat() * 2 - 1) * 50; // 左右随机飘动
-                    endY = startY - 100 - random.nextInt(50); // 向上飘
-                    break;
-                case 1: // 右侧生成的音符向右上方飘
-                    endX = startX + 50 + random.nextInt(30); // 向右飘
-                    endY = startY - 50 - random.nextInt(30); // 向上飘
-                    break;
-                case 2: // 下方生成的音符向上飘
-                    endX = startX + (random.nextFloat() * 2 - 1) * 50; // 左右随机飘动
-                    endY = startY - 100 - random.nextInt(50); // 向上飘
-                    break;
-                default: // 左侧生成的音符向左上方飘
-                    endX = startX - 50 - random.nextInt(30); // 向左飘
-                    endY = startY - 50 - random.nextInt(30); // 向上飘
-                    break;
+            // 创建气泡上升动画
+            // 计算上升距离 - 屏幕高度的1/4到1/3之间，减少上升距离
+            int screenHeight = rootLayout.getHeight();
+            if (screenHeight <= 0) {
+                screenHeight = getResources().getDisplayMetrics().heightPixels;
             }
             
-            // 添加随机旋转
-            float rotation = random.nextInt(40) - 20; // -20到20度的旋转
+            float riseDistance = screenHeight * (0.25f + random.nextFloat() * 0.08f); // 屏幕高度的1/4到1/3
             
-            // 设置动画时长
-            int duration = random.nextInt(1000) + 2000; // 2-3秒
+            // 计算水平漂移 - 更轻微的左右漂移
+            float horizontalDrift = (random.nextFloat() * 2 - 1) * 20; // -20到20像素
             
-            // 创建并启动动画
-            noteView.animate()
-                .x(endX)
-                .y(endY)
-                .rotation(rotation)
-                .alpha(0.8f) // 先淡入
-                .setDuration(duration / 3)
-                .withEndAction(() -> 
-                    noteView.animate()
-                        .alpha(0f) // 然后淡出
-                        .rotation(rotation * 2) // 继续旋转
-                        .setDuration(duration * 2 / 3)
-                        .withEndAction(() -> {
-                            // 动画结束后移除音符
-                            rootLayout.removeView(noteView);
-                        })
-                        .start()
-                )
-                .start();
+            // 计算动画时长 - 更长的时间，使动画看起来更缓慢
+            int duration = 5000 + random.nextInt(3000); // 5-8秒
+            
+            // 创建路径动画 - 使用ValueAnimator实现更平滑的动画
+            ValueAnimator pathAnimator = ValueAnimator.ofFloat(0f, 1f);
+            pathAnimator.setDuration(duration);
+            pathAnimator.setInterpolator(new AccelerateDecelerateInterpolator()); // 加减速插值器，模拟气泡上升
+            
+            // 随机决定这个音符是否有抖动效果 - 减少抖动概率
+            boolean hasWobble = random.nextInt(100) < 25; // 25%的音符有抖动效果，降低比例
+            
+            // 如果有抖动，设置抖动参数 - 减小抖动幅度
+            final float amplitude = hasWobble ? (3 + random.nextFloat() * 7) : 0; // 3-10的抖动幅度，减小范围
+            final float frequency = hasWobble ? (0.3f + random.nextFloat() * 0.7f) : 0; // 0.3-1.0的抖动频率，降低频率
+            
+            // 随机决定是否有轻微旋转 - 减少旋转概率
+            boolean hasRotation = random.nextInt(100) < 20; // 20%的音符有旋转效果
+            final float maxRotation = hasRotation ? (random.nextFloat() * 15 - 7.5f) : 0; // -7.5到7.5度的旋转，减小角度
+            
+            pathAnimator.addUpdateListener(animation -> {
+                float fraction = animation.getAnimatedFraction();
+                
+                // 计算当前Y位置 - 匀速上升，但使用缓动函数使开始和结束更平滑
+                float easeInOutFraction = (float)(Math.sin((fraction - 0.5f) * Math.PI) * 0.5f + 0.5f);
+                float currentY = startY - riseDistance * easeInOutFraction;
+                
+                // 计算当前X位置
+                float currentX;
+                if (hasWobble) {
+                    // 有抖动效果的音符 - 添加正弦波动，但频率更低
+                    currentX = startX + horizontalDrift * fraction + 
+                              amplitude * (float)Math.sin(frequency * Math.PI * fraction * 6);
+                } else {
+                    // 无抖动效果的音符 - 平滑漂移
+                    currentX = startX + horizontalDrift * fraction;
+                }
+                
+                // 更新位置
+                noteView.setX(currentX);
+                noteView.setY(currentY);
+                
+                // 如果有旋转效果，更新旋转角度 - 使旋转更缓慢
+                if (hasRotation) {
+                    noteView.setRotation(maxRotation * (float)Math.sin(Math.PI * fraction));
+                }
+                
+                // 更新透明度 - 先淡入，然后在最后1/3的时间内淡出
+                if (fraction < 0.2f) {
+                    // 前20%时间淡入
+                    noteView.setAlpha(fraction * 4); // 0.1 -> 0.8
+                } else if (fraction > 0.7f) {
+                    // 后30%时间淡出
+                    noteView.setAlpha(0.8f * (1 - (fraction - 0.7f) / 0.3f));
+                } else {
+                    // 中间50%时间保持较高透明度
+                    noteView.setAlpha(0.8f);
+                }
+            });
+            
+            // 动画结束后移除音符
+            pathAnimator.addListener(new android.animation.AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(android.animation.Animator animation) {
+                    rootLayout.removeView(noteView);
+                }
+            });
+            
+            // 启动动画
+            pathAnimator.start();
             
         } catch (Exception e) {
             Log.e("BreathingActivity", "添加音符失败", e);
         }
+    }
+
+    // 修改startMusicNoteAnimation方法，降低音符生成频率
+    private void startMusicNoteAnimation() {
+        if (rootLayout == null || isShowingNotes) return;
+        
+        isShowingNotes = true;
+        Log.d("BreathingActivity", "开始音符动画");
+        
+        // 创建定时任务，随机生成音符
+        noteRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (isBreathing && mediaPlayer != null && mediaPlayer.isPlaying()) {
+                    // 一次只添加1个音符，减少密度
+                    addMusicNote();
+                    
+                    // 增加时间间隔，降低音符生成频率
+                    int delay = random.nextInt(800) + 1500; // 1500-2300ms
+                    noteHandler.postDelayed(this, delay);
+                } else {
+                    isShowingNotes = false;
+                }
+            }
+        };
+        
+        // 立即开始第一次运行
+        noteHandler.post(noteRunnable);
     }
 
     // 修改stopMusicNoteAnimation方法，确保正确停止动画
