@@ -60,6 +60,7 @@ public class ChatService extends Service {
     
     private Map<Long, Boolean> thinkingStates = new HashMap<>();
     private Map<Long, Call<ChatResponse>> activeRequests = new HashMap<>();
+    private Map<Long, Long> thinkingStartTimes = new HashMap<>();
 
     public class ChatBinder extends Binder {
         public ChatService getService() {
@@ -112,6 +113,9 @@ public class ChatService extends Service {
     }
 
     public void sendChatRequest(ChatRequest request, long chatId) {
+        // 记录思考开始时间
+        startThinking(chatId);
+        
         // 更新通知显示正在思考
         updateNotification("AI 助手正在思考", "正在生成回复...");
         
@@ -363,5 +367,27 @@ public class ChatService extends Service {
                 }
             }
         });
+    }
+
+    // 开始思考时记录时间
+    public void startThinking(long chatId) {
+        thinkingStartTimes.put(chatId, System.currentTimeMillis());
+    }
+
+    // 获取思考已用时间（毫秒）
+    public long getThinkingTime(long chatId) {
+        Long startTime = thinkingStartTimes.get(chatId);
+        if (startTime != null) {
+            return System.currentTimeMillis() - startTime;
+        }
+        return 0;
+    }
+
+    // 在响应处理完成后清除时间记录
+    private void handleResponse(String response, long chatId) {
+        // 现有代码...
+        
+        // 清除思考时间记录
+        thinkingStartTimes.remove(chatId);
     }
 } 

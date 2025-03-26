@@ -44,4 +44,14 @@ public class PreferenceManager {
         SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         prefs.edit().putBoolean(PREF_QUICK_MESSAGE_USED + chatId, true).apply();
     }
+    
+    public static void saveChatThinkingState(Context context, long chatId, boolean isThinking) {
+        SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        prefs.edit().putBoolean("chat_thinking_" + chatId, isThinking).apply();
+    }
+    
+    public static boolean getChatThinkingState(Context context, long chatId) {
+        SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        return prefs.getBoolean("chat_thinking_" + chatId, false);
+    }
 } 

@@ -718,18 +718,54 @@ public class AIChatActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         
-        // 检查服务状态
+        // 检查服务状态并重新绑定
         if (!serviceBound) {
             Intent serviceIntent = new Intent(this, ChatService.class);
             bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
         }
         
+        // 更新等待状态
         updateWaitingState();
         updateSendButtonState();
+        
+        // 恢复思考中的消息状态
+        restoreThinkingState();
         
         // 根据对话ID的使用状态决定是否显示预备消息
         if (!PreferenceManager.isQuickMessageUsed(this, currentHistoryId)) {
             setupQuickMessages();
+        }
+    }
+
+    // 添加新方法：恢复思考状态
+    private void restoreThinkingState() {
+        // 检查是否有思考中的消息
+        if (serviceBound && chatService != null && currentHistoryId != -1) {
+            if (chatService.isThinking(currentHistoryId)) {
+                // 找到最后一条加载消息
+                ChatMessage loadingMessage = null;
+                for (int i = messages.size() - 1; i >= 0; i--) {
+                    if (messages.get(i).isLoading()) {
+                        loadingMessage = messages.get(i);
+                        break;
+                    }
+                }
+                
+                // 如果没有加载消息但服务正在思考，添加一个新的加载消息
+                if (loadingMessage == null) {
+                    loadingMessage = ChatMessage.createLoadingMessage(currentPersonality.getId());
+                    loadingMessage.setThinkingStartTime(System.currentTimeMillis() - 
+                        chatService.getThinkingTime(currentHistoryId));
+                    messages.add(loadingMessage);
+                    adapter.notifyItemInserted(messages.size() - 1);
+                    chatRecyclerView.scrollToPosition(messages.size() - 1);
+                }
+                
+                // 重新启动思考时间更新
+                startThinkingTimeUpdate(loadingMessage);
+                isWaitingResponse = true;
+                adapter.setWaitingResponse(true);
+            }
         }
     }
 
@@ -752,6 +788,16 @@ public class AIChatActivity extends AppCompatActivity {
         if (serviceBound && chatService != null && currentHistoryId != -1) {
             boolean serviceThinking = chatService.isThinking(currentHistoryId);
             Log.d("ChatDebug", "服务状态: " + (serviceThinking ? "思考中" : "空闲"));
+            
+            // 如果服务正在思考但UI没有显示加载状态，恢复加载状态
+            if (serviceThinking && !hasLoadingMessage) {
+                restoreThinkingState();
+            }
+            // 如果服务不在思考但UI显示加载状态，清除加载状态
+            else if (!serviceThinking && hasLoadingMessage) {
+                removeThinkingMessage();
+            }
+            
             isWaitingResponse = serviceThinking;
         } else {
             Log.d("ChatDebug", "使用消息列表状态: " + hasLoadingMessage);
