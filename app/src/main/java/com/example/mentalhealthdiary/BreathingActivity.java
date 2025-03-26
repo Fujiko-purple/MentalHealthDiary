@@ -306,6 +306,10 @@ public class BreathingActivity extends AppCompatActivity {
         
         rhythmIndicator.animate().alpha(1.0f).setDuration(500).start();
         rhythmIndicatorHint.animate().alpha(0.0f).setDuration(500).start(); // 隐藏提示文本
+
+        // 播放背景音乐
+        String musicName = getMusicNameForMode(currentMode);
+        playBackgroundMusic(musicName);
     }
 
     private void startBreathingExercise() {
@@ -681,10 +685,23 @@ public class BreathingActivity extends AppCompatActivity {
         spinnerBackground.setCornerRadius(24 * getResources().getDisplayMetrics().density); // 24dp
         spinnerBackground.setColor(Color.WHITE);
         spinnerBackground.setStroke(2, borderColor);
-        spinnerBackground.setPadding(16, 8, 16, 8);
         
-        // 设置新的背景
+        // 不使用setPadding方法，而是直接设置背景
         modeSpinner.setBackground(spinnerBackground);
+        
+        // 使用内边距属性设置内边距
+        modeSpinner.setPadding(
+            (int)(16 * getResources().getDisplayMetrics().density),
+            (int)(8 * getResources().getDisplayMetrics().density),
+            (int)(16 * getResources().getDisplayMetrics().density),
+            (int)(8 * getResources().getDisplayMetrics().density)
+        );
+
+        // 如果正在进行呼吸练习，更新音乐
+        if (isBreathing) {
+            String musicName = getMusicNameForMode(mode);
+            playBackgroundMusic(musicName);
+        }
     }
 
     // 显示模式详细信息
@@ -1702,8 +1719,8 @@ public class BreathingActivity extends AppCompatActivity {
 
     private void updateMusicFeedback(String musicName) {
         if (musicFeedbackText != null) {
-            // 使用带有音符图标的文本
-            musicFeedbackText.setText("🎵 正在播放：" + musicName);
+            // 使用Unicode音符字符，这种方式在大多数设备上都能正确显示
+            musicFeedbackText.setText("\uD83C\uDFB5 正在播放：" + musicName + " \uD83C\uDFB6");
             musicFeedbackText.setVisibility(View.VISIBLE);
             
             // 根据当前模式设置音乐反馈文本的样式
@@ -1857,5 +1874,18 @@ public class BreathingActivity extends AppCompatActivity {
                 startBreathing();
             }
         });
+    }
+
+    private void playBackgroundMusic(String musicName) {
+        try {
+            // 其他代码...
+            
+            // 更新音乐反馈
+            updateMusicFeedback(musicName);
+            
+            // 其他代码...
+        } catch (Exception e) {
+            Log.e("BreathingActivity", "播放背景音乐失败", e);
+        }
     }
 } 
