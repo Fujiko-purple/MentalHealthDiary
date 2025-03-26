@@ -2,4 +2,5 @@
 <resources>
     <item name="action_chart" type="id"/>
     <item name="action_breathing" type="id"/>
+    <item name="breathing_overlay" type="id" />
 </resources> 

@@ -38,4 +38,8 @@
     <color name="chat_tint">#26A69A</color>
     <color name="chat_text">#00796B</color>
     <color name="chat_ripple">#E0F2F1</color>
+    <color name="calm_breathing_bg">#F5F9FC</color>
+    <color name="focus_breathing_bg">#F9F5FC</color>
+    <color name="deep_breathing_bg">#FCF9F5</color>
+    <color name="relax_breathing_bg">#F5FCF7</color>
 </resources>

@@ -13,11 +13,17 @@ import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.RelativeSizeSpan;
+import android.text.style.ScaleXSpan;
+import android.text.style.StyleSpan;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -96,6 +102,7 @@ public class BreathingActivity extends AppCompatActivity {
     }
 
     private BreathingMode currentMode = BreathingMode.NORMAL;
+    private View overlayView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,6 +123,11 @@ public class BreathingActivity extends AppCompatActivity {
         // 初始化音乐反馈文本
         if (musicFeedbackText != null) {
             musicFeedbackText.setVisibility(View.GONE);
+            
+            // 增强文本可见性
+            musicFeedbackText.setTextColor(Color.BLACK);
+            musicFeedbackText.setShadowLayer(2, 1, 1, Color.WHITE);
+            musicFeedbackText.setBackgroundResource(R.drawable.music_feedback_background);
         }
 
         // 初始化MediaPlayer
@@ -143,6 +155,9 @@ public class BreathingActivity extends AppCompatActivity {
         // 设置下拉项的布局和样式
         adapter.setDropDownViewResource(R.layout.item_breathing_mode);
         modeSpinner.setAdapter(adapter);
+
+        // 增强Spinner的可见性
+        modeSpinner.setBackgroundResource(R.drawable.spinner_background_enhanced);
 
         // 更新模式选择监听器
         modeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -191,6 +206,12 @@ public class BreathingActivity extends AppCompatActivity {
 
         // 获取根布局用于添加音符
         rootLayout = findViewById(R.id.breathing_root_layout);
+
+        // 在onCreate方法中
+        guidanceText.setBackground(getResources().getDrawable(R.drawable.guidance_text_background_improved));
+
+        // 改为使用系统默认字体
+        guidanceText.setTypeface(Typeface.DEFAULT_BOLD);
     }
 
     private void setupBreathingAnimation() {
@@ -272,7 +293,7 @@ public class BreathingActivity extends AppCompatActivity {
         breathingAnimation.start();
         
         // 更新引导文本
-        updateGuidanceText(true);
+        updateGuidanceText();
         
         // 启动呼吸引导计时器
         startGuidanceTimer();
@@ -384,44 +405,84 @@ public class BreathingActivity extends AppCompatActivity {
     }
 
     private void startGuidanceTimer() {
-        // 直接启动呼吸计时器，不再需要额外的准备时间
-        breathingTimer = new CountDownTimer(8000, 4000) {
+        // 获取节奏指示器视图
+        View rhythmDot1 = findViewById(R.id.rhythmDot1);
+        View rhythmDot2 = findViewById(R.id.rhythmDot2);
+        
+        // 获取背景视图
+        View breathingBackground = findViewById(R.id.breathing_root_layout);
+        
+        // 设置初始状态
+        rhythmDot1.setAlpha(0.3f);
+        rhythmDot2.setAlpha(0.3f);
+        
+        breathingTimer = new CountDownTimer(Long.MAX_VALUE, 
+                (currentMode.inhaleSeconds + currentMode.exhaleSeconds) * 1000) {
             boolean inhale = true;
             
             @Override
             public void onTick(long millisUntilFinished) {
-                updateGuidanceText(inhale);
+                // 更新指导文本
+                updateGuidanceTextForBreathing(inhale);
+                
+                // 更新节奏指示器
+                updateRhythmIndicator(inhale);
+                
+                // 更新背景微妙变化
+                updateBreathingBackground(inhale);
+                
                 inhale = !inhale;
             }
-
+            
             @Override
             public void onFinish() {
                 start();
             }
-        }.start();
+        };
+        
+        breathingTimer.start();
     }
 
-    private void updateGuidanceText(boolean inhale) {
-        // 取消之前的动画
-        guidanceText.animate().cancel();
-        
-        // 设置初始透明度
-        guidanceText.setAlpha(0f);
-        
-        if (inhale) {
-            guidanceText.setTextColor(getResources().getColor(R.color.teal_700));
-            guidanceText.setText("吸气...");
-        } else {
-            guidanceText.setTextColor(getResources().getColor(android.R.color.darker_gray));
-            guidanceText.setText("呼气...");
+    private void updateGuidanceText() {
+        // 根据当前模式设置不同的文字颜色
+        int textColor;
+        switch (currentMode) {
+            case NORMAL:
+                textColor = getResources().getColor(R.color.calm_breathing);
+                break;
+            case FOCUS:
+                textColor = getResources().getColor(R.color.focus_breathing);
+                break;
+            case ENERGIZING:
+                textColor = getResources().getColor(R.color.deep_breathing);
+                break;
+            case CALMING:
+                textColor = getResources().getColor(R.color.relax_breathing);
+                break;
+            default:
+                textColor = getResources().getColor(R.color.calm_breathing);
         }
         
-        // 统一处理动画
-        guidanceText.animate()
-            .alpha(1f)
-            .setDuration(800)
-            .setInterpolator(new AccelerateDecelerateInterpolator())
-            .start();
+        // 设置文字颜色
+        guidanceText.setTextColor(textColor);
+        
+        // 设置文字阴影，增加可读性
+        guidanceText.setShadowLayer(3, 1, 1, Color.parseColor("#33000000"));
+        
+        // 设置背景透明度
+        Drawable background = guidanceText.getBackground();
+        if (background != null) {
+            background.setAlpha(180); // 0-255，值越小越透明
+        }
+        
+        // 添加文字动画效果
+        if (isBreathing) {
+            // 呼吸时的文字淡入淡出效果
+            guidanceText.animate()
+                .alpha(0.9f)
+                .setDuration(300)
+                .start();
+        }
     }
 
     @Override
@@ -520,41 +581,38 @@ public class BreathingActivity extends AppCompatActivity {
 
     // 修改onModeSelected方法，使其在呼吸练习中也能切换模式
     private void onModeSelected(BreathingMode mode) {
-        // 保存之前的呼吸状态
-        boolean wasBreathing = isBreathing;
-        
-        // 如果正在呼吸，先暂停当前的呼吸练习
-        if (isBreathing) {
-            // 暂停但不完全停止
-            if (breathingAnimation != null) {
-                breathingAnimation.cancel();
-            }
-            if (breathingTimer != null) {
-                breathingTimer.cancel();
-            }
-        }
-        
-        // 更新当前模式
-        currentMode = mode;
-        updateBreathingAnimation();
-        
-        // 如果之前在呼吸，使用新模式重新开始呼吸
-        if (wasBreathing) {
-            // 更新音乐
-            updateBackgroundMusic();
-            
-            // 重新开始动画和计时器
-            breathingAnimation.start();
-            startGuidanceTimer();
-        }
-        
-        // 显示模式效果提示
-        View rootView = findViewById(android.R.id.content);
-        Snackbar.make(rootView, 
-            mode.description + "\n" + mode.benefit, 
-            Snackbar.LENGTH_LONG)
+        // 显示模式信息
+        Snackbar.make(findViewById(R.id.breathing_root_layout), 
+                "已选择: " + mode.description, 
+                Snackbar.LENGTH_SHORT)
             .setAction("了解更多", v -> showModeInfoDialog(mode))
             .show();
+
+        // 根据模式设置背景
+        View rootLayout = findViewById(R.id.breathing_root_layout);
+        switch (mode) {
+            case NORMAL:
+                rootLayout.setBackground(getResources().getDrawable(R.drawable.breathing_background_calm));
+                break;
+            case FOCUS:
+                rootLayout.setBackground(getResources().getDrawable(R.drawable.breathing_background_focus));
+                break;
+            case ENERGIZING:
+                rootLayout.setBackground(getResources().getDrawable(R.drawable.breathing_background_energizing));
+                break;
+            case CALMING:
+                rootLayout.setBackground(getResources().getDrawable(R.drawable.breathing_background_calming));
+                break;
+        }
+        
+        // 确保Spinner在背景变化后仍然可见
+        Spinner modeSpinner = findViewById(R.id.breathingModeSpinner);
+        modeSpinner.setBackgroundResource(R.drawable.spinner_background_enhanced);
+        
+        // 确保音乐反馈文本在背景变化后仍然可见
+        if (musicFeedbackText != null && musicFeedbackText.getVisibility() == View.VISIBLE) {
+            musicFeedbackText.setBackgroundResource(R.drawable.music_feedback_background);
+        }
     }
 
     // 显示模式详细信息
@@ -1213,11 +1271,28 @@ public class BreathingActivity extends AppCompatActivity {
                 // 创建新的ImageView作为音符
                 ImageView noteView = new ImageView(this);
                 
-                // 随机选择音符图标 - 可以创建几种不同的音符图标
-                int noteType = random.nextInt(2);
-                int noteResId = noteType == 0 ? 
-                        R.drawable.ic_music_note_small : 
-                        R.drawable.ic_music_note_small2;
+                // 随机选择音符图标 - 使用5种不同的音符图标
+                int noteType = random.nextInt(5);
+                int noteResId;
+                switch (noteType) {
+                    case 0:
+                        noteResId = R.drawable.ic_music_note_small;
+                        break;
+                    case 1:
+                        noteResId = R.drawable.ic_music_note_small2;
+                        break;
+                    case 2:
+                        noteResId = R.drawable.ic_music_note_small3;
+                        break;
+                    case 3:
+                        noteResId = R.drawable.ic_music_note_small4;
+                        break;
+                    case 4:
+                        noteResId = R.drawable.ic_music_note_small5;
+                        break;
+                    default:
+                        noteResId = R.drawable.ic_music_note_small;
+                }
                 noteView.setImageResource(noteResId);
                 
                 // 设置音符颜色（与当前呼吸模式匹配）
@@ -1302,21 +1377,26 @@ public class BreathingActivity extends AppCompatActivity {
                 // 添加到布局
                 rootLayout.addView(noteView);
                 
-                // 创建随机的上升路径和淡出动画
+                // 创建随机的上升路径、旋转和淡出动画
                 float xOffset = random.nextInt(80) - 40; // -40到40
                 float yOffset = -80 - random.nextInt(60); // -80到-140
                 int duration = 1500 + random.nextInt(1500); // 1.5-3秒
+                
+                // 添加随机旋转
+                float rotation = random.nextInt(40) - 20; // -20到20度的旋转
                 
                 noteView.animate()
                         .alpha(0.7f)
                         .translationYBy(yOffset)
                         .translationXBy(xOffset)
+                        .rotation(rotation)
                         .setDuration(duration)
                         .withEndAction(() -> {
                             // 淡出并移除
                             noteView.animate()
                                     .alpha(0f)
                                     .translationYBy(yOffset/2)
+                                    .rotation(rotation/2) // 继续旋转
                                     .setDuration(duration/2)
                                     .withEndAction(() -> rootLayout.removeView(noteView))
                                     .start();
@@ -1337,5 +1417,232 @@ public class BreathingActivity extends AppCompatActivity {
         int g = Math.min(255, (int) (Color.green(color) * factor));
         int b = Math.min(255, (int) (Color.blue(color) * factor));
         return Color.argb(a, r, g, b);
+    }
+
+    private void updateGuidanceTextForBreathing(boolean isInhaling) {
+        // 取消之前的动画
+        guidanceText.animate().cancel();
+        
+        // 根据当前模式设置颜色
+        int textColor;
+        switch (currentMode) {
+            case NORMAL:
+                textColor = getResources().getColor(R.color.calm_breathing);
+                break;
+            case FOCUS:
+                textColor = getResources().getColor(R.color.focus_breathing);
+                break;
+            case ENERGIZING:
+                textColor = getResources().getColor(R.color.deep_breathing);
+                break;
+            case CALMING:
+                textColor = getResources().getColor(R.color.relax_breathing);
+                break;
+            default:
+                textColor = getResources().getColor(R.color.calm_breathing);
+        }
+        
+        if (isInhaling) {
+            // 吸气阶段 - 文字放大效果
+            String inhaleText = String.format("吸气 %d 秒", currentMode.inhaleSeconds);
+            SpannableString spannableString = new SpannableString(inhaleText);
+            
+            // 设置"吸气"两个字的样式
+            spannableString.setSpan(new StyleSpan(Typeface.BOLD), 0, 2, 
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            
+            // 设置数字的样式
+            spannableString.setSpan(new RelativeSizeSpan(1.2f), 3, 4, 
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            
+            guidanceText.setText(spannableString);
+            guidanceText.setTextColor(textColor);
+            
+            // 添加放大动画
+            guidanceText.setScaleX(0.9f);
+            guidanceText.setScaleY(0.9f);
+            guidanceText.animate()
+                    .scaleX(1.1f)
+                    .scaleY(1.1f)
+                    .alpha(1.0f)
+                    .setDuration(currentMode.inhaleSeconds * 1000)
+                    .setInterpolator(new AccelerateDecelerateInterpolator())
+                    .start();
+        } else {
+            // 呼气阶段 - 文字缩小效果
+            String exhaleText = String.format("呼气 %d 秒", currentMode.exhaleSeconds);
+            SpannableString spannableString = new SpannableString(exhaleText);
+            
+            // 设置"呼气"两个字的样式
+            spannableString.setSpan(new StyleSpan(Typeface.BOLD), 0, 2, 
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            
+            // 设置数字的样式
+            spannableString.setSpan(new RelativeSizeSpan(1.2f), 3, 4, 
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            
+            guidanceText.setText(spannableString);
+            guidanceText.setTextColor(textColor);
+            
+            // 添加缩小动画
+            guidanceText.setScaleX(1.1f);
+            guidanceText.setScaleY(1.1f);
+            guidanceText.animate()
+                    .scaleX(0.9f)
+                    .scaleY(0.9f)
+                    .alpha(0.8f)
+                    .setDuration(currentMode.exhaleSeconds * 1000)
+                    .setInterpolator(new AccelerateDecelerateInterpolator())
+                    .start();
+        }
+
+        // 添加波浪效果
+        if (isInhaling) {
+            // 吸气阶段 - 文字波浪效果
+            CharSequence text = guidanceText.getText();
+            if (text.length() > 0) {
+                SpannableString spannableString;
+                if (text instanceof SpannableString) {
+                    spannableString = (SpannableString) text;
+                } else {
+                    spannableString = new SpannableString(text);
+                }
+                
+                for (int i = 0; i < text.length(); i++) {
+                    float waveOffset = (float) Math.sin(i * 0.5) * 0.2f + 1.0f;
+                    spannableString.setSpan(new ScaleXSpan(waveOffset), i, i + 1, 
+                            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                }
+                
+                guidanceText.setText(spannableString);
+            }
+        }
+    }
+
+    // 添加节奏指示器更新方法
+    private void updateRhythmIndicator(boolean isInhaling) {
+        View rhythmDot1 = findViewById(R.id.rhythmDot1);
+        View rhythmDot2 = findViewById(R.id.rhythmDot2);
+        View rhythmDot3 = findViewById(R.id.rhythmDot3);
+        View rhythmDot4 = findViewById(R.id.rhythmDot4);
+        
+        // 根据当前模式设置颜色
+        int activeColor;
+        switch (currentMode) {
+            case NORMAL:
+                activeColor = getResources().getColor(R.color.calm_breathing);
+                break;
+            case FOCUS:
+                activeColor = getResources().getColor(R.color.focus_breathing);
+                break;
+            case ENERGIZING:
+                activeColor = getResources().getColor(R.color.deep_breathing);
+                break;
+            case CALMING:
+                activeColor = getResources().getColor(R.color.relax_breathing);
+                break;
+            default:
+                activeColor = getResources().getColor(R.color.calm_breathing);
+        }
+        
+        if (isInhaling) {
+            // 吸气阶段 - 第一个点高亮并放大，其他点逐渐变暗
+            rhythmDot1.getBackground().setColorFilter(activeColor, PorterDuff.Mode.SRC_IN);
+            rhythmDot2.getBackground().setColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC_IN);
+            rhythmDot3.getBackground().setColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC_IN);
+            rhythmDot4.getBackground().setColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC_IN);
+            
+            rhythmDot1.animate().alpha(1f).scaleX(1.5f).scaleY(1.5f).setDuration(300).start();
+            rhythmDot2.animate().alpha(0.7f).scaleX(1.0f).scaleY(1.0f).setDuration(300).start();
+            rhythmDot3.animate().alpha(0.5f).scaleX(1.0f).scaleY(1.0f).setDuration(300).start();
+            rhythmDot4.animate().alpha(0.3f).scaleX(1.0f).scaleY(1.0f).setDuration(300).start();
+        } else {
+            // 呼气阶段 - 第四个点高亮并放大，其他点逐渐变暗
+            rhythmDot1.getBackground().setColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC_IN);
+            rhythmDot2.getBackground().setColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC_IN);
+            rhythmDot3.getBackground().setColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC_IN);
+            rhythmDot4.getBackground().setColorFilter(activeColor, PorterDuff.Mode.SRC_IN);
+            
+            rhythmDot1.animate().alpha(0.3f).scaleX(1.0f).scaleY(1.0f).setDuration(300).start();
+            rhythmDot2.animate().alpha(0.5f).scaleX(1.0f).scaleY(1.0f).setDuration(300).start();
+            rhythmDot3.animate().alpha(0.7f).scaleX(1.0f).scaleY(1.0f).setDuration(300).start();
+            rhythmDot4.animate().alpha(1f).scaleX(1.5f).scaleY(1.5f).setDuration(300).start();
+        }
+    }
+
+    // 修改背景变化方法
+    private void updateBreathingBackground(boolean isInhaling) {
+        // 获取根布局
+        ViewGroup rootLayout = findViewById(R.id.breathing_root_layout);
+        
+        // 如果叠加层不存在，创建它
+        if (overlayView == null) {
+            overlayView = new View(this);
+            
+            // 设置叠加层布局参数
+            ConstraintLayout.LayoutParams params = new ConstraintLayout.LayoutParams(
+                    ConstraintLayout.LayoutParams.MATCH_PARENT,
+                    ConstraintLayout.LayoutParams.MATCH_PARENT);
+            
+            overlayView.setLayoutParams(params);
+            
+            // 添加到根布局
+            rootLayout.addView(overlayView, 0); // 添加到最底层
+        }
+        
+        // 根据当前模式获取颜色
+        int baseColor;
+        switch (currentMode) {
+            case NORMAL:
+                baseColor = getResources().getColor(R.color.calm_breathing);
+                break;
+            case FOCUS:
+                baseColor = getResources().getColor(R.color.focus_breathing);
+                break;
+            case ENERGIZING:
+                baseColor = getResources().getColor(R.color.deep_breathing);
+                break;
+            case CALMING:
+                baseColor = getResources().getColor(R.color.relax_breathing);
+                break;
+            default:
+                baseColor = getResources().getColor(R.color.calm_breathing);
+        }
+        
+        // 创建非常透明的颜色
+        int overlayColor = Color.argb(
+                isInhaling ? 10 : 5,  // 非常低的透明度
+                Color.red(baseColor),
+                Color.green(baseColor),
+                Color.blue(baseColor));
+        
+        // 设置叠加层颜色
+        overlayView.setBackgroundColor(overlayColor);
+        
+        // 添加淡入淡出动画
+        overlayView.animate()
+                .alpha(isInhaling ? 1.0f : 0.5f)
+                .setDuration(isInhaling ? 
+                        currentMode.inhaleSeconds * 1000 : 
+                        currentMode.exhaleSeconds * 1000)
+                .start();
+    }
+
+    private void updateMusicFeedback(String musicName) {
+        if (musicFeedbackText != null) {
+            musicFeedbackText.setText("🎶正在播放：" + musicName);
+            musicFeedbackText.setVisibility(View.VISIBLE);
+            
+            // 确保文本在所有背景上都可见
+            musicFeedbackText.setTextColor(Color.BLACK);
+            musicFeedbackText.setBackgroundResource(R.drawable.music_feedback_background);
+            
+            // 添加淡入动画
+            musicFeedbackText.setAlpha(0f);
+            musicFeedbackText.animate()
+                    .alpha(1f)
+                    .setDuration(500)
+                    .start();
+        }
     }
 } 

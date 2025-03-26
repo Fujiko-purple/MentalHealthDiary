@@ -20,6 +20,46 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
 
+    <LinearLayout
+        android:id="@+id/rhythmIndicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/guidanceText"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent">
+        
+        <View
+            android:id="@+id/rhythmDot1"
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:background="@drawable/rhythm_dot"
+            android:layout_margin="4dp" />
+        
+        <View
+            android:id="@+id/rhythmDot2"
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:background="@drawable/rhythm_dot"
+            android:layout_margin="4dp" />
+        
+        <View
+            android:id="@+id/rhythmDot3"
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:background="@drawable/rhythm_dot"
+            android:layout_margin="4dp" />
+        
+        <View
+            android:id="@+id/rhythmDot4"
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:background="@drawable/rhythm_dot"
+            android:layout_margin="4dp" />
+        
+    </LinearLayout>
+
     <TextView
         android:id="@+id/subtitleText"
         android:layout_width="wrap_content"
@@ -34,7 +74,7 @@
         android:shadowDx="1"
         android:shadowDy="1"
         android:shadowRadius="3"
-        app:layout_constraintTop_toBottomOf="@id/guidanceText"
+        app:layout_constraintTop_toBottomOf="@id/rhythmIndicator"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent" />
 
@@ -43,7 +83,7 @@
         android:layout_width="240dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
-        android:background="@drawable/spinner_background"
+        android:background="@drawable/spinner_background_enhanced"
         android:popupBackground="@drawable/spinner_dropdown_background"
         android:spinnerMode="dropdown"
         android:dropDownWidth="match_parent"
@@ -130,22 +170,15 @@
         android:id="@+id/musicFeedbackText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:drawableStart="@drawable/ic_music_note"
-        android:drawablePadding="8dp"
-        android:text="正在播放冥想音乐..."
-        android:textColor="#FFFFFF"
-        android:shadowColor="#4D000000"
-        android:shadowDx="1"
-        android:shadowDy="1"
-        android:shadowRadius="2"
+        android:layout_marginBottom="16dp"
+        android:text="正在播放：冥想音乐"
         android:textSize="14sp"
-        android:alpha="0.8"
-        android:background="@drawable/timer_background"
-        android:padding="12dp"
+        android:textColor="#000000"
+        android:background="@drawable/music_feedback_background"
+        android:padding="8dp"
         android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/timerText" />
+        app:layout_constraintRight_toRightOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout> 
