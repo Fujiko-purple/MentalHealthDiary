@@ -223,6 +223,9 @@ public class BreathingActivity extends AppCompatActivity {
 
         // 在onCreate方法中添加
         setupInitialRhythmIndicator();
+        
+        // 在onCreate方法中添加，初始化呼吸圆形的提示
+        setupInitialBreathingCircleHint();
     }
 
     private void setupBreathingAnimation() {
@@ -380,7 +383,9 @@ public class BreathingActivity extends AppCompatActivity {
         }
         
         // 重置引导文本和计时器
-        guidanceText.setText("跟随圆圈呼吸\n吸气4秒，呼气4秒");
+        guidanceText.setText("跟随圆圈呼吸\n吸气" + currentMode.inhaleSeconds + "秒，呼气" + currentMode.exhaleSeconds + "秒");
+        guidanceText.setGravity(android.view.Gravity.CENTER);
+        guidanceText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         sessionSeconds = 0;
         timerText.setText("");
 
@@ -1712,5 +1717,67 @@ public class BreathingActivity extends AppCompatActivity {
                 }, 500);
             }
         }, 2000); // 在页面加载2秒后展示演示动画
+    }
+
+    // 修改呼吸圆形提示方法
+    private void setupInitialBreathingCircleHint() {
+        // 获取呼吸圆形和指导文本
+        ImageView breathingCircle = findViewById(R.id.breathingCircle);
+        TextView guidanceText = findViewById(R.id.guidanceText);
+        TextView breathingStateText = findViewById(R.id.breathingStateText);
+        
+        // 清空中间的状态文本
+        breathingStateText.setText("");
+        
+        // 设置上方的指导文本，确保居中显示
+        guidanceText.setText("跟随圆圈呼吸\n吸气4秒，呼气4秒");
+        guidanceText.setTextSize(18);
+        guidanceText.setTextColor(getResources().getColor(R.color.calm_breathing));
+        guidanceText.setShadowLayer(3, 1, 1, Color.parseColor("#80000000"));
+        guidanceText.setAlpha(0.9f);
+        guidanceText.setGravity(android.view.Gravity.CENTER); // 设置文本居中
+        guidanceText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER); // 确保文本对齐居中
+        
+        // 添加一个轻微的脉动动画，提示这是呼吸指示器
+        ValueAnimator pulseAnimator = ValueAnimator.ofFloat(1.0f, 1.08f);
+        pulseAnimator.setDuration(2000);
+        pulseAnimator.setRepeatCount(ValueAnimator.INFINITE);
+        pulseAnimator.setRepeatMode(ValueAnimator.REVERSE);
+        pulseAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
+        
+        pulseAnimator.addUpdateListener(animation -> {
+            float value = (float) animation.getAnimatedValue();
+            breathingCircle.setScaleX(value);
+            breathingCircle.setScaleY(value);
+        });
+        
+        // 立即开始动画
+        pulseAnimator.start();
+        
+        // 当用户点击开始按钮时，停止初始动画，开始正式的呼吸练习
+        startButton.setOnClickListener(v -> {
+            if (!isBreathing) {
+                // 清除提示文本，恢复为空白
+                guidanceText.setText("");
+                // 停止脉动动画
+                pulseAnimator.cancel();
+                // 开始呼吸练习
+                startBreathing();
+            } else {
+                stopBreathingExercise();
+            }
+        });
+        
+        // 添加点击呼吸圆形也可以开始练习的功能
+        breathingCircle.setOnClickListener(v -> {
+            if (!isBreathing && !isPreparingToStart) {
+                // 清除提示文本
+                guidanceText.setText("");
+                // 停止脉动动画
+                pulseAnimator.cancel();
+                // 开始呼吸练习
+                startBreathing();
+            }
+        });
     }
 } 
