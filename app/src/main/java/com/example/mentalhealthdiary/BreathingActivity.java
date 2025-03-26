@@ -299,7 +299,7 @@ public class BreathingActivity extends AppCompatActivity {
                 }
             }
         }.start();
-
+        
         // 使节奏指示器完全可见
         View rhythmIndicator = findViewById(R.id.rhythmIndicator);
         TextView rhythmIndicatorHint = findViewById(R.id.rhythmIndicatorHint);
@@ -308,24 +308,31 @@ public class BreathingActivity extends AppCompatActivity {
         rhythmIndicatorHint.animate().alpha(0.0f).setDuration(500).start(); // 隐藏提示文本
 
         // 播放背景音乐
-        String musicName = getMusicNameForMode(currentMode);
-        playBackgroundMusic(musicName);
+        String musicName = getMusicFeedbackForMode(currentMode);
+        startBackgroundMusic();
+        
+        // 确保更新音乐反馈文本
+        updateMusicFeedback(musicName);
+        
+        // 确保启动音符动画
+        if (!isShowingNotes) {
+            startMusicNoteAnimation();
+        }
     }
 
     private void startBreathingExercise() {
-        if (isBreathing) {
-            return;
-        }
-
         isBreathing = true;
-        startButton.setText("停止");
-        sessionSeconds = 0; // 确保从0开始计时
+        startButton.setText("停止练习");
+        
+        // 重置引导文本和计时器
+        guidanceText.setText("跟随圆圈呼吸\n吸气" + currentMode.inhaleSeconds + "秒，呼气" + currentMode.exhaleSeconds + "秒");
+        guidanceText.setGravity(android.view.Gravity.CENTER);
+        guidanceText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        
+        // 其他代码...
         
         // 开始动画
         breathingAnimation.start();
-        
-        // 更新引导文本
-        updateGuidanceText();
         
         // 启动呼吸引导计时器
         startGuidanceTimer();
@@ -358,6 +365,41 @@ public class BreathingActivity extends AppCompatActivity {
     }
 
     private void startBackgroundMusic() {
+        try {
+            // 确保MediaPlayer已初始化
+            if (mediaPlayer == null) {
+                initializeMediaPlayer();
+            } else {
+                // 重新创建MediaPlayer以确保从头开始播放
+                mediaPlayer.release();
+                initializeMediaPlayer();
+            }
+            
+            // 开始播放音乐
+            if (mediaPlayer != null) {
+                Log.d("BreathingActivity", "开始播放音乐: " + getMusicFeedbackForMode(currentMode));
+                mediaPlayer.seekTo(0); // 确保从头开始播放
+                mediaPlayer.start();
+                
+                // 显示音乐反馈
+                if (musicFeedbackText != null) {
+                    // 根据当前模式设置不同的反馈文本
+                    String musicFeedback = getMusicFeedbackForMode(currentMode);
+                    
+                    // 更新音乐反馈文本
+                    updateMusicFeedback(musicFeedback);
+                    
+                    // 确保启动音符动画
+                    if (!isShowingNotes) {
+                        startMusicNoteAnimation();
+                    }
+                }
+            } else {
+                Log.e("BreathingActivity", "MediaPlayer为null");
+            }
+        } catch (Exception e) {
+            Log.e("BreathingActivity", "播放音乐失败", e);
+        }
     }
 
     private void stopBreathingExercise() {
@@ -397,7 +439,7 @@ public class BreathingActivity extends AppCompatActivity {
         }
         
         // 重置引导文本和计时器
-        guidanceText.setText("跟随圆圈呼吸\n吸气" + currentMode.inhaleSeconds + "秒，呼气" + currentMode.exhaleSeconds + "秒");
+        guidanceText.setText("跟随圆圈呼吸\n吸气" + currentMode.inhaleSeconds + "秒，呼气" + currentMode.exhaleSeconds);
         guidanceText.setGravity(android.view.Gravity.CENTER);
         guidanceText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         sessionSeconds = 0;
