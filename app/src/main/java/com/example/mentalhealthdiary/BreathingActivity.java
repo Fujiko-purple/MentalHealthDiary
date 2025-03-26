@@ -124,10 +124,17 @@ public class BreathingActivity extends AppCompatActivity {
         if (musicFeedbackText != null) {
             musicFeedbackText.setVisibility(View.GONE);
             
-            // 增强文本可见性
-            musicFeedbackText.setTextColor(Color.BLACK);
-            musicFeedbackText.setShadowLayer(2, 1, 1, Color.WHITE);
-            musicFeedbackText.setBackgroundResource(R.drawable.music_feedback_background);
+            // 设置文本样式
+            musicFeedbackText.setTextColor(getResources().getColor(R.color.calm_breathing));
+            
+            // 创建一个新的GradientDrawable来设置背景
+            android.graphics.drawable.GradientDrawable musicBackground = new android.graphics.drawable.GradientDrawable();
+            musicBackground.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
+            musicBackground.setCornerRadius(16 * getResources().getDisplayMetrics().density); // 16dp
+            musicBackground.setColor(Color.argb(220, 245, 249, 252)); // 非常淡的蓝色，带透明度
+            
+            // 设置新的背景
+            musicFeedbackText.setBackground(musicBackground);
         }
 
         // 初始化MediaPlayer
@@ -635,14 +642,49 @@ public class BreathingActivity extends AppCompatActivity {
                 break;
         }
         
-        // 确保Spinner在背景变化后仍然可见
+        // 获取Spinner并更新其样式
         Spinner modeSpinner = findViewById(R.id.breathingModeSpinner);
-        modeSpinner.setBackgroundResource(R.drawable.spinner_background_enhanced);
         
-        // 确保音乐反馈文本在背景变化后仍然可见
-        if (musicFeedbackText != null && musicFeedbackText.getVisibility() == View.VISIBLE) {
-            musicFeedbackText.setBackgroundResource(R.drawable.music_feedback_background);
+        // 根据当前模式设置Spinner边框颜色
+        int borderColor;
+        int alpha = 180; // 透明度，使颜色更柔和
+        switch (mode) {
+            case NORMAL:
+                borderColor = Color.argb(alpha, Color.red(getResources().getColor(R.color.calm_breathing)), 
+                                       Color.green(getResources().getColor(R.color.calm_breathing)), 
+                                       Color.blue(getResources().getColor(R.color.calm_breathing)));
+                break;
+            case FOCUS:
+                borderColor = Color.argb(alpha, Color.red(getResources().getColor(R.color.focus_breathing)), 
+                                       Color.green(getResources().getColor(R.color.focus_breathing)), 
+                                       Color.blue(getResources().getColor(R.color.focus_breathing)));
+                break;
+            case ENERGIZING:
+                borderColor = Color.argb(alpha, Color.red(getResources().getColor(R.color.deep_breathing)), 
+                                       Color.green(getResources().getColor(R.color.deep_breathing)), 
+                                       Color.blue(getResources().getColor(R.color.deep_breathing)));
+                break;
+            case CALMING:
+                borderColor = Color.argb(alpha, Color.red(getResources().getColor(R.color.relax_breathing)), 
+                                       Color.green(getResources().getColor(R.color.relax_breathing)), 
+                                       Color.blue(getResources().getColor(R.color.relax_breathing)));
+                break;
+            default:
+                borderColor = Color.argb(alpha, Color.red(getResources().getColor(R.color.calm_breathing)), 
+                                       Color.green(getResources().getColor(R.color.calm_breathing)), 
+                                       Color.blue(getResources().getColor(R.color.calm_breathing)));
         }
+        
+        // 创建一个新的GradientDrawable来设置边框颜色
+        android.graphics.drawable.GradientDrawable spinnerBackground = new android.graphics.drawable.GradientDrawable();
+        spinnerBackground.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
+        spinnerBackground.setCornerRadius(24 * getResources().getDisplayMetrics().density); // 24dp
+        spinnerBackground.setColor(Color.WHITE);
+        spinnerBackground.setStroke(2, borderColor);
+        spinnerBackground.setPadding(16, 8, 16, 8);
+        
+        // 设置新的背景
+        modeSpinner.setBackground(spinnerBackground);
     }
 
     // 显示模式详细信息
@@ -1660,12 +1702,48 @@ public class BreathingActivity extends AppCompatActivity {
 
     private void updateMusicFeedback(String musicName) {
         if (musicFeedbackText != null) {
-            musicFeedbackText.setText("🎶正在播放：" + musicName);
+            // 使用带有音符图标的文本
+            musicFeedbackText.setText("🎵 正在播放：" + musicName);
             musicFeedbackText.setVisibility(View.VISIBLE);
             
-            // 确保文本在所有背景上都可见
-            musicFeedbackText.setTextColor(Color.BLACK);
-            musicFeedbackText.setBackgroundResource(R.drawable.music_feedback_background);
+            // 根据当前模式设置音乐反馈文本的样式
+            int textColor;
+            int backgroundColor;
+            int alpha = 220; // 透明度，使背景更柔和
+            
+            switch (currentMode) {
+                case NORMAL:
+                    textColor = getResources().getColor(R.color.calm_breathing);
+                    backgroundColor = Color.argb(alpha, 245, 249, 252); // 非常淡的蓝色
+                    break;
+                case FOCUS:
+                    textColor = getResources().getColor(R.color.focus_breathing);
+                    backgroundColor = Color.argb(alpha, 249, 245, 252); // 非常淡的紫色
+                    break;
+                case ENERGIZING:
+                    textColor = getResources().getColor(R.color.deep_breathing);
+                    backgroundColor = Color.argb(alpha, 252, 249, 245); // 非常淡的橙色
+                    break;
+                case CALMING:
+                    textColor = getResources().getColor(R.color.relax_breathing);
+                    backgroundColor = Color.argb(alpha, 245, 252, 247); // 非常淡的绿色
+                    break;
+                default:
+                    textColor = getResources().getColor(R.color.calm_breathing);
+                    backgroundColor = Color.argb(alpha, 245, 249, 252);
+            }
+            
+            // 设置文本颜色
+            musicFeedbackText.setTextColor(textColor);
+            
+            // 创建一个新的GradientDrawable来设置背景
+            android.graphics.drawable.GradientDrawable musicBackground = new android.graphics.drawable.GradientDrawable();
+            musicBackground.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
+            musicBackground.setCornerRadius(16 * getResources().getDisplayMetrics().density); // 16dp
+            musicBackground.setColor(backgroundColor);
+            
+            // 设置新的背景
+            musicFeedbackText.setBackground(musicBackground);
             
             // 添加淡入动画
             musicFeedbackText.setAlpha(0f);
