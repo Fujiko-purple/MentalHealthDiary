@@ -306,18 +306,6 @@ public class BreathingActivity extends AppCompatActivity {
         
         rhythmIndicator.animate().alpha(1.0f).setDuration(500).start();
         rhythmIndicatorHint.animate().alpha(0.0f).setDuration(500).start(); // 隐藏提示文本
-
-        // 播放背景音乐
-        String musicName = getMusicFeedbackForMode(currentMode);
-        startBackgroundMusic();
-        
-        // 确保更新音乐反馈文本
-        updateMusicFeedback(musicName);
-        
-        // 确保启动音符动画
-        if (!isShowingNotes) {
-            startMusicNoteAnimation();
-        }
     }
 
     private void startBreathingExercise() {
@@ -329,6 +317,11 @@ public class BreathingActivity extends AppCompatActivity {
         guidanceText.setGravity(android.view.Gravity.CENTER);
         guidanceText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         
+        // 在这里播放背景音乐
+        String musicName = getMusicFeedbackForMode(currentMode);
+        startBackgroundMusic();
+        updateMusicFeedback(musicName);
+        
         // 其他代码...
         
         // 开始动画
@@ -336,9 +329,6 @@ public class BreathingActivity extends AppCompatActivity {
         
         // 启动呼吸引导计时器
         startGuidanceTimer();
-        
-        // 播放音乐并显示反馈
-        startBackgroundMusic();
         
         // 添加练习时长计时
         if (durationTimer != null) {
@@ -741,10 +731,11 @@ public class BreathingActivity extends AppCompatActivity {
             (int)(16 * getResources().getDisplayMetrics().density),
             (int)(8 * getResources().getDisplayMetrics().density)
         );
-
+        
         // 如果正在进行呼吸练习，更新音乐
-        if (isBreathing && mediaPlayer != null && mediaPlayer.isPlaying()) {
+        if (isBreathing && !isPreparingToStart && mediaPlayer != null && mediaPlayer.isPlaying()) {
             String musicName = getMusicFeedbackForMode(mode);
+            startBackgroundMusic(); // 重新开始播放音乐
             updateMusicFeedback(musicName);
         }
     }
