@@ -357,6 +357,9 @@ public class BreathingActivity extends AppCompatActivity {
         }.start();
     }
 
+    private void startBackgroundMusic() {
+    }
+
     private void stopBreathingExercise() {
         // 如果正在准备阶段，取消准备
         if (isPreparingToStart && prepTimer != null) {
@@ -698,9 +701,9 @@ public class BreathingActivity extends AppCompatActivity {
         );
 
         // 如果正在进行呼吸练习，更新音乐
-        if (isBreathing) {
-            String musicName = getMusicNameForMode(mode);
-            playBackgroundMusic(musicName);
+        if (isBreathing && mediaPlayer != null && mediaPlayer.isPlaying()) {
+            String musicName = getMusicFeedbackForMode(mode);
+            updateMusicFeedback(musicName);
         }
     }
 
@@ -1047,43 +1050,9 @@ public class BreathingActivity extends AppCompatActivity {
                 if (musicFeedbackText != null) {
                     // 根据当前模式设置不同的反馈文本
                     String musicFeedback = getMusicFeedbackForMode(currentMode);
-                    musicFeedbackText.setText(musicFeedback);
                     
-                    // 设置音乐反馈框的颜色与当前呼吸模式匹配
-                    int textColor;
-                    switch (currentMode) {
-                        case NORMAL:
-                            textColor = getResources().getColor(R.color.calm_breathing);
-                            break;
-                        case FOCUS:
-                            textColor = getResources().getColor(R.color.focus_breathing);
-                            break;
-                        case ENERGIZING:
-                            textColor = getResources().getColor(R.color.deep_breathing);
-                            break;
-                        case CALMING:
-                            textColor = getResources().getColor(R.color.relax_breathing);
-                            break;
-                        default:
-                            textColor = getResources().getColor(R.color.calm_breathing);
-                    }
-                    
-                    // 为音乐图标设置颜色
-                    Drawable[] drawables = musicFeedbackText.getCompoundDrawables();
-                    if (drawables[0] != null) {
-                        drawables[0].setColorFilter(textColor, PorterDuff.Mode.SRC_IN);
-                    }
-                    
-                    // 淡入动画显示反馈
-                    musicFeedbackText.setAlpha(0f);
-                    musicFeedbackText.setVisibility(View.VISIBLE);
-                    musicFeedbackText.animate()
-                        .alpha(0.8f)
-                        .setDuration(1000)
-                        .start();
-                    
-                    // 添加轻微的脉动动画
-                    startMusicFeedbackPulsation();
+                    // 添加音符图标到文本
+                    updateMusicFeedback(musicFeedback);
                     
                     // 开始音符动画
                     startMusicNoteAnimation();
@@ -1168,73 +1137,44 @@ public class BreathingActivity extends AppCompatActivity {
 
     }
 
-    private void startBackgroundMusic() {
+    private void playBackgroundMusic(String musicName) {
         try {
-            // 确保MediaPlayer已初始化
-            if (mediaPlayer == null) {
-                initializeMediaPlayer();
-            } else {
-                // 重新创建MediaPlayer以确保从头开始播放
-                mediaPlayer.release();
-                initializeMediaPlayer();
+            if (mediaPlayer != null) {
+                stopBackgroundMusic();
             }
             
-            // 开始播放音乐
-            if (mediaPlayer != null) {
-                Log.d("BreathingActivity", "开始播放音乐: " + getMusicFeedbackForMode(currentMode));
-                mediaPlayer.seekTo(0); // 确保从头开始播放
-                mediaPlayer.start();
-                
-                // 显示音乐反馈
-                if (musicFeedbackText != null) {
-                    // 根据当前模式设置不同的反馈文本
-                    String musicFeedback = getMusicFeedbackForMode(currentMode);
-                    musicFeedbackText.setText(musicFeedback);
-                    
-                    // 设置音乐反馈框的颜色与当前呼吸模式匹配
-                    int textColor;
-                    switch (currentMode) {
-                        case NORMAL:
-                            textColor = getResources().getColor(R.color.calm_breathing);
-                            break;
-                        case FOCUS:
-                            textColor = getResources().getColor(R.color.focus_breathing);
-                            break;
-                        case ENERGIZING:
-                            textColor = getResources().getColor(R.color.deep_breathing);
-                            break;
-                        case CALMING:
-                            textColor = getResources().getColor(R.color.relax_breathing);
-                            break;
-                        default:
-                            textColor = getResources().getColor(R.color.calm_breathing);
-                    }
-                    
-                    // 为音乐图标设置颜色
-                    Drawable[] drawables = musicFeedbackText.getCompoundDrawables();
-                    if (drawables[0] != null) {
-                        drawables[0].setColorFilter(textColor, PorterDuff.Mode.SRC_IN);
-                    }
-                    
-                    // 淡入动画显示反馈
-                    musicFeedbackText.setAlpha(0f);
-                    musicFeedbackText.setVisibility(View.VISIBLE);
-                    musicFeedbackText.animate()
-                        .alpha(0.8f)
-                        .setDuration(1000)
-                        .start();
-                    
-                    // 添加轻微的脉动动画
-                    startMusicFeedbackPulsation();
-                    
-                    // 开始音符动画
-                    startMusicNoteAnimation();
-                }
-            } else {
-                Log.d("BreathingActivity", "MediaPlayer为null");
+            // 根据音乐名称选择资源ID
+            int musicResId;
+            switch (musicName) {
+                case "Call of silence":
+                    musicResId = R.raw.calm_breathing;
+                    break;
+                case "Nuit Silencieuse":
+                    musicResId = R.raw.focus_breathing;
+                    break;
+                case "皎洁的笑颜":
+                    musicResId = R.raw.calming_breathing;
+                    break;
+                case "钢琴曲":
+                    musicResId = R.raw.energizing_breathing;
+                    break;
+                default:
+                    musicResId = R.raw.energizing_breathing;
+                    musicName = "冥想音乐";
             }
+            
+            mediaPlayer = MediaPlayer.create(this, musicResId);
+            mediaPlayer.setLooping(true);
+            mediaPlayer.start();
+            
+            // 更新音乐反馈
+            updateMusicFeedback(musicName);
+            
+            // 启动音符动画
+            startMusicNoteAnimation();
+            
         } catch (Exception e) {
-            Log.e("BreathingActivity", "播放音乐失败", e);
+            Log.e("BreathingActivity", "播放背景音乐失败", e);
         }
     }
 
@@ -1270,15 +1210,15 @@ public class BreathingActivity extends AppCompatActivity {
         // 根据不同的呼吸模式返回不同的音乐反馈文本
         switch (mode) {
             case NORMAL:
-                return "正在播放：Call of silence";
+                return "Call of silence";
             case FOCUS:
-                return "正在播放：Nuit Silencieuse";
+                return "Nuit Silencieuse";
             case ENERGIZING:
-                return "正在播放：钢琴曲";
+                return "钢琴曲";
             case CALMING:
-                return "正在播放：皎洁的笑颜";
+                return "皎洁的笑颜";
             default:
-                return "正在播放：冥想音乐";
+                return "冥想音乐";
         }
     }
 
@@ -1720,7 +1660,7 @@ public class BreathingActivity extends AppCompatActivity {
     private void updateMusicFeedback(String musicName) {
         if (musicFeedbackText != null) {
             // 使用Unicode音符字符，这种方式在大多数设备上都能正确显示
-            musicFeedbackText.setText("\uD83C\uDFB5 正在播放：" + musicName + " \uD83C\uDFB6");
+            musicFeedbackText.setText("\uD83C\uDFB5 正在播放：" + musicName + "\uD83C\uDFB6");
             musicFeedbackText.setVisibility(View.VISIBLE);
             
             // 根据当前模式设置音乐反馈文本的样式
@@ -1874,18 +1814,5 @@ public class BreathingActivity extends AppCompatActivity {
                 startBreathing();
             }
         });
-    }
-
-    private void playBackgroundMusic(String musicName) {
-        try {
-            // 其他代码...
-            
-            // 更新音乐反馈
-            updateMusicFeedback(musicName);
-            
-            // 其他代码...
-        } catch (Exception e) {
-            Log.e("BreathingActivity", "播放背景音乐失败", e);
-        }
     }
 } 
