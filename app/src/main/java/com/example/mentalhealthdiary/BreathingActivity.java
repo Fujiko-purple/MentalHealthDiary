@@ -17,11 +17,13 @@ import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Handler;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -31,6 +33,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
@@ -44,6 +47,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 public class BreathingActivity extends AppCompatActivity {
     private ImageView breathingCircle;
@@ -59,6 +63,13 @@ public class BreathingActivity extends AppCompatActivity {
     private CountDownTimer prepTimer;
     private MediaPlayer mediaPlayer;
     private TextView musicFeedbackText;
+
+    // 音符动画相关变量
+    private ViewGroup rootLayout;
+    private Random random = new Random();
+    private Handler noteHandler = new Handler();
+    private Runnable noteRunnable;
+    private boolean isShowingNotes = false;
 
     private static final String CHANNEL_ID = "breathing_reminder_channel";
     private static final String CHANNEL_NAME = "呼吸练习提醒";
@@ -177,6 +188,9 @@ public class BreathingActivity extends AppCompatActivity {
             .alpha(1f)
             .setDuration(1500)
             .start();
+
+        // 获取根布局用于添加音符
+        rootLayout = findViewById(R.id.breathing_root_layout);
     }
 
     private void setupBreathingAnimation() {
@@ -450,6 +464,11 @@ public class BreathingActivity extends AppCompatActivity {
         // 如果正在进行练习且超过30秒，保存记录
         if (isBreathing && sessionSeconds >= 30) {
             saveBreathingSession();
+        }
+        
+        // 清理音符动画
+        if (noteHandler != null && noteRunnable != null) {
+            noteHandler.removeCallbacks(noteRunnable);
         }
     }
 
@@ -862,28 +881,105 @@ public class BreathingActivity extends AppCompatActivity {
 
     private void updateBackgroundMusic() {
         try {
-            // 保存当前播放位置
-            boolean wasPlaying = mediaPlayer.isPlaying();
+            // 确保MediaPlayer已初始化
+            if (mediaPlayer == null) {
+                initializeMediaPlayer();
+            } else {
+                // 重新创建MediaPlayer以确保从头开始播放
+                mediaPlayer.release();
+                initializeMediaPlayer();
+            }
             
-            // 释放旧的MediaPlayer
-            mediaPlayer.stop();
-            mediaPlayer.release();
-            
-            // 创建新的MediaPlayer并加载对应模式的音乐
-            initializeMediaPlayer();
-            
-            // 如果之前在播放，则继续播放
-            if (wasPlaying) {
+            // 开始播放音乐
+            if (mediaPlayer != null) {
+                Log.d("BreathingActivity", "开始播放音乐: " + getMusicFeedbackForMode(currentMode));
+                mediaPlayer.seekTo(0); // 确保从头开始播放
                 mediaPlayer.start();
                 
-                // 更新音乐反馈文本
+                // 显示音乐反馈
                 if (musicFeedbackText != null) {
+                    // 根据当前模式设置不同的反馈文本
                     String musicFeedback = getMusicFeedbackForMode(currentMode);
                     musicFeedbackText.setText(musicFeedback);
+                    
+                    // 设置音乐反馈框的颜色与当前呼吸模式匹配
+                    int textColor;
+                    switch (currentMode) {
+                        case NORMAL:
+                            textColor = getResources().getColor(R.color.calm_breathing);
+                            break;
+                        case FOCUS:
+                            textColor = getResources().getColor(R.color.focus_breathing);
+                            break;
+                        case ENERGIZING:
+                            textColor = getResources().getColor(R.color.deep_breathing);
+                            break;
+                        case CALMING:
+                            textColor = getResources().getColor(R.color.relax_breathing);
+                            break;
+                        default:
+                            textColor = getResources().getColor(R.color.calm_breathing);
+                    }
+                    
+                    // 为音乐图标设置颜色
+                    Drawable[] drawables = musicFeedbackText.getCompoundDrawables();
+                    if (drawables[0] != null) {
+                        drawables[0].setColorFilter(textColor, PorterDuff.Mode.SRC_IN);
+                    }
+                    
+                    // 淡入动画显示反馈
+                    musicFeedbackText.setAlpha(0f);
+                    musicFeedbackText.setVisibility(View.VISIBLE);
+                    musicFeedbackText.animate()
+                        .alpha(0.8f)
+                        .setDuration(1000)
+                        .start();
+                    
+                    // 添加轻微的脉动动画
+                    startMusicFeedbackPulsation();
+                    
+                    // 开始音符动画
+                    startMusicNoteAnimation();
                 }
+            } else {
+                Log.d("BreathingActivity", "MediaPlayer为null");
             }
         } catch (Exception e) {
-            Log.e("BreathingActivity", "更新音乐失败", e);
+            Log.e("BreathingActivity", "播放音乐失败", e);
+        }
+    }
+
+    // 添加轻微的脉动动画，与呼吸节奏相协调
+    private void startMusicFeedbackPulsation() {
+        if (musicFeedbackText == null) return;
+        
+        // 取消可能存在的动画
+        musicFeedbackText.clearAnimation();
+        
+        // 创建轻微的缩放动画
+        ValueAnimator pulseAnimator = ValueAnimator.ofFloat(1f, 1.03f);
+        pulseAnimator.setDuration(currentMode.inhaleSeconds * 1000);
+        pulseAnimator.setRepeatMode(ValueAnimator.REVERSE);
+        pulseAnimator.setRepeatCount(ValueAnimator.INFINITE);
+        pulseAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
+        
+        pulseAnimator.addUpdateListener(animation -> {
+            float value = (float) animation.getAnimatedValue();
+            musicFeedbackText.setScaleX(value);
+            musicFeedbackText.setScaleY(value);
+        });
+        
+        pulseAnimator.start();
+        
+        Log.d("BreathingActivity", "音乐反馈框脉动动画已启动");
+    }
+
+    // 停止音乐反馈动画
+    private void stopMusicFeedbackAnimation() {
+        if (musicFeedbackText != null) {
+            musicFeedbackText.clearAnimation();
+            musicFeedbackText.setScaleX(1f);
+            musicFeedbackText.setScaleY(1f);
         }
     }
 
@@ -948,6 +1044,31 @@ public class BreathingActivity extends AppCompatActivity {
                     String musicFeedback = getMusicFeedbackForMode(currentMode);
                     musicFeedbackText.setText(musicFeedback);
                     
+                    // 设置音乐反馈框的颜色与当前呼吸模式匹配
+                    int textColor;
+                    switch (currentMode) {
+                        case NORMAL:
+                            textColor = getResources().getColor(R.color.calm_breathing);
+                            break;
+                        case FOCUS:
+                            textColor = getResources().getColor(R.color.focus_breathing);
+                            break;
+                        case ENERGIZING:
+                            textColor = getResources().getColor(R.color.deep_breathing);
+                            break;
+                        case CALMING:
+                            textColor = getResources().getColor(R.color.relax_breathing);
+                            break;
+                        default:
+                            textColor = getResources().getColor(R.color.calm_breathing);
+                    }
+                    
+                    // 为音乐图标设置颜色
+                    Drawable[] drawables = musicFeedbackText.getCompoundDrawables();
+                    if (drawables[0] != null) {
+                        drawables[0].setColorFilter(textColor, PorterDuff.Mode.SRC_IN);
+                    }
+                    
                     // 淡入动画显示反馈
                     musicFeedbackText.setAlpha(0f);
                     musicFeedbackText.setVisibility(View.VISIBLE);
@@ -955,6 +1076,12 @@ public class BreathingActivity extends AppCompatActivity {
                         .alpha(0.8f)
                         .setDuration(1000)
                         .start();
+                    
+                    // 添加轻微的脉动动画
+                    startMusicFeedbackPulsation();
+                    
+                    // 开始音符动画
+                    startMusicNoteAnimation();
                 }
             } else {
                 Log.d("BreathingActivity", "MediaPlayer为null");
@@ -968,6 +1095,15 @@ public class BreathingActivity extends AppCompatActivity {
         try {
             if (mediaPlayer != null && mediaPlayer.isPlaying()) {
                 mediaPlayer.pause();
+                
+                // 停止音符动画
+                if (noteHandler != null && noteRunnable != null) {
+                    noteHandler.removeCallbacks(noteRunnable);
+                    isShowingNotes = false;
+                }
+                
+                // 停止脉动动画
+                stopMusicFeedbackAnimation();
                 
                 // 隐藏音乐反馈
                 if (musicFeedbackText != null) {
@@ -1013,5 +1149,193 @@ public class BreathingActivity extends AppCompatActivity {
             default:
                 return "冥想音乐";
         }
+    }
+
+    // 开始音符动画
+    private void startMusicNoteAnimation() {
+        if (rootLayout == null || isShowingNotes) return;
+        
+        isShowingNotes = true;
+        Log.d("BreathingActivity", "开始音符动画");
+        
+        // 创建定时任务，随机生成音符
+        noteRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (isBreathing && mediaPlayer != null && mediaPlayer.isPlaying()) {
+                    // 一次添加多个音符，形成更丰富的效果
+                    int noteCount = random.nextInt(3) + 1; // 随机生成1-3个音符
+                    for (int i = 0; i < noteCount; i++) {
+                        // 延迟一点时间添加每个音符，使其看起来更自然
+                        final int delay = i * 150;
+                        noteHandler.postDelayed(() -> addMusicNote(), delay);
+                    }
+                    
+                    // 根据当前模式设置音符生成频率
+                    int delay;
+                    switch (currentMode) {
+                        case ENERGIZING:
+                            delay = 1200 + random.nextInt(800); // 更频繁
+                            break;
+                        case CALMING:
+                            delay = 2500 + random.nextInt(1000); // 较少
+                            break;
+                        default:
+                            delay = 1800 + random.nextInt(1000); // 中等
+                    }
+                    
+                    // 安排下一组音符
+                    noteHandler.postDelayed(this, delay);
+                    Log.d("BreathingActivity", "安排下一组音符，延迟: " + delay + "ms");
+                } else {
+                    isShowingNotes = false;
+                    Log.d("BreathingActivity", "停止音符动画");
+                }
+            }
+        };
+        
+        // 立即添加第一组音符，然后开始定时生成
+        int initialNotes = random.nextInt(2) + 2; // 2-3个初始音符
+        for (int i = 0; i < initialNotes; i++) {
+            noteHandler.postDelayed(() -> addMusicNote(), i * 200);
+        }
+        
+        // 开始生成音符
+        noteHandler.postDelayed(noteRunnable, 1000);
+    }
+
+    // 修改addMusicNote方法，创建大小不同的音符
+    private void addMusicNote() {
+        runOnUiThread(() -> {
+            try {
+                if (musicFeedbackText == null || !musicFeedbackText.isShown()) return;
+                
+                // 创建新的ImageView作为音符
+                ImageView noteView = new ImageView(this);
+                
+                // 随机选择音符图标 - 可以创建几种不同的音符图标
+                int noteType = random.nextInt(2);
+                int noteResId = noteType == 0 ? 
+                        R.drawable.ic_music_note_small : 
+                        R.drawable.ic_music_note_small2;
+                noteView.setImageResource(noteResId);
+                
+                // 设置音符颜色（与当前呼吸模式匹配）
+                int noteColor;
+                switch (currentMode) {
+                    case NORMAL:
+                        noteColor = getResources().getColor(R.color.calm_breathing);
+                        break;
+                    case FOCUS:
+                        noteColor = getResources().getColor(R.color.focus_breathing);
+                        break;
+                    case ENERGIZING:
+                        noteColor = getResources().getColor(R.color.deep_breathing);
+                        break;
+                    case CALMING:
+                        noteColor = getResources().getColor(R.color.relax_breathing);
+                        break;
+                    default:
+                        noteColor = getResources().getColor(R.color.calm_breathing);
+                }
+                
+                // 随机调整颜色亮度，使音符颜色略有变化
+                float brightness = 0.8f + random.nextFloat() * 0.4f; // 0.8-1.2
+                noteColor = adjustBrightness(noteColor, brightness);
+                
+                noteView.setColorFilter(noteColor, PorterDuff.Mode.SRC_IN);
+                
+                // 随机大小 (50%-150% 的原始大小)
+                float scale = 0.5f + random.nextFloat(); // 0.5-1.5
+                noteView.setScaleX(scale);
+                noteView.setScaleY(scale);
+                
+                // 设置布局参数
+                ConstraintLayout.LayoutParams params = new ConstraintLayout.LayoutParams(
+                        ConstraintLayout.LayoutParams.WRAP_CONTENT,
+                        ConstraintLayout.LayoutParams.WRAP_CONTENT
+                );
+                
+                // 获取音乐反馈文本的位置
+                int[] location = new int[2];
+                musicFeedbackText.getLocationInWindow(location);
+                
+                // 设置音符的初始位置 - 从音乐反馈框内部或周围随机位置出现
+                int startX, startY;
+                boolean fromInside = random.nextBoolean(); // 50%几率从内部生成
+                
+                if (fromInside) {
+                    // 从音乐反馈框内部随机位置生成
+                    startX = location[0] + random.nextInt(musicFeedbackText.getWidth() - 20);
+                    startY = location[1] + random.nextInt(musicFeedbackText.getHeight() - 10);
+                } else {
+                    // 从音乐反馈框周围生成
+                    int side = random.nextInt(4); // 0:上, 1:右, 2:下, 3:左
+                    switch (side) {
+                        case 0: // 上方
+                            startX = location[0] + random.nextInt(musicFeedbackText.getWidth());
+                            startY = location[1] - 10 - random.nextInt(20);
+                            break;
+                        case 1: // 右侧
+                            startX = location[0] + musicFeedbackText.getWidth() + random.nextInt(20);
+                            startY = location[1] + random.nextInt(musicFeedbackText.getHeight());
+                            break;
+                        case 2: // 下方
+                            startX = location[0] + random.nextInt(musicFeedbackText.getWidth());
+                            startY = location[1] + musicFeedbackText.getHeight() + random.nextInt(20);
+                            break;
+                        default: // 左侧
+                            startX = location[0] - 10 - random.nextInt(20);
+                            startY = location[1] + random.nextInt(musicFeedbackText.getHeight());
+                            break;
+                    }
+                }
+                
+                params.leftToLeft = ConstraintLayout.LayoutParams.PARENT_ID;
+                params.topToTop = ConstraintLayout.LayoutParams.PARENT_ID;
+                params.leftMargin = startX;
+                params.topMargin = startY;
+                
+                noteView.setLayoutParams(params);
+                noteView.setAlpha(0f);
+                
+                // 添加到布局
+                rootLayout.addView(noteView);
+                
+                // 创建随机的上升路径和淡出动画
+                float xOffset = random.nextInt(80) - 40; // -40到40
+                float yOffset = -80 - random.nextInt(60); // -80到-140
+                int duration = 1500 + random.nextInt(1500); // 1.5-3秒
+                
+                noteView.animate()
+                        .alpha(0.7f)
+                        .translationYBy(yOffset)
+                        .translationXBy(xOffset)
+                        .setDuration(duration)
+                        .withEndAction(() -> {
+                            // 淡出并移除
+                            noteView.animate()
+                                    .alpha(0f)
+                                    .translationYBy(yOffset/2)
+                                    .setDuration(duration/2)
+                                    .withEndAction(() -> rootLayout.removeView(noteView))
+                                    .start();
+                        })
+                        .start();
+                    
+                Log.d("BreathingActivity", "音符已添加到屏幕");
+            } catch (Exception e) {
+                Log.e("BreathingActivity", "添加音符失败", e);
+            }
+        });
+    }
+
+    // 调整颜色亮度的辅助方法
+    private int adjustBrightness(int color, float factor) {
+        int a = Color.alpha(color);
+        int r = Math.min(255, (int) (Color.red(color) * factor));
+        int g = Math.min(255, (int) (Color.green(color) * factor));
+        int b = Math.min(255, (int) (Color.blue(color) * factor));
+        return Color.argb(a, r, g, b);
     }
 } 
