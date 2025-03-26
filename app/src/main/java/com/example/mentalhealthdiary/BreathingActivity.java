@@ -14,6 +14,7 @@ import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
@@ -56,6 +57,8 @@ public class BreathingActivity extends AppCompatActivity {
     private int sessionSeconds = 0;
     private boolean isPreparingToStart = false;
     private CountDownTimer prepTimer;
+    private MediaPlayer mediaPlayer;
+    private TextView musicFeedbackText;
 
     private static final String CHANNEL_ID = "breathing_reminder_channel";
     private static final String CHANNEL_NAME = "呼吸练习提醒";
@@ -97,7 +100,16 @@ public class BreathingActivity extends AppCompatActivity {
         guidanceText = findViewById(R.id.guidanceText);
         startButton = findViewById(R.id.startButton);
         timerText = findViewById(R.id.timerText);
+        musicFeedbackText = findViewById(R.id.musicFeedbackText);
+        
+        // 初始化音乐反馈文本
+        if (musicFeedbackText != null) {
+            musicFeedbackText.setVisibility(View.GONE);
+        }
 
+        // 初始化MediaPlayer
+        initializeMediaPlayer();
+        
         setupBreathingAnimation();
         setupUI();
 
@@ -251,6 +263,9 @@ public class BreathingActivity extends AppCompatActivity {
         // 启动呼吸引导计时器
         startGuidanceTimer();
         
+        // 播放音乐并显示反馈
+        startBackgroundMusic();
+        
         // 添加练习时长计时
         if (durationTimer != null) {
             durationTimer.cancel();
@@ -294,6 +309,9 @@ public class BreathingActivity extends AppCompatActivity {
         breathingCircle.setScaleX(1f);
         breathingCircle.setScaleY(1f);
         breathingCircle.setAlpha(0.7f);
+        
+        // 停止音乐并隐藏反馈
+        stopBackgroundMusic();
         
         // 停止所有计时器
         if (breathingTimer != null) {
@@ -417,6 +435,18 @@ public class BreathingActivity extends AppCompatActivity {
         if (breathingAnimation != null) {
             breathingAnimation.cancel();
         }
+        // 释放MediaPlayer资源
+        if (mediaPlayer != null) {
+            try {
+                if (mediaPlayer.isPlaying()) {
+                    mediaPlayer.stop();
+                }
+                mediaPlayer.release();
+                mediaPlayer = null;
+            } catch (Exception e) {
+                Log.e("BreathingActivity", "释放MediaPlayer失败", e);
+            }
+        }
         // 如果正在进行练习且超过30秒，保存记录
         if (isBreathing && sessionSeconds >= 30) {
             saveBreathingSession();
@@ -469,10 +499,35 @@ public class BreathingActivity extends AppCompatActivity {
             currentMode.exhaleSeconds));
     }
 
-    // 添加模式切换时的提示
+    // 修改onModeSelected方法，使其在呼吸练习中也能切换模式
     private void onModeSelected(BreathingMode mode) {
+        // 保存之前的呼吸状态
+        boolean wasBreathing = isBreathing;
+        
+        // 如果正在呼吸，先暂停当前的呼吸练习
+        if (isBreathing) {
+            // 暂停但不完全停止
+            if (breathingAnimation != null) {
+                breathingAnimation.cancel();
+            }
+            if (breathingTimer != null) {
+                breathingTimer.cancel();
+            }
+        }
+        
+        // 更新当前模式
         currentMode = mode;
         updateBreathingAnimation();
+        
+        // 如果之前在呼吸，使用新模式重新开始呼吸
+        if (wasBreathing) {
+            // 更新音乐
+            updateBackgroundMusic();
+            
+            // 重新开始动画和计时器
+            breathingAnimation.start();
+            startGuidanceTimer();
+        }
         
         // 显示模式效果提示
         View rootView = findViewById(android.R.id.content);
@@ -570,32 +625,38 @@ public class BreathingActivity extends AppCompatActivity {
         String guideDetail;
         switch (mode) {
             case NORMAL:
-                benefitDetail = "• 帮助平衡身心\n• 缓解日常压力\n• 提升专注力\n• 改善睡眠质量";
+                benefitDetail = "• 帮助平衡身心\n• 缓解日常压力\n• 提升专注力\n• 改善睡眠质量\n\n🎵 背景音乐: Call of silence";
                 guideDetail = "找到舒适的坐姿，保持背部挺直。跟随圆圈的节奏，" +
                             "通过鼻子缓慢吸气，感受气息充满胸腹，然后轻柔地呼出。";
                 break;
             case CALMING:
-                benefitDetail = "• 帮助入睡\n• 减轻失眠\n• 平静心绪\n• 改善睡眠质量";
+                benefitDetail = "• 帮助入睡\n• 减轻失眠\n• 平静心绪\n• 改善睡眠质量\n\n🎵 背景音乐: 皎洁的笑颜";
                 guideDetail = "可以采用躺姿，放松全身肌肉。" +
                             "将注意力集中在呼吸上，让思绪随着呼吸渐渐平静。";
                 break;
             case ENERGIZING:
-                benefitDetail = "• 提升能量水平\n• 增强清醒度\n• 改善注意力\n• 提高工作效率";
+                benefitDetail = "• 提升能量水平\n• 增强清醒度\n• 改善注意力\n• 提高工作效率\n\n🎵 背景音乐: 钢琴曲";
                 guideDetail = "较长的吸气和短促的呼气能激活身体系统。" +
                             "保持正确的呼吸节奏，感受能量在体内流动。";
                 break;
             case FOCUS:
-                benefitDetail = "• 提升专注力\n• 增强思维清晰度\n• 改善学习效率\n• 减少分心走神";
+                benefitDetail = "• 提升专注力\n• 增强思维清晰度\n• 改善学习效率\n• 减少分心走神\n\n🎵 背景音乐: Nuit Silencieuse";
                 guideDetail = "找到舒适的坐姿，保持背部挺直。跟随圆圈的节奏，" +
                             "通过鼻子缓慢吸气，感受气息充满胸腹，然后轻柔地呼出。";
                 break;
             default:
-                benefitDetail = mode.benefit;
+                benefitDetail = mode.benefit + "\n\n🎵 背景音乐: " + getMusicNameForMode(mode);
                 guideDetail = "保持自然的呼吸节奏，关注当下的呼吸感受。";
         }
         
         benefitText.setText(benefitDetail);
         guideText.setText(guideDetail);
+        
+        // 隐藏单独的音乐信息文本视图，因为我们已经将其整合到功效文本中
+        TextView musicInfoText = dialogView.findViewById(R.id.musicInfoText);
+        if (musicInfoText != null) {
+            musicInfoText.setVisibility(View.GONE);
+        }
 
         AlertDialog dialog = new AlertDialog.Builder(this)
             .setView(dialogView)
@@ -729,18 +790,23 @@ public class BreathingActivity extends AppCompatActivity {
         switch (position) {
             case 0: // 平静呼吸
                 textColor = getResources().getColor(R.color.calm_breathing);  // 蓝色
+                currentMode = BreathingMode.NORMAL;
                 break;
             case 1: // 专注呼吸
                 textColor = getResources().getColor(R.color.focus_breathing);  // 紫色
+                currentMode = BreathingMode.FOCUS;
                 break;
             case 2: // 提神呼吸
                 textColor = getResources().getColor(R.color.deep_breathing);  // 橙色
+                currentMode = BreathingMode.ENERGIZING;
                 break;
             case 3: // 安眠呼吸
                 textColor = getResources().getColor(R.color.relax_breathing);  // 绿色
+                currentMode = BreathingMode.CALMING;
                 break;
             default:
                 textColor = getResources().getColor(R.color.calm_breathing);
+                currentMode = BreathingMode.NORMAL;
                 break;
         }
         
@@ -787,6 +853,38 @@ public class BreathingActivity extends AppCompatActivity {
                     .start();
             })
             .start();
+        
+        // 如果正在练习中，更新音乐
+        if (isBreathing && mediaPlayer != null) {
+            updateBackgroundMusic();
+        }
+    }
+
+    private void updateBackgroundMusic() {
+        try {
+            // 保存当前播放位置
+            boolean wasPlaying = mediaPlayer.isPlaying();
+            
+            // 释放旧的MediaPlayer
+            mediaPlayer.stop();
+            mediaPlayer.release();
+            
+            // 创建新的MediaPlayer并加载对应模式的音乐
+            initializeMediaPlayer();
+            
+            // 如果之前在播放，则继续播放
+            if (wasPlaying) {
+                mediaPlayer.start();
+                
+                // 更新音乐反馈文本
+                if (musicFeedbackText != null) {
+                    String musicFeedback = getMusicFeedbackForMode(currentMode);
+                    musicFeedbackText.setText(musicFeedback);
+                }
+            }
+        } catch (Exception e) {
+            Log.e("BreathingActivity", "更新音乐失败", e);
+        }
     }
 
     // 辅助方法：调整颜色的透明度
@@ -796,5 +894,124 @@ public class BreathingActivity extends AppCompatActivity {
         int green = Color.green(color);
         int blue = Color.blue(color);
         return Color.argb(alpha, red, green, blue);
+    }
+
+    private void initializeMediaPlayer() {
+        try {
+            // 根据当前模式选择合适的音乐
+            int musicResId = getMusicResourceForMode(currentMode);
+            mediaPlayer = MediaPlayer.create(this, musicResId);
+            mediaPlayer.setLooping(true); // 循环播放
+            mediaPlayer.setVolume(1.0f, 1.0f); // 设置最大音量
+        } catch (Exception e) {
+            Log.e("BreathingActivity", "初始化MediaPlayer失败", e);
+        }
+    }
+
+    private int getMusicResourceForMode(BreathingMode mode) {
+
+        switch (mode) {
+            case NORMAL:
+                return R.raw.calm_breathing;
+            case FOCUS:
+                return R.raw.focus_breathing;
+            case ENERGIZING:
+                return R.raw.energizing_breathing;
+            case CALMING:
+                return R.raw.calming_breathing;
+            default:
+                return R.raw.calm_breathing;
+        }
+
+    }
+
+    private void startBackgroundMusic() {
+        try {
+            // 确保MediaPlayer已初始化
+            if (mediaPlayer == null) {
+                initializeMediaPlayer();
+            } else {
+                // 重新创建MediaPlayer以确保从头开始播放
+                mediaPlayer.release();
+                initializeMediaPlayer();
+            }
+            
+            // 开始播放音乐
+            if (mediaPlayer != null) {
+                Log.d("BreathingActivity", "开始播放音乐: " + getMusicFeedbackForMode(currentMode));
+                mediaPlayer.seekTo(0); // 确保从头开始播放
+                mediaPlayer.start();
+                
+                // 显示音乐反馈
+                if (musicFeedbackText != null) {
+                    // 根据当前模式设置不同的反馈文本
+                    String musicFeedback = getMusicFeedbackForMode(currentMode);
+                    musicFeedbackText.setText(musicFeedback);
+                    
+                    // 淡入动画显示反馈
+                    musicFeedbackText.setAlpha(0f);
+                    musicFeedbackText.setVisibility(View.VISIBLE);
+                    musicFeedbackText.animate()
+                        .alpha(0.8f)
+                        .setDuration(1000)
+                        .start();
+                }
+            } else {
+                Log.d("BreathingActivity", "MediaPlayer为null");
+            }
+        } catch (Exception e) {
+            Log.e("BreathingActivity", "播放音乐失败", e);
+        }
+    }
+
+    private void stopBackgroundMusic() {
+        try {
+            if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+                mediaPlayer.pause();
+                
+                // 隐藏音乐反馈
+                if (musicFeedbackText != null) {
+                    musicFeedbackText.animate()
+                        .alpha(0f)
+                        .setDuration(500)
+                        .withEndAction(() -> musicFeedbackText.setVisibility(View.GONE))
+                        .start();
+                }
+            }
+        } catch (Exception e) {
+            Log.e("BreathingActivity", "停止音乐失败", e);
+        }
+    }
+
+    private String getMusicFeedbackForMode(BreathingMode mode) {
+        // 根据不同的呼吸模式返回不同的音乐反馈文本
+        switch (mode) {
+            case NORMAL:
+                return "正在播放：Call of silence";
+            case FOCUS:
+                return "正在播放：Nuit Silencieuse";
+            case ENERGIZING:
+                return "正在播放：钢琴曲";
+            case CALMING:
+                return "正在播放：皎洁的笑颜";
+            default:
+                return "正在播放：冥想音乐";
+        }
+    }
+
+    // 添加一个新方法来获取音乐名称
+    private String getMusicNameForMode(BreathingMode mode) {
+        switch (mode) {
+            case NORMAL:
+                return "Call of silence";
+            case FOCUS:
+                return "Nuit Silencieuse";
+            case ENERGIZING:
+                return "钢琴曲";
+            case CALMING:
+                return "皎洁的笑颜";
+            default:
+                return "冥想音乐";
+        }
     }
 } 

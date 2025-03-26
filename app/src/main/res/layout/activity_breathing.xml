@@ -125,4 +125,26 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/startButton" />
 
+    <TextView
+        android:id="@+id/musicFeedbackText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:drawableStart="@drawable/ic_music_note"
+        android:drawablePadding="8dp"
+        android:text="正在播放冥想音乐..."
+        android:textColor="#FFFFFF"
+        android:shadowColor="#4D000000"
+        android:shadowDx="1"
+        android:shadowDy="1"
+        android:shadowRadius="2"
+        android:textSize="14sp"
+        android:alpha="0.8"
+        android:background="@drawable/timer_background"
+        android:padding="12dp"
+        android:visibility="gone"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/timerText" />
+
 </androidx.constraintlayout.widget.ConstraintLayout> 
