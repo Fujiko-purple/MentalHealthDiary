@@ -111,6 +111,9 @@ public class AIChatActivity extends AppCompatActivity {
                         adapter.setWaitingResponse(false);
                         updateSendButtonState();
                         
+                        // 刷新适配器以更新所有消息的可编辑状态
+                        adapter.notifyDataSetChanged();
+                        
                         // 滚动到底部
                         chatRecyclerView.post(() -> {
                             chatRecyclerView.smoothScrollToPosition(messages.size() - 1);
@@ -381,6 +384,10 @@ public class AIChatActivity extends AppCompatActivity {
                 apiMessages,
                 modelName
             );
+            
+            // 设置等待状态
+            isWaitingResponse = true;
+            adapter.setWaitingResponse(true);
             
             // 发送请求
             chatService.sendChatRequest(request, currentHistoryId);

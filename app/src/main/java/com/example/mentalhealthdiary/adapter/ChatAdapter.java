@@ -41,7 +41,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private static final int FADE_DURATION = 300;
     private Context context;
     private OnMessageEditListener messageEditListener;
-    private boolean isWaitingResponse = false;
+    private boolean waitingResponse = false;
 
     // 添加接口定义
     public interface OnMessageEditListener {
@@ -101,8 +101,11 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             if (message.isUser()) {
                 messageHolder.messageText.setBackgroundResource(R.drawable.chat_bubble_sent);
                 
-                // 检查是否正在等待AI回复
-                if (!isWaitingResponse) {
+                // 关键修改：检查是否有任何加载消息存在于列表中
+                boolean hasLoadingMessage = checkForLoadingMessage();
+                
+                // 只有在没有加载消息且不在等待响应时才允许编辑
+                if (!hasLoadingMessage && !waitingResponse) {
                     // 设置长按监听
                     messageHolder.messageText.setOnLongClickListener(v -> {
                         // 显示编辑框和确认按钮，隐藏文本框
@@ -163,8 +166,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         imm.hideSoftInputFromWindow(messageHolder.messageEditText.getWindowToken(), 0);
                     });
                 } else {
-                    // 如果正在等待AI回复，移除长按监听器
+                    // 禁用编辑功能
                     messageHolder.messageText.setOnLongClickListener(null);
+                    messageHolder.messageText.setLongClickable(false);
                     // 确保编辑容器是隐藏的
                     messageHolder.editContainer.setVisibility(View.GONE);
                     messageHolder.messageText.setVisibility(View.VISIBLE);
@@ -376,8 +380,19 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
     }
 
+    // 添加设置等待状态的方法
     public void setWaitingResponse(boolean waiting) {
-        this.isWaitingResponse = waiting;
-        notifyDataSetChanged();
+        this.waitingResponse = waiting;
+        notifyDataSetChanged(); // 刷新所有项以更新可编辑状态
+    }
+
+    // 添加一个辅助方法来检查是否有加载消息
+    private boolean checkForLoadingMessage() {
+        for (ChatMessage msg : messages) {
+            if (msg.isLoading()) {
+                return true;
+            }
+        }
+        return false;
     }
 } 
