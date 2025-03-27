@@ -787,9 +787,18 @@ public class BreathingActivity extends AppCompatActivity {
             }
         }
 
-        Snackbar.make(findViewById(R.id.breathing_root_layout),
-            "已删除 " + songsToDelete.size() + " 首歌曲",
-            Snackbar.LENGTH_SHORT).show();
+        // 构建删除歌曲的提示信息
+        StringBuilder message = new StringBuilder("已删除:\n");
+        for (String song : songsToDelete) {
+            message.append("• ").append(song).append("\n");
+        }
+
+        // 显示删除提示，使用 AlertDialog 而不是 Snackbar
+        new AlertDialog.Builder(this)
+            .setTitle("删除成功")
+            .setMessage(message.toString())
+            .setPositiveButton("确定", null)
+            .show();
     }
 
     // 处理权限请求结果
@@ -953,14 +962,23 @@ public class BreathingActivity extends AppCompatActivity {
                     .apply();
 
                 // 更新列表显示
-                currentSongs.addAll(importedFiles);
+                currentSongs = new ArrayList<>(existingPlaylist);  // 创建新的列表
                 if (playlistAdapter != null) {
-                    playlistAdapter.updateSongs(currentSongs);
+                    playlistAdapter.updateSongs(new ArrayList<>(currentSongs));  // 传入新的列表副本
                 }
 
-                Snackbar.make(findViewById(R.id.breathing_root_layout),
-                    "已导入 " + importedFiles.size() + " 首音乐",
-                    Snackbar.LENGTH_SHORT).show();
+                // 构建导入歌曲的提示信息
+                StringBuilder message = new StringBuilder("已导入:\n");
+                for (String song : importedFiles) {
+                    message.append("• ").append(song).append("\n");
+                }
+
+                // 显示导入提示，使用 AlertDialog
+                new AlertDialog.Builder(BreathingActivity.this)
+                    .setTitle("导入成功")
+                    .setMessage(message.toString())
+                    .setPositiveButton("确定", null)
+                    .show();
             }
         }
     }
