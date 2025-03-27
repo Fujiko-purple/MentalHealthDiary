@@ -10,15 +10,21 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
+import android.provider.OpenableColumns;
+import android.provider.Settings;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.RelativeSizeSpan;
@@ -47,13 +53,18 @@ import com.example.mentalhealthdiary.database.AppDatabase;
 import com.example.mentalhealthdiary.database.BreathingSession;
 import com.google.android.material.snackbar.Snackbar;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 public class BreathingActivity extends AppCompatActivity {
     private ImageView breathingCircle;
@@ -81,6 +92,8 @@ public class BreathingActivity extends AppCompatActivity {
     private static final String CHANNEL_NAME = "呼吸练习提醒";
     private static final String CHANNEL_DESC = "提醒您进行每日呼吸练习";
 
+    private static final int PICK_AUDIO_REQUEST = 1;
+
     // 更新呼吸模式枚举
     private enum BreathingMode {
         NORMAL(4, 4, "标准呼吸 4-4", "平衡身心"),      // 平静呼吸
@@ -104,6 +117,9 @@ public class BreathingActivity extends AppCompatActivity {
 
     private BreathingMode currentMode = BreathingMode.NORMAL;
     private View overlayView;
+
+    // 添加权限请求常量
+    private static final int PERMISSION_REQUEST_CODE = 123;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -654,11 +670,178 @@ public class BreathingActivity extends AppCompatActivity {
             return;
         }
         
-        // 这里暂时只添加一个占位方法
-        // 后续会实现具体的导入歌单功能
-        Snackbar.make(findViewById(R.id.breathing_root_layout),
-            "导入歌单功能即将开放",
-            Snackbar.LENGTH_SHORT).show();
+        // 检查权限
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            // Android 13及以上版本使用READ_MEDIA_AUDIO权限
+            if (checkSelfPermission(android.Manifest.permission.READ_MEDIA_AUDIO)
+                    != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(
+                    new String[]{android.Manifest.permission.READ_MEDIA_AUDIO},
+                    PERMISSION_REQUEST_CODE
+                );
+                return;
+            }
+        } else {
+            // Android 13以下版本使用READ_EXTERNAL_STORAGE权限
+            if (checkSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(
+                    new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE},
+                    PERMISSION_REQUEST_CODE
+                );
+                return;
+            }
+        }
+        
+        // 有权限后执行导入操作
+        startImportProcess();
+    }
+
+    // 处理权限请求结果
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // 用户授予了权限，开始导入
+                startImportProcess();
+            } else {
+                // 用户拒绝了权限
+                Snackbar.make(findViewById(R.id.breathing_root_layout),
+                    "需要存储权限才能导入音乐文件",
+                    Snackbar.LENGTH_LONG)
+                    .setAction("设置", v -> {
+                        // 打开应用设置页面
+                        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                        Uri uri = Uri.fromParts("package", getPackageName(), null);
+                        intent.setData(uri);
+                        startActivity(intent);
+                    })
+                    .show();
+            }
+        }
+    }
+
+    // 将原来的导入逻辑移到这个方法中
+    private void startImportProcess() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("audio/*");
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        
+        try {
+            startActivityForResult(
+                Intent.createChooser(intent, "选择音乐文件"),
+                PICK_AUDIO_REQUEST
+            );
+        } catch (android.content.ActivityNotFoundException ex) {
+            Snackbar.make(findViewById(R.id.breathing_root_layout),
+                "请安装文件管理器",
+                Snackbar.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        
+        if (requestCode == PICK_AUDIO_REQUEST && resultCode == RESULT_OK) {
+            if (data != null) {
+                if (data.getClipData() != null) {
+                    // 处理多个文件
+                    int count = data.getClipData().getItemCount();
+                    for (int i = 0; i < count; i++) {
+                        Uri audioUri = data.getClipData().getItemAt(i).getUri();
+                        saveAudioToPlaylist(audioUri);
+                    }
+                    Snackbar.make(findViewById(R.id.breathing_root_layout),
+                        "已导入 " + count + " 首音乐",
+                        Snackbar.LENGTH_SHORT).show();
+                } else if (data.getData() != null) {
+                    // 处理单个文件
+                    Uri audioUri = data.getData();
+                    saveAudioToPlaylist(audioUri);
+                    Snackbar.make(findViewById(R.id.breathing_root_layout),
+                        "已导入 1 首音乐",
+                        Snackbar.LENGTH_SHORT).show();
+                }
+            }
+        }
+    }
+
+    private void saveAudioToPlaylist(Uri audioUri) {
+        try {
+            // 获取文件名
+            String fileName = getFileNameFromUri(audioUri);
+            
+            // 将文件复制到应用私有目录
+            File destFile = new File(getFilesDir(), "music/" + fileName);
+            if (!destFile.getParentFile().exists()) {
+                destFile.getParentFile().mkdirs();
+            }
+            
+            InputStream is = getContentResolver().openInputStream(audioUri);
+            FileOutputStream fos = new FileOutputStream(destFile);
+            
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = is.read(buffer)) > 0) {
+                fos.write(buffer, 0, length);
+            }
+            
+            fos.close();
+            is.close();
+            
+            // 保存到数据库或SharedPreferences中
+            saveAudioInfoToPreferences(fileName, destFile.getAbsolutePath());
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            Snackbar.make(findViewById(R.id.breathing_root_layout),
+                "导入音乐失败: " + e.getMessage(),
+                Snackbar.LENGTH_SHORT).show();
+        }
+    }
+
+    private String getFileNameFromUri(Uri uri) {
+        String result = null;
+        if (uri.getScheme().equals("content")) {
+            Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+            try {
+                if (cursor != null && cursor.moveToFirst()) {
+                    int index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                    if (index >= 0) {
+                        result = cursor.getString(index);
+                    }
+                }
+            } finally {
+                if (cursor != null) {
+                    cursor.close();
+                }
+            }
+        }
+        if (result == null) {
+            result = uri.getPath();
+            int cut = result.lastIndexOf('/');
+            if (cut != -1) {
+                result = result.substring(cut + 1);
+            }
+        }
+        return result;
+    }
+
+    private void saveAudioInfoToPreferences(String fileName, String filePath) {
+        SharedPreferences prefs = getSharedPreferences("custom_playlist", MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        
+        // 保存音乐文件信息
+        Set<String> playlist = new HashSet<>(prefs.getStringSet("playlist", new HashSet<>()));
+        playlist.add(fileName);
+        editor.putStringSet("playlist", playlist);
+        
+        // 保存文件路径
+        editor.putString("path_" + fileName, filePath);
+        editor.apply();
     }
 
     @Override
