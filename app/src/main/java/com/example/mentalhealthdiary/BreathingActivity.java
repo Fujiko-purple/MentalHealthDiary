@@ -1260,6 +1260,45 @@ public class BreathingActivity extends AppCompatActivity {
                 selectedFreeBreathingMusic = lastSelectedSong;
             }
         }
+
+        // 获取节奏指示器视图
+        View rhythmIndicator = findViewById(R.id.rhythmIndicator);
+        TextView rhythmIndicatorHint = findViewById(R.id.rhythmIndicatorHint);
+
+        // 如果是自由呼吸模式，隐藏指示灯
+        if (mode == BreathingMode.FREE) {
+            rhythmIndicator.setVisibility(View.GONE);
+            rhythmIndicatorHint.setVisibility(View.GONE);
+        } else {
+            rhythmIndicator.setVisibility(View.VISIBLE);
+            rhythmIndicatorHint.setVisibility(View.VISIBLE);
+            
+            // 重置指示灯状态
+            ImageView rhythmDot1 = findViewById(R.id.rhythmDot1);
+            ImageView rhythmDot2 = findViewById(R.id.rhythmDot2);
+            ImageView rhythmDot3 = findViewById(R.id.rhythmDot3);
+            ImageView rhythmDot4 = findViewById(R.id.rhythmDot4);
+            
+            int defaultColor = Color.LTGRAY;
+            rhythmDot1.setColorFilter(defaultColor, PorterDuff.Mode.SRC_IN);
+            rhythmDot2.setColorFilter(defaultColor, PorterDuff.Mode.SRC_IN);
+            rhythmDot3.setColorFilter(defaultColor, PorterDuff.Mode.SRC_IN);
+            rhythmDot4.setColorFilter(defaultColor, PorterDuff.Mode.SRC_IN);
+            
+            rhythmDot1.setAlpha(0.5f);
+            rhythmDot2.setAlpha(0.5f);
+            rhythmDot3.setAlpha(0.5f);
+            rhythmDot4.setAlpha(0.5f);
+            
+            rhythmDot1.setScaleX(1.0f);
+            rhythmDot1.setScaleY(1.0f);
+            rhythmDot2.setScaleX(1.0f);
+            rhythmDot2.setScaleY(1.0f);
+            rhythmDot3.setScaleX(1.0f);
+            rhythmDot3.setScaleY(1.0f);
+            rhythmDot4.setScaleX(1.0f);
+            rhythmDot4.setScaleY(1.0f);
+        }
     }
 
     // 显示模式详细信息
