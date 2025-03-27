@@ -732,6 +732,10 @@ public class BreathingActivity extends AppCompatActivity {
             (int)(8 * getResources().getDisplayMetrics().density)
         );
         
+        // 更新引导文本以匹配当前模式
+        guidanceText.setText(String.format("跟随圆圈呼吸\n吸气%d秒，呼气%d秒", 
+            mode.inhaleSeconds, mode.exhaleSeconds));
+        
         // 如果正在进行呼吸练习，更新音乐
         if (isBreathing && !isPreparingToStart && mediaPlayer != null && mediaPlayer.isPlaying()) {
             String musicName = getMusicFeedbackForMode(mode);
