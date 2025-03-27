@@ -1083,6 +1083,9 @@ public class BreathingActivity extends AppCompatActivity {
             case 3: // 安眠呼吸
                 subtitle = "放松身心，安抚入眠";
                 break;
+            case 4: // 自由呼吸
+                subtitle = "随心呼吸，体验自在流动";
+                break;
             default:
                 subtitle = "让心灵沉淀，找回内在平静";
                 break;
@@ -1357,6 +1360,9 @@ public class BreathingActivity extends AppCompatActivity {
                     break;
                 case CALMING:
                     noteColor = getResources().getColor(R.color.relax_breathing);
+                    break;
+                case FREE:
+                    noteColor = getResources().getColor(R.color.free_breathing_text);  // 使用梦幻蓝紫色
                     break;
                 default:
                     noteColor = getResources().getColor(R.color.calm_breathing);
@@ -1674,6 +1680,9 @@ public class BreathingActivity extends AppCompatActivity {
             case CALMING:
                 activeColor = getResources().getColor(R.color.relax_breathing);
                 break;
+            case FREE:
+                activeColor = getResources().getColor(R.color.free_breathing);
+                break;
             default:
                 activeColor = getResources().getColor(R.color.calm_breathing);
         }
@@ -1738,6 +1747,9 @@ public class BreathingActivity extends AppCompatActivity {
             case CALMING:
                 baseColor = getResources().getColor(R.color.relax_breathing);
                 break;
+            case FREE:
+                baseColor = getResources().getColor(R.color.free_breathing);
+                break;
             default:
                 baseColor = getResources().getColor(R.color.calm_breathing);
         }
@@ -1788,6 +1800,10 @@ public class BreathingActivity extends AppCompatActivity {
                 case CALMING:
                     textColor = getResources().getColor(R.color.relax_breathing);
                     backgroundColor = Color.argb(alpha, 245, 252, 247); // 非常淡的绿色
+                    break;
+                case FREE:
+                    textColor = getResources().getColor(R.color.free_breathing_text);
+                    backgroundColor = Color.argb(alpha, 230, 248, 255); // 极淡的天蓝色
                     break;
                 default:
                     textColor = getResources().getColor(R.color.calm_breathing);

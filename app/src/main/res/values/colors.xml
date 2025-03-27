@@ -42,10 +42,10 @@
     <color name="focus_breathing_bg">#F9F5FC</color>
     <color name="deep_breathing_bg">#FCF9F5</color>
     <color name="relax_breathing_bg">#F5FCF7</color>
-    <color name="free_breathing">#9C27B0</color>
+    <color name="free_breathing">#00BCD4</color>
     <color name="free_breathing_bg">#F3E5F5</color>
     <color name="free_breathing_start">#E6F8FF</color>
     <color name="free_breathing_middle">#D5F5F3</color>
     <color name="free_breathing_end">#F0E6FF</color>
-    <color name="free_breathing_text">#88A5D3</color>
+    <color name="free_breathing_text">#00BCD4</color>
 </resources>
