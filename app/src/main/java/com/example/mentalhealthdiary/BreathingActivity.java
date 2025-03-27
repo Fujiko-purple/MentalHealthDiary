@@ -171,7 +171,54 @@ public class BreathingActivity extends AppCompatActivity {
         modeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                currentMode = BreathingMode.values()[position];
+                // 如果正在进行呼吸练习，检查是否允许切换
+                if (isBreathing) {
+                    boolean isCurrentlyFree = currentMode == BreathingMode.FREE;
+                    boolean isSelectingFree = position == 4; // 假设自由呼吸在第5个位置
+
+                    // 如果当前是自由模式且试图切换到其他模式，或者
+                    // 当前是其他模式且试图切换到自由模式
+                    if ((isCurrentlyFree && !isSelectingFree) || (!isCurrentlyFree && isSelectingFree)) {
+                        // 还原到之前的选择
+                        modeSpinner.setSelection(isCurrentlyFree ? 4 : getPositionForMode(currentMode));
+                        
+                        // 显示提示消息
+                        Snackbar.make(findViewById(R.id.breathing_root_layout),
+                            "训练过程中无法在自由呼吸和其他模式之间切换",
+                            Snackbar.LENGTH_SHORT).show();
+                        return;
+                    }
+                }
+
+                // 根据不同的呼吸模式设置不同的颜色
+                int textColor;
+                switch (position) {
+                    case 0: // 平静呼吸
+                        textColor = getResources().getColor(R.color.calm_breathing);
+                        currentMode = BreathingMode.NORMAL;
+                        break;
+                    case 1: // 专注呼吸
+                        textColor = getResources().getColor(R.color.focus_breathing);
+                        currentMode = BreathingMode.FOCUS;
+                        break;
+                    case 2: // 提神呼吸
+                        textColor = getResources().getColor(R.color.deep_breathing);
+                        currentMode = BreathingMode.ENERGIZING;
+                        break;
+                    case 3: // 安眠呼吸
+                        textColor = getResources().getColor(R.color.relax_breathing);
+                        currentMode = BreathingMode.CALMING;
+                        break;
+                    case 4: // 自由呼吸
+                        textColor = getResources().getColor(R.color.free_breathing_text);
+                        currentMode = BreathingMode.FREE;
+                        break;
+                    default:
+                        textColor = getResources().getColor(R.color.calm_breathing);
+                        currentMode = BreathingMode.NORMAL;
+                        break;
+                }
+
                 updateBreathingMode(position);
                 onModeSelected(currentMode);
             }
@@ -895,8 +942,8 @@ public class BreathingActivity extends AppCompatActivity {
                              "4. 体验呼吸带来的自由感";
 
                 // 设置自由模式特有的文字颜色
-                benefitText.setTextColor(getResources().getColor(R.color.free_breathing_text));
-                guideText.setTextColor(getResources().getColor(R.color.free_breathing_text));
+//                benefitText.setTextColor(getResources().getColor(R.color.free_breathing_text));
+//                guideText.setTextColor(getResources().getColor(R.color.free_breathing_text));
                 break;
             default:
                 benefitDetail = mode.benefit + "\n\n🎵 背景音乐: " + getMusicNameForMode(mode);
@@ -1965,5 +2012,23 @@ public class BreathingActivity extends AppCompatActivity {
         });
         
         pulseAnimator.start();
+    }
+
+    // 添加一个辅助方法来获取当前模式对应的位置
+    private int getPositionForMode(BreathingMode mode) {
+        switch (mode) {
+            case NORMAL:
+                return 0;
+            case FOCUS:
+                return 1;
+            case ENERGIZING:
+                return 2;
+            case CALMING:
+                return 3;
+            case FREE:
+                return 4;
+            default:
+                return 0;
+        }
     }
 } 
