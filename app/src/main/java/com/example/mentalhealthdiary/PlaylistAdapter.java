@@ -1,6 +1,7 @@
 package com.example.mentalhealthdiary;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +16,7 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
     private List<String> selectedSongs = new ArrayList<>();
     private Context context;
     private boolean isSelectionMode = false;
+    private String selectedFreeBreathingMusic;
 
     public interface OnItemClickListener {
         void onItemClick(String song);
@@ -61,7 +63,16 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         String song = songs.get(position);
-        holder.textView.setText(song);
+        
+        // 显示歌曲名称，如果是当前选中的歌曲则加上标记
+        String displayText = song;
+        if (song.equals(selectedFreeBreathingMusic)) {
+            displayText = "▶ " + song;  // 添加播放标记
+            holder.textView.setTextColor(context.getResources().getColor(R.color.free_breathing_text));
+        } else {
+            holder.textView.setTextColor(Color.BLACK);
+        }
+        holder.textView.setText(displayText);
         
         // 显示/隐藏复选框
         holder.checkBox.setVisibility(isSelectionMode ? View.VISIBLE : View.GONE);

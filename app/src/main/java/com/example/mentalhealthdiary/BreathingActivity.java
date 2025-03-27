@@ -129,6 +129,7 @@ public class BreathingActivity extends AppCompatActivity {
     private PlaylistAdapter playlistAdapter; // 添加成员变量
     private List<String> currentSongs = new ArrayList<>(); // 添加成员变量
     private BottomSheetDialog playlistDialog;  // 添加这个成员变量
+    private String selectedFreeBreathingMusic = null;  // 添加选中的音乐文件名
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -395,23 +396,47 @@ public class BreathingActivity extends AppCompatActivity {
         
         // 重置引导文本和计时器
         if (currentMode == BreathingMode.FREE) {
-            guidanceText.setText("月亮不会奔你而来，星星也不会\n但我会");
-            guidanceText.setTextColor(getResources().getColor(R.color.free_breathing_text));
-            // 自由模式下不启动呼吸动画
-            breathingAnimation.cancel();
-            breathingCircle.setScaleX(1.0f);
-            breathingCircle.setScaleY(1.0f);
-            breathingCircle.setAlpha(0.8f);
+            // 检查是否有导入的歌曲
+            SharedPreferences prefs = getSharedPreferences("custom_playlist", MODE_PRIVATE);
+            Set<String> playlist = prefs.getStringSet("playlist", new HashSet<>());
+            
+            if (playlist.isEmpty()) {
+                // 如果没有导入歌曲，显示提示
+                new AlertDialog.Builder(this)
+                    .setTitle("提示")
+                    .setMessage("自由呼吸模式需要背景音乐，请先导入歌曲")
+                    .setPositiveButton("去导入", (dialog, which) -> {
+                        openImportPlaylist();
+                    })
+                    .setNegativeButton("取消", (dialog, which) -> {
+                        // 取消开始练习
+                        isBreathing = false;
+                        startButton.setText("开始练习");
+                    })
+                    .show();
+                return;
+            } else {
+                // 设置自由呼吸模式的界面
+                guidanceText.setText("月亮不会奔你而来，星星也不会\n但我会");
+                guidanceText.setTextColor(getResources().getColor(R.color.free_breathing_text));
+                
+                // 自由模式下使用柔和的呼吸动画
+                startFreeBreathingAnimation();
+                
+                // 如果没有选择音乐，使用第一首歌
+                if (selectedFreeBreathingMusic == null && !playlist.isEmpty()) {
+                    selectedFreeBreathingMusic = playlist.iterator().next();
+                }
+
+                // 播放选中的音乐
+                playCustomMusic(selectedFreeBreathingMusic);
+            }
         } else {
             guidanceText.setText("跟随圆圈呼吸\n吸气" + currentMode.inhaleSeconds + 
                                "秒，呼气" + currentMode.exhaleSeconds + "秒");
             breathingAnimation.start();
+            startBackgroundMusic();
         }
-        
-        // 在这里播放背景音乐
-        String musicName = getMusicFeedbackForMode(currentMode);
-        startBackgroundMusic();
-        updateMusicFeedback(musicName);
         
         // 启动呼吸引导计时器
         if (currentMode != BreathingMode.FREE) {
@@ -695,7 +720,15 @@ public class BreathingActivity extends AppCompatActivity {
         playlistAdapter = new PlaylistAdapter(this, currentSongs, new PlaylistAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(String song) {
-                // 普通点击，可以播放歌曲等操作
+                // 点击歌曲时，如果当前是自由呼吸模式，则设置为背景音乐
+                if (currentMode == BreathingMode.FREE) {
+                    selectedFreeBreathingMusic = song;
+                    // 显示选中提示
+                    Snackbar.make(findViewById(R.id.breathing_root_layout),
+                        "已选择 " + song + " 作为自由呼吸背景音乐",
+                        Snackbar.LENGTH_SHORT).show();
+                    playlistDialog.dismiss();
+                }
             }
 
             @Override
@@ -1209,6 +1242,15 @@ public class BreathingActivity extends AppCompatActivity {
             String musicName = getMusicFeedbackForMode(mode);
             startBackgroundMusic(); // 重新开始播放音乐
             updateMusicFeedback(musicName);
+        }
+
+        // 如果切换到自由呼吸模式，恢复上次选择的歌曲
+        if (mode == BreathingMode.FREE) {
+            SharedPreferences prefs = getSharedPreferences("custom_playlist", MODE_PRIVATE);
+            String lastSelectedSong = prefs.getString("last_selected_song", null);
+            if (lastSelectedSong != null) {
+                selectedFreeBreathingMusic = lastSelectedSong;
+            }
         }
     }
 
@@ -2385,7 +2427,6 @@ public class BreathingActivity extends AppCompatActivity {
 
     // 添加自由呼吸模式的动画
     private void startFreeBreathingAnimation() {
-        // 取消可能存在的动画
         if (breathingAnimation != null) {
             breathingAnimation.cancel();
         }
@@ -2404,7 +2445,9 @@ public class BreathingActivity extends AppCompatActivity {
             breathingCircle.setAlpha(0.7f + (value - 1.0f) * 0.5f); // 透明度随大小变化
         });
         
-        pulseAnimator.start();
+        breathingAnimation = new AnimatorSet();
+        breathingAnimation.play(pulseAnimator);
+        breathingAnimation.start();
     }
 
     // 添加一个辅助方法来获取当前模式对应的位置
@@ -2423,5 +2466,37 @@ public class BreathingActivity extends AppCompatActivity {
             default:
                 return 0;
         }
+    }
+
+    private void playCustomMusic(String musicFileName) {
+        try {
+            if (mediaPlayer != null) {
+                mediaPlayer.release();
+            }
+            
+            // 创建新的 MediaPlayer
+            mediaPlayer = new MediaPlayer();
+            File musicFile = new File(getFilesDir(), "music/" + musicFileName);
+            
+            if (musicFile.exists()) {
+                mediaPlayer.setDataSource(musicFile.getAbsolutePath());
+                mediaPlayer.setLooping(true);
+                mediaPlayer.prepare();
+                mediaPlayer.start();
+                
+                // 更新音乐反馈
+                updateMusicFeedback(musicFileName);
+            }
+        } catch (Exception e) {
+            Log.e("BreathingActivity", "播放自定义音乐失败", e);
+        }
+    }
+
+    // 保存选中的歌曲
+    private void saveSelectedSong(String song) {
+        SharedPreferences prefs = getSharedPreferences("custom_playlist", MODE_PRIVATE);
+        prefs.edit()
+            .putString("last_selected_song", song)
+            .apply();
     }
 } 
