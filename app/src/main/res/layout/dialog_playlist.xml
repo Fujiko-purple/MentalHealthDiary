@@ -3,7 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:background="@drawable/playlist_dialog_background">
 
     <LinearLayout
         android:id="@+id/selectionToolbar"
@@ -29,24 +30,57 @@
             android:text="删除选中"/>
     </LinearLayout>
 
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="我的歌单"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="8dp"/>
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="我的歌单"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/free_breathing_text"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:layout_marginStart="16dp"
+            android:background="@drawable/play_mode_container_background"
+            android:gravity="center_vertical"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp">
+
+            <ImageView
+                android:id="@+id/playModeIcon"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_play_mode_loop"
+                android:tint="@color/free_breathing_text"
+                android:layout_marginEnd="4dp"/>
+
+            <Spinner
+                android:id="@+id/playModeSpinner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@null"
+                android:minWidth="80dp"/>
+        </LinearLayout>
+    </LinearLayout>
 
     <EditText
         android:id="@+id/searchEditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="搜索歌曲..."
-        android:padding="8dp"
+        android:padding="12dp"
         android:background="@drawable/search_background"
         android:drawableStart="@drawable/ic_search"
         android:drawablePadding="8dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="16dp"
         android:maxLines="1"
         android:inputType="text"
         android:imeOptions="actionSearch"/>
@@ -60,7 +94,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:scrollbars="vertical"
-            android:fadeScrollbars="false"/>
+            android:fadeScrollbars="false"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:clipToPadding="false"/>
     </androidx.core.widget.NestedScrollView>
 
     <Button
@@ -68,5 +105,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="导入新歌曲"
-        android:layout_marginTop="8dp"/>
+        android:layout_marginTop="16dp"
+        android:background="@drawable/import_button_background"
+        android:textColor="@android:color/white"/>
 </LinearLayout> 

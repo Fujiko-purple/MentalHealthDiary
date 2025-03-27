@@ -126,6 +126,22 @@ public class BreathingActivity extends AppCompatActivity {
     private BottomSheetDialog playlistDialog;  // 添加这个成员变量
     private String selectedFreeBreathingMusic = null;  // 添加选中的音乐文件名
 
+    // 添加播放模式枚举
+    private enum PlayMode {
+        LOOP("循环播放"),
+        SEQUENCE("列表播放"),
+        RANDOM("随机播放");
+
+        final String description;
+
+        PlayMode(String description) {
+            this.description = description;
+        }
+    }
+
+    private PlayMode currentPlayMode = PlayMode.LOOP;  // 默认循环播放
+    private int currentSongIndex = 0;  // 当前播放的歌曲索引
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -680,17 +696,19 @@ public class BreathingActivity extends AppCompatActivity {
 
     // 修改导入歌单功能的方法
     private void openImportPlaylist() {
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_playlist, null);
+        playlistDialog = new BottomSheetDialog(this);
+        playlistDialog.setContentView(dialogView);
+
+        // 设置动画
+        playlistDialog.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
+        
         if (isBreathing) {
             Snackbar.make(findViewById(R.id.breathing_root_layout),
                 "请先停止当前的呼吸训练",
                 Snackbar.LENGTH_SHORT).show();
             return;
         }
-
-        // 创建底部弹出对话框
-        playlistDialog = new BottomSheetDialog(this);  // 使用成员变量
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_playlist, null);
-        playlistDialog.setContentView(dialogView);
 
         RecyclerView recyclerView = dialogView.findViewById(R.id.playlistRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -787,6 +805,58 @@ public class BreathingActivity extends AppCompatActivity {
             @Override
             public void afterTextChanged(Editable s) {}
         });
+
+        // 设置播放模式选择器
+        Spinner playModeSpinner = dialogView.findViewById(R.id.playModeSpinner);
+        ArrayAdapter<String> playModeAdapter = new ArrayAdapter<>(this,
+            android.R.layout.simple_spinner_item,
+            Arrays.stream(PlayMode.values())
+                  .map(mode -> mode.description)
+                  .toArray(String[]::new));
+        playModeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        playModeSpinner.setAdapter(playModeAdapter);
+
+        ImageView playModeIcon = dialogView.findViewById(R.id.playModeIcon);
+        
+        // 设置播放模式选择监听
+        playModeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                currentPlayMode = PlayMode.values()[position];
+                // 更新图标
+                switch (currentPlayMode) {
+                    case LOOP:
+                        playModeIcon.setImageResource(R.drawable.ic_play_mode_loop);
+                        break;
+                    case SEQUENCE:
+                        playModeIcon.setImageResource(R.drawable.ic_play_mode_sequence);
+                        break;
+                    case RANDOM:
+                        playModeIcon.setImageResource(R.drawable.ic_play_mode_random);
+                        break;
+                }
+                // 保存选择
+                prefs.edit().putInt("play_mode", position).apply();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
+        // 恢复上次选择的播放模式并设置对应图标
+        int savedMode = prefs.getInt("play_mode", 0);
+        playModeSpinner.setSelection(savedMode);
+        switch (PlayMode.values()[savedMode]) {
+            case LOOP:
+                playModeIcon.setImageResource(R.drawable.ic_play_mode_loop);
+                break;
+            case SEQUENCE:
+                playModeIcon.setImageResource(R.drawable.ic_play_mode_sequence);
+                break;
+            case RANDOM:
+                playModeIcon.setImageResource(R.drawable.ic_play_mode_random);
+                break;
+        }
     }
 
     private void showSelectionToolbar() {
@@ -2348,34 +2418,60 @@ public class BreathingActivity extends AppCompatActivity {
                 mediaPlayer.release();
             }
             
-            // 创建新的 MediaPlayer
             mediaPlayer = new MediaPlayer();
             File musicFile = new File(getFilesDir(), "music/" + musicFileName);
             
             if (musicFile.exists()) {
                 mediaPlayer.setDataSource(musicFile.getAbsolutePath());
-                mediaPlayer.setLooping(true);
+                mediaPlayer.setLooping(currentPlayMode == PlayMode.LOOP);
                 mediaPlayer.prepare();
                 mediaPlayer.start();
+
+                // 设置播放完成监听器
+                mediaPlayer.setOnCompletionListener(mp -> {
+                    if (currentPlayMode != PlayMode.LOOP) {
+                        playNextSong();
+                    }
+                });
                 
-                // 更新音乐反馈
                 updateMusicFeedback(musicFileName);
-                
-                // 开始音符动画
                 if (!isShowingNotes) {
                     startMusicNoteAnimation();
                 }
-                
-                // 更新适配器中的选中状态
-                if (playlistAdapter != null) {
-                    playlistAdapter.setCurrentPlayingSong(musicFileName);
-                }
-                
-                // 保存选中的歌曲
-                saveSelectedSong(musicFileName);
             }
         } catch (Exception e) {
             Log.e("BreathingActivity", "播放自定义音乐失败", e);
+        }
+    }
+
+    // 添加播放下一首歌的方法
+    private void playNextSong() {
+        if (currentSongs.isEmpty()) return;
+
+        switch (currentPlayMode) {
+            case SEQUENCE:
+                // 列表播放：播放下一首，到末尾后停止
+                currentSongIndex = (currentSongIndex + 1) % currentSongs.size();
+                if (currentSongIndex == 0) {
+                    stopBackgroundMusic();
+                } else {
+                    playCustomMusic(currentSongs.get(currentSongIndex));
+                }
+                break;
+
+            case RANDOM:
+                // 随机播放：随机选择一首歌播放
+                int nextIndex = random.nextInt(currentSongs.size());
+                while (nextIndex == currentSongIndex && currentSongs.size() > 1) {
+                    nextIndex = random.nextInt(currentSongs.size());
+                }
+                currentSongIndex = nextIndex;
+                playCustomMusic(currentSongs.get(currentSongIndex));
+                break;
+
+            case LOOP:
+                // 循环播放：MediaPlayer已设置循环，无需处理
+                break;
         }
     }
 
