@@ -86,7 +86,8 @@ public class BreathingActivity extends AppCompatActivity {
         NORMAL(4, 4, "标准呼吸 4-4", "平衡身心"),      // 平静呼吸
         FOCUS(4, 6, "专注呼吸 4-6", "提升专注"),      // 专注呼吸
         ENERGIZING(6, 2, "提神呼吸 6-2", "提升能量"),  // 提神呼吸
-        CALMING(4, 8, "安眠呼吸 4-8", "助于入睡");     // 安眠呼吸
+        CALMING(4, 8, "安眠呼吸 4-8", "助于入睡"),     // 安眠呼吸
+        FREE(0, 0, "自由呼吸", "让呼吸随心而动");           // 自由呼吸
 
         final int inhaleSeconds;
         final int exhaleSeconds;
@@ -313,22 +314,29 @@ public class BreathingActivity extends AppCompatActivity {
         startButton.setText("停止练习");
         
         // 重置引导文本和计时器
-        guidanceText.setText("跟随圆圈呼吸\n吸气" + currentMode.inhaleSeconds + "秒，呼气" + currentMode.exhaleSeconds + "秒");
-        guidanceText.setGravity(android.view.Gravity.CENTER);
-        guidanceText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        if (currentMode == BreathingMode.FREE) {
+            guidanceText.setText("随心呼吸\n感受内在的自由");
+            guidanceText.setTextColor(getResources().getColor(R.color.free_breathing_text));
+            // 自由模式下不启动呼吸动画
+            breathingAnimation.cancel();
+            breathingCircle.setScaleX(1.0f);
+            breathingCircle.setScaleY(1.0f);
+            breathingCircle.setAlpha(0.8f);
+        } else {
+            guidanceText.setText("跟随圆圈呼吸\n吸气" + currentMode.inhaleSeconds + 
+                               "秒，呼气" + currentMode.exhaleSeconds + "秒");
+            breathingAnimation.start();
+        }
         
         // 在这里播放背景音乐
         String musicName = getMusicFeedbackForMode(currentMode);
         startBackgroundMusic();
         updateMusicFeedback(musicName);
         
-        // 其他代码...
-        
-        // 开始动画
-        breathingAnimation.start();
-        
         // 启动呼吸引导计时器
-        startGuidanceTimer();
+        if (currentMode != BreathingMode.FREE) {
+            startGuidanceTimer();
+        }
         
         // 添加练习时长计时
         if (durationTimer != null) {
@@ -679,6 +687,9 @@ public class BreathingActivity extends AppCompatActivity {
             case CALMING:
                 rootLayout.setBackground(getResources().getDrawable(R.drawable.breathing_background_calming));
                 break;
+            case FREE:
+                rootLayout.setBackground(getResources().getDrawable(R.drawable.breathing_background_free));
+                break;
         }
         
         // 获取Spinner并更新其样式
@@ -741,6 +752,11 @@ public class BreathingActivity extends AppCompatActivity {
             String musicName = getMusicFeedbackForMode(mode);
             startBackgroundMusic(); // 重新开始播放音乐
             updateMusicFeedback(musicName);
+        }
+
+        if (mode == BreathingMode.FREE) {
+            guidanceText.setText("随心呼吸\n感受内在的自由");
+            guidanceText.setTextColor(getResources().getColor(R.color.free_breathing_text));
         }
     }
 
@@ -850,6 +866,19 @@ public class BreathingActivity extends AppCompatActivity {
                 guideDetail = "找到舒适的坐姿，保持背部挺直。跟随圆圈的节奏，" +
                             "通过鼻子缓慢吸气，感受气息充满胸腹，然后轻柔地呼出。";
                 break;
+            case FREE:
+                benefitDetail = "• 培养自然呼吸觉知\n" +
+                              "• 释放身心束缚\n" +
+                              "• 提升呼吸自主性\n" +
+                              "• 体验当下片刻";
+                guideDetail = "1. 找到舒适的姿势，放松全身\n" +
+                             "2. 让呼吸自然流动，不加控制\n" +
+                             "3. 感受每一次呼吸的韵律\n" +
+                             "4. 体验呼吸带来的自由感";
+
+                // 设置自由模式特有的文字颜色
+
+                break;
             default:
                 benefitDetail = mode.benefit + "\n\n🎵 背景音乐: " + getMusicNameForMode(mode);
                 guideDetail = "保持自然的呼吸节奏，关注当下的呼吸感受。";
@@ -893,6 +922,9 @@ public class BreathingActivity extends AppCompatActivity {
                 dialog.dismiss();
             }
         });
+
+
+
     }
 
     private void initializeBreathingPatterns() {
@@ -1009,6 +1041,10 @@ public class BreathingActivity extends AppCompatActivity {
             case 3: // 安眠呼吸
                 textColor = getResources().getColor(R.color.relax_breathing);  // 绿色
                 currentMode = BreathingMode.CALMING;
+                break;
+            case 4: // 自由呼吸
+                textColor = getResources().getColor(R.color.free_breathing);  // 紫色
+                currentMode = BreathingMode.FREE;
                 break;
             default:
                 textColor = getResources().getColor(R.color.calm_breathing);
@@ -1867,5 +1903,29 @@ public class BreathingActivity extends AppCompatActivity {
                 startBreathing();
             }
         });
+    }
+
+    // 添加自由呼吸模式的动画
+    private void startFreeBreathingAnimation() {
+        // 取消可能存在的动画
+        if (breathingAnimation != null) {
+            breathingAnimation.cancel();
+        }
+        
+        // 创建柔和的脉动动画
+        ValueAnimator pulseAnimator = ValueAnimator.ofFloat(1.0f, 1.15f);
+        pulseAnimator.setDuration(4000); // 4秒一个周期
+        pulseAnimator.setRepeatCount(ValueAnimator.INFINITE);
+        pulseAnimator.setRepeatMode(ValueAnimator.REVERSE);
+        pulseAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
+        
+        pulseAnimator.addUpdateListener(animation -> {
+            float value = (float) animation.getAnimatedValue();
+            breathingCircle.setScaleX(value);
+            breathingCircle.setScaleY(value);
+            breathingCircle.setAlpha(0.7f + (value - 1.0f) * 0.5f); // 透明度随大小变化
+        });
+        
+        pulseAnimator.start();
     }
 } 
