@@ -47,12 +47,13 @@
 
         <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="32dp"
+            android:layout_height="40dp"
             android:layout_marginStart="16dp"
             android:background="@drawable/play_mode_container_background"
             android:gravity="center_vertical"
             android:paddingStart="8dp"
-            android:paddingEnd="8dp">
+            android:paddingEnd="8dp"
+            android:minWidth="120dp">
 
             <ImageView
                 android:id="@+id/playModeIcon"
@@ -65,9 +66,12 @@
             <Spinner
                 android:id="@+id/playModeSpinner"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:background="@null"
-                android:minWidth="80dp"/>
+                android:spinnerMode="dropdown"
+                android:dropDownWidth="120dp"
+                android:overlapAnchor="false"
+                android:dropDownVerticalOffset="0dp"/>
         </LinearLayout>
     </LinearLayout>
 

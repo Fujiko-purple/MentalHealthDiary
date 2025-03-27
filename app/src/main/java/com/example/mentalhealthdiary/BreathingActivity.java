@@ -417,13 +417,13 @@ public class BreathingActivity extends AppCompatActivity {
         } else {
             guidanceText.setText("跟随圆圈呼吸\n吸气" + currentMode.inhaleSeconds + 
                                "秒，呼气" + currentMode.exhaleSeconds + "秒");
-            breathingAnimation.start();
+        breathingAnimation.start();
             startBackgroundMusic();
         }
         
         // 启动呼吸引导计时器
         if (currentMode != BreathingMode.FREE) {
-            startGuidanceTimer();
+        startGuidanceTimer();
         }
         
         // 添加练习时长计时
@@ -679,18 +679,18 @@ public class BreathingActivity extends AppCompatActivity {
             case R.id.action_import_playlist:
                 // 处理导入歌单的点击事件
                 openImportPlaylist();
-                return true;
+            return true;
                 
             case R.id.action_history:
-                startActivity(new Intent(this, BreathingHistoryActivity.class));
-                return true;
+            startActivity(new Intent(this, BreathingHistoryActivity.class));
+            return true;
                 
             case android.R.id.home:
                 onBackPressed();
                 return true;
                 
             default:
-                return super.onOptionsItemSelected(item);
+        return super.onOptionsItemSelected(item);
         }
     }
 
@@ -808,12 +808,28 @@ public class BreathingActivity extends AppCompatActivity {
 
         // 设置播放模式选择器
         Spinner playModeSpinner = dialogView.findViewById(R.id.playModeSpinner);
-        ArrayAdapter<String> playModeAdapter = new ArrayAdapter<>(this,
-            android.R.layout.simple_spinner_item,
-            Arrays.stream(PlayMode.values())
-                  .map(mode -> mode.description)
-                  .toArray(String[]::new));
-        playModeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        playModeSpinner.setDropDownVerticalOffset(1);  // 确保下拉框紧贴选择器
+        
+        ArrayAdapter<String> playModeAdapter = new ArrayAdapter<String>(this, R.layout.item_play_mode) {
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                TextView view = (TextView) super.getView(position, convertView, parent);
+                view.setHeight(ViewGroup.LayoutParams.WRAP_CONTENT);  // 确保文字完全显示
+                return view;
+            }
+
+            @Override
+            public View getDropDownView(int position, View convertView, ViewGroup parent) {
+                TextView view = (TextView) super.getDropDownView(position, convertView, parent);
+                view.setHeight(ViewGroup.LayoutParams.WRAP_CONTENT);  // 确保下拉项文字完全显示
+                return view;
+            }
+        };
+
+        playModeAdapter.addAll(Arrays.stream(PlayMode.values())
+                .map(mode -> mode.description)
+                .toArray(String[]::new));
+        
         playModeSpinner.setAdapter(playModeAdapter);
 
         ImageView playModeIcon = dialogView.findViewById(R.id.playModeIcon);
@@ -1429,8 +1445,8 @@ public class BreathingActivity extends AppCompatActivity {
         if (mode == BreathingMode.FREE) {
             rhythmText.setText("偶尔要回头看看，否则永远都在追寻\n而不知道自己失去了什么");
         } else {
-            rhythmText.setText(String.format("呼吸节奏：吸气 %d 秒，呼气 %d 秒",
-                    mode.inhaleSeconds, mode.exhaleSeconds));
+        rhythmText.setText(String.format("呼吸节奏：吸气 %d 秒，呼气 %d 秒", 
+            mode.inhaleSeconds, mode.exhaleSeconds));
         }
         
         // 设置不同模式的具体效果说明
