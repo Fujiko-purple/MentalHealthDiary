@@ -43,6 +43,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -141,6 +142,14 @@ public class BreathingActivity extends AppCompatActivity {
 
     private PlayMode currentPlayMode = PlayMode.LOOP;  // 默认循环播放
     private int currentSongIndex = 0;  // 当前播放的歌曲索引
+
+    // 添加成员变量
+    private SeekBar musicSeekBar;
+    private TextView currentTimeText;
+    private TextView totalTimeText;
+    private View musicProgressContainer;
+    private Handler progressHandler = new Handler();
+    private Runnable progressRunnable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -293,6 +302,39 @@ public class BreathingActivity extends AppCompatActivity {
         
         // 在onCreate方法中添加，初始化呼吸圆形的提示
         setupInitialBreathingCircleHint();
+
+        // 初始化音乐进度条相关控件
+        musicSeekBar = findViewById(R.id.musicSeekBar);
+        currentTimeText = findViewById(R.id.currentTimeText);
+        totalTimeText = findViewById(R.id.totalTimeText);
+        musicProgressContainer = findViewById(R.id.musicProgressContainer);
+        
+        // 设置进度条拖动监听
+        musicSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (fromUser && mediaPlayer != null) {
+                    // 更新当前时间显示
+                    updateCurrentTimeText(progress);
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                // 暂停进度条更新
+                stopProgressUpdate();
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                if (mediaPlayer != null) {
+                    // 设置媒体播放器位置
+                    mediaPlayer.seekTo(seekBar.getProgress());
+                    // 恢复进度条更新
+                    startProgressUpdate();
+                }
+            }
+        });
     }
 
     private void setupBreathingAnimation() {
@@ -376,6 +418,15 @@ public class BreathingActivity extends AppCompatActivity {
         
         // 显示计时器文本
         timerText.setVisibility(View.VISIBLE);
+        
+        // 如果是自由呼吸模式且有选中的音乐，显示进度条
+        if (currentMode == BreathingMode.FREE && selectedFreeBreathingMusic != null) {
+            musicProgressContainer.setVisibility(View.VISIBLE);
+            // 如果已经在播放，开始更新进度条
+            if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+                startProgressUpdate();
+            }
+        }
         
         // 重置引导文本和计时器
         if (currentMode == BreathingMode.FREE) {
@@ -552,6 +603,11 @@ public class BreathingActivity extends AppCompatActivity {
         
         rhythmIndicator.animate().alpha(0.5f).setDuration(500).start();
         rhythmIndicatorHint.animate().alpha(0.7f).setDuration(500).start(); // 显示提示文本
+
+        // 隐藏进度条
+        musicProgressContainer.setVisibility(View.GONE);
+        // 停止进度条更新
+        stopProgressUpdate();
     }
 
     private void saveBreathingSession() {
@@ -1160,6 +1216,8 @@ public class BreathingActivity extends AppCompatActivity {
         if (noteHandler != null && noteRunnable != null) {
             noteHandler.removeCallbacks(noteRunnable);
         }
+        // 停止进度条更新
+        stopProgressUpdate();
     }
 
     @Override
@@ -2436,8 +2494,22 @@ public class BreathingActivity extends AppCompatActivity {
                 mediaPlayer.setDataSource(musicFile.getAbsolutePath());
                 mediaPlayer.setLooping(currentPlayMode == PlayMode.LOOP);
                 mediaPlayer.prepare();
+                
+                // 设置进度条最大值
+                int duration = mediaPlayer.getDuration();
+                musicSeekBar.setMax(duration);
+                totalTimeText.setText(formatTime(duration));
+                
+                // 如果是自由呼吸模式且正在训练，显示进度条
+                if (currentMode == BreathingMode.FREE && isBreathing) {
+                    musicProgressContainer.setVisibility(View.VISIBLE);
+                }
+                
                 mediaPlayer.start();
-
+                
+                // 开始更新进度条
+                startProgressUpdate();
+                
                 // 设置播放完成监听器
                 mediaPlayer.setOnCompletionListener(mp -> {
                     if (currentPlayMode != PlayMode.LOOP) {
@@ -2511,5 +2583,45 @@ public class BreathingActivity extends AppCompatActivity {
             }
             playlistAdapter.updateSongs(filteredList);
         }
+    }
+
+    // 格式化时间显示
+    private String formatTime(int milliseconds) {
+        int seconds = milliseconds / 1000;
+        int minutes = seconds / 60;
+        seconds = seconds % 60;
+        return String.format("%d:%02d", minutes, seconds);
+    }
+
+    // 更新当前时间文本
+    private void updateCurrentTimeText(int milliseconds) {
+        currentTimeText.setText(formatTime(milliseconds));
+    }
+
+    // 开始更新进度条
+    private void startProgressUpdate() {
+        if (mediaPlayer == null) return;
+        
+        // 停止之前的更新
+        stopProgressUpdate();
+        
+        progressRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+                    int currentPosition = mediaPlayer.getCurrentPosition();
+                    musicSeekBar.setProgress(currentPosition);
+                    updateCurrentTimeText(currentPosition);
+                    progressHandler.postDelayed(this, 1000);
+                }
+            }
+        };
+        
+        progressHandler.post(progressRunnable);
+    }
+
+    // 停止更新进度条
+    private void stopProgressUpdate() {
+        progressHandler.removeCallbacks(progressRunnable);
     }
 } 
