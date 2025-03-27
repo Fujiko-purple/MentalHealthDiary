@@ -372,8 +372,7 @@ public class BreathingActivity extends AppCompatActivity {
         isBreathing = true;
         startButton.setText("停止练习");
         
-        // 禁用导入歌单按钮
-        invalidateOptionsMenu();
+        // 确保这里没有调用 invalidateOptionsMenu()
         
         // 显示计时器文本
         timerText.setVisibility(View.VISIBLE);
@@ -675,23 +674,18 @@ public class BreathingActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_import_playlist:
-                // 处理导入歌单的点击事件
-                openImportPlaylist();
+        if (item.getItemId() == android.R.id.home) {
+            onBackPressed();
             return true;
-                
-            case R.id.action_history:
+        } else if (item.getItemId() == R.id.action_import_playlist) {
+            // 无论是否在呼吸训练中，都允许打开歌单
+            openImportPlaylist();
+            return true;
+        } else if (item.getItemId() == R.id.action_history) {
             startActivity(new Intent(this, BreathingHistoryActivity.class));
             return true;
-                
-            case android.R.id.home:
-                onBackPressed();
-                return true;
-                
-            default:
-        return super.onOptionsItemSelected(item);
         }
+        return super.onOptionsItemSelected(item);
     }
 
     // 修改导入歌单功能的方法
@@ -703,13 +697,6 @@ public class BreathingActivity extends AppCompatActivity {
         // 设置动画
         playlistDialog.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
         
-        if (isBreathing) {
-            Snackbar.make(findViewById(R.id.breathing_root_layout),
-                "请先停止当前的呼吸训练",
-                Snackbar.LENGTH_SHORT).show();
-            return;
-        }
-
         RecyclerView recyclerView = dialogView.findViewById(R.id.playlistRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
@@ -724,13 +711,16 @@ public class BreathingActivity extends AppCompatActivity {
             public void onItemClick(String song) {
                 if (currentMode == BreathingMode.FREE) {
                     selectedFreeBreathingMusic = song;
-                    // 更新适配器显示
                     playlistAdapter.setCurrentPlayingSong(song);
-                    // 保存选择
                     saveSelectedSong(song);
-                    // 显示选中提示
+                    
+                    // 如果正在呼吸训练中，直接切换音乐
+                    if (isBreathing) {
+                        playCustomMusic(song);
+                    }
+                    
                     Snackbar.make(findViewById(R.id.breathing_root_layout),
-                        "已选择 " + song + " 作为自由呼吸背景音乐",
+                        "已切换到 " + song,
                         Snackbar.LENGTH_SHORT).show();
                     playlistDialog.dismiss();
                 }
@@ -1175,11 +1165,18 @@ public class BreathingActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_breathing, menu);
-        // 获取导入歌单的菜单项
-        MenuItem importItem = menu.findItem(R.id.action_import_playlist);
-        // 如果正在进行呼吸训练，禁用导入按钮
-        importItem.setEnabled(!isBreathing);
+        // 初始化时就调用一次，确保按钮状态正确
+        onPrepareOptionsMenu(menu);
         return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem importItem = menu.findItem(R.id.action_import_playlist);
+        // 只在自由呼吸模式下启用导入歌单按钮，不再考虑是否正在训练
+        importItem.setEnabled(currentMode == BreathingMode.FREE);  // 无论是否在训练中，自由模式下都可用
+        importItem.setVisible(currentMode == BreathingMode.FREE);  // 只在自由呼吸模式下显示
+        return super.onPrepareOptionsMenu(menu);
     }
 
 
@@ -1553,32 +1550,30 @@ public class BreathingActivity extends AppCompatActivity {
 
 
     private void updateBreathingMode(int position) {
+        currentMode = BreathingMode.values()[position];
+        // 每次切换模式时更新菜单状态
+        invalidateOptionsMenu();
+        
         // 根据不同的呼吸模式设置不同的颜色
         int textColor;
         switch (position) {
             case 0: // 平静呼吸
                 textColor = getResources().getColor(R.color.calm_breathing);  // 蓝色
-                currentMode = BreathingMode.NORMAL;
                 break;
             case 1: // 专注呼吸
                 textColor = getResources().getColor(R.color.focus_breathing);  // 紫色
-                currentMode = BreathingMode.FOCUS;
                 break;
             case 2: // 提神呼吸
                 textColor = getResources().getColor(R.color.deep_breathing);  // 橙色
-                currentMode = BreathingMode.ENERGIZING;
                 break;
             case 3: // 安眠呼吸
                 textColor = getResources().getColor(R.color.relax_breathing);  // 绿色
-                currentMode = BreathingMode.CALMING;
                 break;
             case 4: // 自由呼吸
                 textColor = getResources().getColor(R.color.free_breathing);  // 紫色
-                currentMode = BreathingMode.FREE;
                 break;
             default:
                 textColor = getResources().getColor(R.color.calm_breathing);
-                currentMode = BreathingMode.NORMAL;
                 break;
         }
         
