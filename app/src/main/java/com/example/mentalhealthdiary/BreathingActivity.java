@@ -406,12 +406,25 @@ public class BreathingActivity extends AppCompatActivity {
                     .setTitle("提示")
                     .setMessage("自由呼吸模式需要背景音乐，请先导入歌曲")
                     .setPositiveButton("去导入", (dialog, which) -> {
+                        // 取消开始练习
+                        isBreathing = false;
+                        startButton.setText("开始练习");
+                        // 恢复引导文字
+                        guidanceText.setText("你是万千星辰中的一颗\n于我而言却是整个世界");
+                        guidanceText.setTextColor(getResources().getColor(R.color.free_breathing_text));
+                        // 隐藏计时器
+                        timerText.setVisibility(View.INVISIBLE);
                         openImportPlaylist();
                     })
                     .setNegativeButton("取消", (dialog, which) -> {
                         // 取消开始练习
                         isBreathing = false;
                         startButton.setText("开始练习");
+                        // 恢复引导文字
+                        guidanceText.setText("你是万千星辰中的一颗\n于我而言却是整个世界");
+                        guidanceText.setTextColor(getResources().getColor(R.color.free_breathing_text));
+                        // 隐藏计时器
+                        timerText.setVisibility(View.INVISIBLE);
                     })
                     .show();
                 return;
