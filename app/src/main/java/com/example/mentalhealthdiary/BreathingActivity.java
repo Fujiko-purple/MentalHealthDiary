@@ -119,6 +119,8 @@ public class BreathingActivity extends AppCompatActivity {
         guidanceText = findViewById(R.id.guidanceText);
         startButton = findViewById(R.id.startButton);
         timerText = findViewById(R.id.timerText);
+        // 初始状态设置为不可见
+        timerText.setVisibility(View.INVISIBLE);
         musicFeedbackText = findViewById(R.id.musicFeedbackText);
         
         // 初始化音乐反馈文本
@@ -360,9 +362,15 @@ public class BreathingActivity extends AppCompatActivity {
         isBreathing = true;
         startButton.setText("停止练习");
         
+        // 禁用导入歌单按钮
+        invalidateOptionsMenu();
+        
+        // 显示计时器文本
+        timerText.setVisibility(View.VISIBLE);
+        
         // 重置引导文本和计时器
         if (currentMode == BreathingMode.FREE) {
-            guidanceText.setText("随心呼吸\n感受内在的自由");
+            guidanceText.setText("月亮不会奔你而来，星星也不会\n但我会");
             guidanceText.setTextColor(getResources().getColor(R.color.free_breathing_text));
             // 自由模式下不启动呼吸动画
             breathingAnimation.cancel();
@@ -448,18 +456,11 @@ public class BreathingActivity extends AppCompatActivity {
     }
 
     private void stopBreathingExercise() {
-        // 如果正在准备阶段，取消准备
-        if (isPreparingToStart && prepTimer != null) {
-            prepTimer.cancel();
-            isPreparingToStart = false;
-        }
-
-        if (!isBreathing) {
-            return;
-        }
-
         isBreathing = false;
         startButton.setText("开始练习");
+        
+        // 启用导入歌单按钮
+        invalidateOptionsMenu();
         
         // 停止动画
         breathingAnimation.cancel();
@@ -485,7 +486,7 @@ public class BreathingActivity extends AppCompatActivity {
         
         // 重置引导文本和计时器
         if (currentMode == BreathingMode.FREE) {
-            guidanceText.setText("随心呼吸\n感受内在的自由");
+            guidanceText.setText("你是万千星辰中的一颗\n于我而言却是整个世界");
             guidanceText.setTextColor(getResources().getColor(R.color.free_breathing_text));
         } else {
             guidanceText.setText(String.format("跟随圆圈呼吸\n吸气%d秒，呼气%d秒", 
@@ -624,15 +625,40 @@ public class BreathingActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            onBackPressed();
-            return true;
+        switch (item.getItemId()) {
+            case R.id.action_import_playlist:
+                // 处理导入歌单的点击事件
+                openImportPlaylist();
+                return true;
+                
+            case R.id.action_history:
+                startActivity(new Intent(this, BreathingHistoryActivity.class));
+                return true;
+                
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+                
+            default:
+                return super.onOptionsItemSelected(item);
         }
-        if (item.getItemId() == R.id.action_history) {
-            startActivity(new Intent(this, BreathingHistoryActivity.class));
-            return true;
+    }
+
+    // 修改导入歌单功能的方法
+    private void openImportPlaylist() {
+        // 如果正在进行呼吸训练，不允许导入
+        if (isBreathing) {
+            Snackbar.make(findViewById(R.id.breathing_root_layout),
+                "请先停止当前的呼吸训练",
+                Snackbar.LENGTH_SHORT).show();
+            return;
         }
-        return super.onOptionsItemSelected(item);
+        
+        // 这里暂时只添加一个占位方法
+        // 后续会实现具体的导入歌单功能
+        Snackbar.make(findViewById(R.id.breathing_root_layout),
+            "导入歌单功能即将开放",
+            Snackbar.LENGTH_SHORT).show();
     }
 
     @Override
@@ -673,6 +699,10 @@ public class BreathingActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_breathing, menu);
+        // 获取导入歌单的菜单项
+        MenuItem importItem = menu.findItem(R.id.action_import_playlist);
+        // 如果正在进行呼吸训练，禁用导入按钮
+        importItem.setEnabled(!isBreathing);
         return true;
     }
 
@@ -804,10 +834,10 @@ public class BreathingActivity extends AppCompatActivity {
         
         // 更新引导文本以匹配当前模式
         if (mode == BreathingMode.FREE) {
-            guidanceText.setText("随心呼吸\n感受内在的自由");
+            guidanceText.setText("你是万千星辰中的一颗\n于我而言却是整个世界");
             guidanceText.setTextColor(getResources().getColor(R.color.free_breathing_text));
         } else {
-            guidanceText.setText(String.format("跟随圆圈呼吸\n吸气%d秒，呼气%d秒", 
+            guidanceText.setText(String.format("跟随圆圈呼吸:吸气%d秒，呼气%d秒",
                 mode.inhaleSeconds, mode.exhaleSeconds));
         }
         
@@ -1138,7 +1168,7 @@ public class BreathingActivity extends AppCompatActivity {
                 subtitle = "放松身心，安抚入眠";
                 break;
             case 4: // 自由呼吸
-                subtitle = "随心呼吸，体验自在流动";
+                subtitle = "海的那边是自由";
                 break;
             default:
                 subtitle = "让心灵沉淀，找回内在平静";
