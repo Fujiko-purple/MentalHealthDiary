@@ -899,6 +899,11 @@ public class BreathingActivity extends AppCompatActivity {
                 }
                 // 保存选择
                 prefs.edit().putInt("play_mode", position).apply();
+                
+                // 如果正在播放，更新循环设置
+                if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+                    mediaPlayer.setLooping(currentPlayMode == PlayMode.LOOP);
+                }
             }
 
             @Override
@@ -2492,7 +2497,10 @@ public class BreathingActivity extends AppCompatActivity {
             
             if (musicFile.exists()) {
                 mediaPlayer.setDataSource(musicFile.getAbsolutePath());
+                
+                // 只有在循环播放模式下才设置循环
                 mediaPlayer.setLooping(currentPlayMode == PlayMode.LOOP);
+                
                 mediaPlayer.prepare();
                 
                 // 设置进度条最大值
@@ -2510,12 +2518,19 @@ public class BreathingActivity extends AppCompatActivity {
                 // 开始更新进度条
                 startProgressUpdate();
                 
-                // 设置播放完成监听器
+                // 设置播放完成监听器，根据播放模式决定下一步操作
                 mediaPlayer.setOnCompletionListener(mp -> {
                     if (currentPlayMode != PlayMode.LOOP) {
+                        // 如果不是循环播放，则播放下一首
                         playNextSong();
                     }
+                    // 循环播放模式下，MediaPlayer会自动循环，无需额外处理
                 });
+                
+                // 更新当前播放的歌曲索引
+                if (currentSongs.contains(musicFileName)) {
+                    currentSongIndex = currentSongs.indexOf(musicFileName);
+                }
                 
                 updateMusicFeedback(musicFileName);
                 if (!isShowingNotes) {
@@ -2527,33 +2542,37 @@ public class BreathingActivity extends AppCompatActivity {
         }
     }
 
-    // 添加播放下一首歌的方法
+    // 优化 playNextSong 方法，确保正确处理不同的播放模式
     private void playNextSong() {
         if (currentSongs.isEmpty()) return;
 
         switch (currentPlayMode) {
             case SEQUENCE:
-                // 列表播放：播放下一首，到末尾后停止
+                // 列表播放：播放下一首，到末尾后回到第一首
                 currentSongIndex = (currentSongIndex + 1) % currentSongs.size();
-                if (currentSongIndex == 0) {
-                    stopBackgroundMusic();
-                } else {
-                    playCustomMusic(currentSongs.get(currentSongIndex));
-                }
+                playCustomMusic(currentSongs.get(currentSongIndex));
                 break;
 
             case RANDOM:
                 // 随机播放：随机选择一首歌播放
-                int nextIndex = random.nextInt(currentSongs.size());
-                while (nextIndex == currentSongIndex && currentSongs.size() > 1) {
-                    nextIndex = random.nextInt(currentSongs.size());
+                if (currentSongs.size() > 1) {
+                    // 如果有多首歌，确保不会连续播放同一首
+                    int nextIndex = random.nextInt(currentSongs.size());
+                    while (nextIndex == currentSongIndex) {
+                        nextIndex = random.nextInt(currentSongs.size());
+                    }
+                    currentSongIndex = nextIndex;
+                } else {
+                    // 只有一首歌时，继续播放
+                    currentSongIndex = 0;
                 }
-                currentSongIndex = nextIndex;
                 playCustomMusic(currentSongs.get(currentSongIndex));
                 break;
 
             case LOOP:
                 // 循环播放：MediaPlayer已设置循环，无需处理
+                // 但如果到这里，说明循环设置可能有问题，重新播放当前歌曲
+                playCustomMusic(currentSongs.get(currentSongIndex));
                 break;
         }
     }
