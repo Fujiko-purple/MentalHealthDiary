@@ -719,6 +719,12 @@ public class BreathingActivity extends AppCompatActivity {
                                        Color.green(getResources().getColor(R.color.relax_breathing)), 
                                        Color.blue(getResources().getColor(R.color.relax_breathing)));
                 break;
+            case FREE:
+                borderColor = Color.argb(alpha, 
+                    Color.red(getResources().getColor(R.color.free_breathing_text)),
+                    Color.green(getResources().getColor(R.color.free_breathing_text)),
+                    Color.blue(getResources().getColor(R.color.free_breathing_text)));
+                break;
             default:
                 borderColor = Color.argb(alpha, Color.red(getResources().getColor(R.color.calm_breathing)), 
                                        Color.green(getResources().getColor(R.color.calm_breathing)), 
@@ -785,6 +791,9 @@ public class BreathingActivity extends AppCompatActivity {
             case CALMING: // 安眠呼吸
                 textColor = getResources().getColor(R.color.relax_breathing);  // 绿色
                 break;
+            case FREE: // 自由呼吸
+                textColor = getResources().getColor(R.color.free_breathing_text);  // 梦幻蓝紫色
+                break;
             default:
                 textColor = getResources().getColor(R.color.calm_breathing);
                 break;
@@ -804,6 +813,9 @@ public class BreathingActivity extends AppCompatActivity {
                 break;
             case CALMING:
                 iconRes = R.drawable.ic_breathing_sleep;
+                break;
+            case FREE:
+                iconRes = R.drawable.ic_breathing_free;  // 需要创建自由呼吸的图标
                 break;
             default:
                 iconRes = R.drawable.ic_benefits;
@@ -1555,6 +1567,9 @@ public class BreathingActivity extends AppCompatActivity {
                 break;
             case CALMING:
                 textColor = getResources().getColor(R.color.relax_breathing);
+                break;
+            case FREE:
+                textColor = getResources().getColor(R.color.free_breathing_text);
                 break;
             default:
                 textColor = getResources().getColor(R.color.calm_breathing);
