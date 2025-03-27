@@ -1338,8 +1338,12 @@ public class BreathingActivity extends AppCompatActivity {
         guideTitleText.setCompoundDrawablePadding(8);  // 保持原有的padding
         
         titleText.setText(mode.description);
-        rhythmText.setText(String.format("呼吸节奏：吸气 %d 秒，呼气 %d 秒", 
-            mode.inhaleSeconds, mode.exhaleSeconds));
+        if (mode == BreathingMode.FREE) {
+            rhythmText.setText("偶尔要回头看看，否则永远都在追寻\n而不知道自己失去了什么");
+        } else {
+            rhythmText.setText(String.format("呼吸节奏：吸气 %d 秒，呼气 %d 秒",
+                    mode.inhaleSeconds, mode.exhaleSeconds));
+        }
         
         // 设置不同模式的具体效果说明
         String benefitDetail;
