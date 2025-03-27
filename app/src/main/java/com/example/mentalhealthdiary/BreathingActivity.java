@@ -3,13 +3,10 @@ package com.example.mentalhealthdiary;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
-import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -48,8 +45,6 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -63,11 +58,8 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -218,34 +210,7 @@ public class BreathingActivity extends AppCompatActivity {
                     }
                 }
 
-                // 根据不同的呼吸模式设置不同的颜色
-                int textColor;
-                switch (position) {
-                    case 0: // 平静呼吸
-                        textColor = getResources().getColor(R.color.calm_breathing);
-                        currentMode = BreathingMode.NORMAL;
-                        break;
-                    case 1: // 专注呼吸
-                        textColor = getResources().getColor(R.color.focus_breathing);
-                        currentMode = BreathingMode.FOCUS;
-                        break;
-                    case 2: // 提神呼吸
-                        textColor = getResources().getColor(R.color.deep_breathing);
-                        currentMode = BreathingMode.ENERGIZING;
-                        break;
-                    case 3: // 安眠呼吸
-                        textColor = getResources().getColor(R.color.relax_breathing);
-                        currentMode = BreathingMode.CALMING;
-                        break;
-                    case 4: // 自由呼吸
-                        textColor = getResources().getColor(R.color.free_breathing_text);
-                        currentMode = BreathingMode.FREE;
-                        break;
-                    default:
-                        textColor = getResources().getColor(R.color.calm_breathing);
-                        currentMode = BreathingMode.NORMAL;
-                        break;
-                }
+
 
                 updateBreathingMode(position);
                 onModeSelected(currentMode);
@@ -1067,19 +1032,6 @@ public class BreathingActivity extends AppCompatActivity {
         return result;
     }
 
-    private void saveAudioInfoToPreferences(String fileName, String filePath) {
-        SharedPreferences prefs = getSharedPreferences("custom_playlist", MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
-        
-        // 保存音乐文件信息
-        Set<String> playlist = new HashSet<>(prefs.getStringSet("playlist", new HashSet<>()));
-        playlist.add(fileName);
-        editor.putStringSet("playlist", playlist);
-        
-        // 保存文件路径
-        editor.putString("path_" + fileName, filePath);
-        editor.apply();
-    }
 
     @Override
     protected void onDestroy() {
@@ -1126,23 +1078,7 @@ public class BreathingActivity extends AppCompatActivity {
         return true;
     }
 
-    private void scheduleReminder() {
-        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        Intent intent = new Intent(this, ReminderReceiver.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
 
-        // 设置每天固定时间提醒
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, 9); // 早上9点
-        calendar.set(Calendar.MINUTE, 0);
-
-        alarmManager.setRepeating(
-            AlarmManager.RTC_WAKEUP,
-            calendar.getTimeInMillis(),
-            AlarmManager.INTERVAL_DAY,
-            pendingIntent
-        );
-    }
 
     private void updateBreathingAnimation() {
         if (breathingAnimation != null) {
@@ -1430,14 +1366,14 @@ public class BreathingActivity extends AppCompatActivity {
                             "通过鼻子缓慢吸气，感受气息充满胸腹，然后轻柔地呼出。";
                 break;
             case FREE:
-                benefitDetail = "• 培养自然呼吸觉知\n" +
-                              "• 释放身心束缚\n" +
-                              "• 提升呼吸自主性\n" +
-                              "• 体验当下片刻";
-                guideDetail = "1. 找到舒适的姿势，放松全身\n" +
-                             "2. 让呼吸自然流动，不加控制\n" +
-                             "3. 感受每一次呼吸的韵律\n" +
-                             "4. 体验呼吸带来的自由感";
+                benefitDetail = "呼吸是灵魂与世界的永恒对话\n" +
+                        "在气息的涨落中重获存在的证明\n" +
+                        "每一次吞吐都是对生命定义的温柔反叛\n" +
+                        "此刻，你即万有引力之外的星辰\n\n";
+                guideDetail = "当呼吸不再是为生存而做的妥协，" +
+                        "每一次气息的交换都是向世界宣告——" +
+                        "此刻我舍弃所有呼吸规范，" +
+                        "便重获改变生命形态的自由。";
 
                 // 设置自由模式特有的文字颜色
 //                benefitText.setTextColor(getResources().getColor(R.color.free_breathing_text));
@@ -1491,63 +1427,6 @@ public class BreathingActivity extends AppCompatActivity {
 
     }
 
-    private void initializeBreathingPatterns() {
-        // 使用已有的 breathingModeSpinner 而不是 patternSpinner
-        Spinner modeSpinner = findViewById(R.id.breathingModeSpinner);
-        
-        Map<String, BreathingPattern> patterns = new HashMap<>();
-        patterns.put("478呼吸法", new BreathingPattern(4, 7, 8, "缓解焦虑"));
-        patterns.put("方块呼吸", new BreathingPattern(4, 4, 4, "平静心情"));
-        patterns.put("4-4-4-4呼吸", new BreathingPattern(4, 4, 4, "提升专注力"));
-        
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
-            this, 
-            R.layout.item_breathing_mode,  // 使用自定义布局
-            new ArrayList<>(patterns.keySet())
-        );
-        adapter.setDropDownViewResource(R.layout.item_breathing_mode_dropdown);
-        modeSpinner.setAdapter(adapter);
-        
-        modeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String selectedPattern = (String) parent.getItemAtPosition(position);
-                BreathingPattern pattern = patterns.get(selectedPattern);
-                if (pattern != null) {
-                    updateBreathingPattern(pattern);
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
-        });
-    }
-
-    private void updateBreathingPattern(BreathingPattern pattern) {
-        // 更新呼吸动画时间
-        if (breathingAnimation != null) {
-            breathingAnimation.setDuration((pattern.inhale + pattern.exhale) * 1000L);
-        }
-        
-        // 更新提示文本
-        guidanceText.setText(String.format("吸气%d秒，屏息%d秒，呼气%d秒\n%s", 
-            pattern.inhale, pattern.hold, pattern.exhale, pattern.benefit));
-    }
-
-    // 添加呼吸模式类
-    private static class BreathingPattern {
-        final int inhale;
-        final int hold;
-        final int exhale;
-        final String benefit;
-        
-        BreathingPattern(int inhale, int hold, int exhale, String benefit) {
-            this.inhale = inhale;
-            this.hold = hold;
-            this.exhale = exhale;
-            this.benefit = benefit;
-        }
-    }
 
     private void createNotificationChannel() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
@@ -1563,28 +1442,7 @@ public class BreathingActivity extends AppCompatActivity {
         }
     }
 
-    private void showNotification(Context context) {
-        createNotificationChannel();
 
-        Intent intent = new Intent(context, BreathingActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(
-            context, 
-            0, 
-            intent, 
-            PendingIntent.FLAG_IMMUTABLE
-        );
-
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("呼吸练习提醒")
-            .setContentText("现在是放松身心的好时候，让我们进行一次呼吸练习吧")
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setAutoCancel(true)
-            .setContentIntent(pendingIntent);
-
-        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-        notificationManager.notify(1, builder.build());
-    }
 
     private void updateBreathingMode(int position) {
         // 根据不同的呼吸模式设置不同的颜色
@@ -1705,30 +1563,7 @@ public class BreathingActivity extends AppCompatActivity {
         }
     }
 
-    // 添加轻微的脉动动画，与呼吸节奏相协调
-    private void startMusicFeedbackPulsation() {
-        if (musicFeedbackText == null) return;
-        
-        // 取消可能存在的动画
-        musicFeedbackText.clearAnimation();
-        
-        // 创建轻微的缩放动画
-        ValueAnimator pulseAnimator = ValueAnimator.ofFloat(1f, 1.03f);
-        pulseAnimator.setDuration(currentMode.inhaleSeconds * 1000);
-        pulseAnimator.setRepeatMode(ValueAnimator.REVERSE);
-        pulseAnimator.setRepeatCount(ValueAnimator.INFINITE);
-        pulseAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
-        
-        pulseAnimator.addUpdateListener(animation -> {
-            float value = (float) animation.getAnimatedValue();
-            musicFeedbackText.setScaleX(value);
-            musicFeedbackText.setScaleY(value);
-        });
-        
-        pulseAnimator.start();
-        
-        Log.d("BreathingActivity", "音乐反馈框脉动动画已启动");
-    }
+
 
     // 停止音乐反馈动画
     private void stopMusicFeedbackAnimation() {
@@ -1777,46 +1612,7 @@ public class BreathingActivity extends AppCompatActivity {
 
     }
 
-    private void playBackgroundMusic(String musicName) {
-        try {
-            if (mediaPlayer != null) {
-                stopBackgroundMusic();
-            }
-            
-            // 根据音乐名称选择资源ID
-            int musicResId;
-            switch (musicName) {
-                case "Call of silence":
-                    musicResId = R.raw.calm_breathing;
-                    break;
-                case "Nuit Silencieuse":
-                    musicResId = R.raw.focus_breathing;
-                    break;
-                case "皎洁的笑颜":
-                    musicResId = R.raw.calming_breathing;
-                    break;
-                case "钢琴曲":
-                    musicResId = R.raw.energizing_breathing;
-                    break;
-                default:
-                    musicResId = R.raw.energizing_breathing;
-                    musicName = "冥想音乐";
-            }
-            
-            mediaPlayer = MediaPlayer.create(this, musicResId);
-            mediaPlayer.setLooping(true);
-            mediaPlayer.start();
-            
-            // 更新音乐反馈
-            updateMusicFeedback(musicName);
-            
-            // 启动音符动画
-            startMusicNoteAnimation();
-            
-        } catch (Exception e) {
-            Log.e("BreathingActivity", "播放背景音乐失败", e);
-        }
-    }
+
 
     private void stopBackgroundMusic() {
         try {
@@ -2098,14 +1894,7 @@ public class BreathingActivity extends AppCompatActivity {
         }
     }
 
-    // 调整颜色亮度的辅助方法
-    private int adjustBrightness(int color, float factor) {
-        int a = Color.alpha(color);
-        int r = Math.min(255, (int) (Color.red(color) * factor));
-        int g = Math.min(255, (int) (Color.green(color) * factor));
-        int b = Math.min(255, (int) (Color.blue(color) * factor));
-        return Color.argb(a, r, g, b);
-    }
+
 
     private void updateGuidanceTextForBreathing(boolean isInhaling) {
         // 取消之前的动画
