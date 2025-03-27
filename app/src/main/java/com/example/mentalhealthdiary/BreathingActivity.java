@@ -412,7 +412,7 @@ public class BreathingActivity extends AppCompatActivity {
         }
 
         isBreathing = false;
-        startButton.setText("开始");
+        startButton.setText("开始练习");
         
         // 停止动画
         breathingAnimation.cancel();
@@ -437,7 +437,13 @@ public class BreathingActivity extends AppCompatActivity {
         }
         
         // 重置引导文本和计时器
-        guidanceText.setText("跟随圆圈呼吸\n吸气" + currentMode.inhaleSeconds + "秒，呼气" + currentMode.exhaleSeconds);
+        if (currentMode == BreathingMode.FREE) {
+            guidanceText.setText("随心呼吸\n感受内在的自由");
+            guidanceText.setTextColor(getResources().getColor(R.color.free_breathing_text));
+        } else {
+            guidanceText.setText(String.format("跟随圆圈呼吸\n吸气%d秒，呼气%d秒", 
+                currentMode.inhaleSeconds, currentMode.exhaleSeconds));
+        }
         guidanceText.setGravity(android.view.Gravity.CENTER);
         guidanceText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         sessionSeconds = 0;
@@ -750,19 +756,19 @@ public class BreathingActivity extends AppCompatActivity {
         );
         
         // 更新引导文本以匹配当前模式
-        guidanceText.setText(String.format("跟随圆圈呼吸\n吸气%d秒，呼气%d秒", 
-            mode.inhaleSeconds, mode.exhaleSeconds));
+        if (mode == BreathingMode.FREE) {
+            guidanceText.setText("随心呼吸\n感受内在的自由");
+            guidanceText.setTextColor(getResources().getColor(R.color.free_breathing_text));
+        } else {
+            guidanceText.setText(String.format("跟随圆圈呼吸\n吸气%d秒，呼气%d秒", 
+                mode.inhaleSeconds, mode.exhaleSeconds));
+        }
         
         // 如果正在进行呼吸练习，更新音乐
         if (isBreathing && !isPreparingToStart && mediaPlayer != null && mediaPlayer.isPlaying()) {
             String musicName = getMusicFeedbackForMode(mode);
             startBackgroundMusic(); // 重新开始播放音乐
             updateMusicFeedback(musicName);
-        }
-
-        if (mode == BreathingMode.FREE) {
-            guidanceText.setText("随心呼吸\n感受内在的自由");
-            guidanceText.setTextColor(getResources().getColor(R.color.free_breathing_text));
         }
     }
 
@@ -889,7 +895,8 @@ public class BreathingActivity extends AppCompatActivity {
                              "4. 体验呼吸带来的自由感";
 
                 // 设置自由模式特有的文字颜色
-
+                benefitText.setTextColor(getResources().getColor(R.color.free_breathing_text));
+                guideText.setTextColor(getResources().getColor(R.color.free_breathing_text));
                 break;
             default:
                 benefitDetail = mode.benefit + "\n\n🎵 背景音乐: " + getMusicNameForMode(mode);
