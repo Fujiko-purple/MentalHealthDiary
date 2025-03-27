@@ -835,6 +835,15 @@ public class BreathingActivity extends AppCompatActivity {
         // 设置当前选中的歌曲
         if (selectedFreeBreathingMusic != null) {
             playlistAdapter.setCurrentPlayingSong(selectedFreeBreathingMusic);
+            
+            // 关键修改：在对话框显示后，滚动到当前播放的歌曲位置
+            RecyclerView playlistRecyclerView = playlistDialog.findViewById(R.id.playlistRecyclerView);
+            if (playlistRecyclerView != null && currentSongs.contains(selectedFreeBreathingMusic)) {
+                int position = currentSongs.indexOf(selectedFreeBreathingMusic);
+                playlistRecyclerView.post(() -> {
+                    playlistRecyclerView.scrollToPosition(position);
+                });
+            }
         }
 
         // 设置搜索功能
@@ -2604,22 +2613,41 @@ public class BreathingActivity extends AppCompatActivity {
             .apply();
     }
 
-    // 添加搜索过滤方法
+    // 修改 filterSongs 方法，实现实时搜索过滤
     private void filterSongs(String query) {
         if (currentSongs == null || playlistAdapter == null) return;
         
+        Log.d("BreathingActivity", "过滤歌曲，搜索词: " + query);
+        Log.d("BreathingActivity", "当前歌曲总数: " + currentSongs.size());
+        
+        List<String> filteredList;
         if (query.isEmpty()) {
             // 如果搜索框为空，显示所有歌曲
-            playlistAdapter.updateSongs(new ArrayList<>(currentSongs));
+            filteredList = new ArrayList<>(currentSongs);
+            Log.d("BreathingActivity", "搜索框为空，显示所有歌曲: " + filteredList.size());
         } else {
             // 否则过滤匹配的歌曲
-            List<String> filteredList = new ArrayList<>();
+            filteredList = new ArrayList<>();
             for (String song : currentSongs) {
                 if (song.toLowerCase().contains(query.toLowerCase())) {
                     filteredList.add(song);
                 }
             }
-            playlistAdapter.updateSongs(filteredList);
+            Log.d("BreathingActivity", "过滤后的歌曲数: " + filteredList.size());
+        }
+        
+        // 更新适配器中的歌曲列表
+        playlistAdapter.updateSongs(filteredList);
+        
+        // 如果当前有选中的歌曲，并且它在过滤后的列表中，滚动到该位置
+        if (selectedFreeBreathingMusic != null && filteredList.contains(selectedFreeBreathingMusic)) {
+            int position = filteredList.indexOf(selectedFreeBreathingMusic);
+            RecyclerView playlistRecyclerView = playlistDialog.findViewById(R.id.playlistRecyclerView);
+            if (playlistRecyclerView != null) {
+                playlistRecyclerView.post(() -> {
+                    playlistRecyclerView.scrollToPosition(position);
+                });
+            }
         }
     }
 

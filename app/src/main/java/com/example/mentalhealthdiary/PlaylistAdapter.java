@@ -121,8 +121,11 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
     }
 
     public void updateSongs(List<String> newSongs) {
-        this.songs.clear();
-        this.songs.addAll(newSongs);
+        this.songs = new ArrayList<>(newSongs);
         notifyDataSetChanged();
+    }
+
+    public List<String> getSongs() {
+        return songs;
     }
 } 
