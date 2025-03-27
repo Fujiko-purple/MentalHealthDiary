@@ -720,9 +720,12 @@ public class BreathingActivity extends AppCompatActivity {
         playlistAdapter = new PlaylistAdapter(this, currentSongs, new PlaylistAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(String song) {
-                // 点击歌曲时，如果当前是自由呼吸模式，则设置为背景音乐
                 if (currentMode == BreathingMode.FREE) {
                     selectedFreeBreathingMusic = song;
+                    // 更新适配器显示
+                    playlistAdapter.setCurrentPlayingSong(song);
+                    // 保存选择
+                    saveSelectedSong(song);
                     // 显示选中提示
                     Snackbar.make(findViewById(R.id.breathing_root_layout),
                         "已选择 " + song + " 作为自由呼吸背景音乐",
@@ -780,6 +783,11 @@ public class BreathingActivity extends AppCompatActivity {
         });
 
         playlistDialog.show();  // 使用成员变量
+
+        // 设置当前选中的歌曲
+        if (selectedFreeBreathingMusic != null) {
+            playlistAdapter.setCurrentPlayingSong(selectedFreeBreathingMusic);
+        }
     }
 
     private void showSelectionToolbar() {
@@ -2486,6 +2494,19 @@ public class BreathingActivity extends AppCompatActivity {
                 
                 // 更新音乐反馈
                 updateMusicFeedback(musicFileName);
+                
+                // 开始音符动画
+                if (!isShowingNotes) {
+                    startMusicNoteAnimation();
+                }
+                
+                // 更新适配器中的选中状态
+                if (playlistAdapter != null) {
+                    playlistAdapter.setCurrentPlayingSong(musicFileName);
+                }
+                
+                // 保存选中的歌曲
+                saveSelectedSong(musicFileName);
             }
         } catch (Exception e) {
             Log.e("BreathingActivity", "播放自定义音乐失败", e);

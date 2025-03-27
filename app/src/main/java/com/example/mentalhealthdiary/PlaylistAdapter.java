@@ -10,6 +10,7 @@ import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
+import android.content.SharedPreferences;
 
 public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHolder> {
     private List<String> songs;
@@ -29,6 +30,10 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
         this.context = context;
         this.songs = songs;
         this.listener = listener;
+        
+        // 从 SharedPreferences 获取上次选择的歌曲
+        SharedPreferences prefs = context.getSharedPreferences("custom_playlist", Context.MODE_PRIVATE);
+        this.selectedFreeBreathingMusic = prefs.getString("last_selected_song", null);
     }
 
     public void setSelectionMode(boolean selectionMode) {
@@ -54,6 +59,11 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
         notifyDataSetChanged();
     }
 
+    public void setCurrentPlayingSong(String song) {
+        this.selectedFreeBreathingMusic = song;
+        notifyDataSetChanged();  // 确保刷新列表显示
+    }
+
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(context).inflate(R.layout.item_playlist, parent, false);
@@ -64,13 +74,15 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
     public void onBindViewHolder(ViewHolder holder, int position) {
         String song = songs.get(position);
         
-        // 显示歌曲名称，如果是当前选中的歌曲则加上标记
+        // 显示歌曲名称，如果是当前选中的歌曲则加上标记和特殊样式
         String displayText = song;
         if (song.equals(selectedFreeBreathingMusic)) {
             displayText = "▶ " + song;  // 添加播放标记
             holder.textView.setTextColor(context.getResources().getColor(R.color.free_breathing_text));
+            holder.itemView.setBackgroundColor(context.getResources().getColor(R.color.selected_song_background));
         } else {
             holder.textView.setTextColor(Color.BLACK);
+            holder.itemView.setBackgroundColor(Color.TRANSPARENT);
         }
         holder.textView.setText(displayText);
         
