@@ -750,31 +750,21 @@ public class BreathingActivity extends AppCompatActivity {
             }
         }
 
-        // 使用 ACTION_OPEN_DOCUMENT 来支持多选
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        // 使用 ACTION_GET_CONTENT 来打开系统文件管理器
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("audio/*");
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | 
-                       Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+        intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);  // 只显示本地文件
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
         try {
+            // 直接启动 intent，不使用 createChooser
             startActivityForResult(intent, PICK_AUDIO_REQUEST);
         } catch (android.content.ActivityNotFoundException ex) {
-            // 如果 ACTION_OPEN_DOCUMENT 不可用，回退到 ACTION_GET_CONTENT
-            Intent fallbackIntent = new Intent(Intent.ACTION_GET_CONTENT);
-            fallbackIntent.setType("audio/*");
-            fallbackIntent.addCategory(Intent.CATEGORY_OPENABLE);
-            fallbackIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-            fallbackIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            
-            try {
-                startActivityForResult(fallbackIntent, PICK_AUDIO_REQUEST);
-            } catch (android.content.ActivityNotFoundException e) {
-                Snackbar.make(findViewById(R.id.breathing_root_layout),
-                    "请安装文件管理器",
-                    Snackbar.LENGTH_SHORT).show();
-            }
+            Snackbar.make(findViewById(R.id.breathing_root_layout),
+                "请安装文件管理器",
+                Snackbar.LENGTH_SHORT).show();
         }
     }
 
