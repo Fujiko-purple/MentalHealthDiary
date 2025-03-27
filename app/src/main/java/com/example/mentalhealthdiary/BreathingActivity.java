@@ -406,25 +406,11 @@ public class BreathingActivity extends AppCompatActivity {
                     .setTitle("提示")
                     .setMessage("自由呼吸模式需要背景音乐，请先导入歌曲")
                     .setPositiveButton("去导入", (dialog, which) -> {
-                        // 取消开始练习
-                        isBreathing = false;
-                        startButton.setText("开始练习");
-                        // 恢复引导文字
-                        guidanceText.setText("你是万千星辰中的一颗\n于我而言却是整个世界");
-                        guidanceText.setTextColor(getResources().getColor(R.color.free_breathing_text));
-                        // 隐藏计时器
-                        timerText.setVisibility(View.INVISIBLE);
+                        resetBreathingState();  // 重置所有状态
                         openImportPlaylist();
                     })
                     .setNegativeButton("取消", (dialog, which) -> {
-                        // 取消开始练习
-                        isBreathing = false;
-                        startButton.setText("开始练习");
-                        // 恢复引导文字
-                        guidanceText.setText("你是万千星辰中的一颗\n于我而言却是整个世界");
-                        guidanceText.setTextColor(getResources().getColor(R.color.free_breathing_text));
-                        // 隐藏计时器
-                        timerText.setVisibility(View.INVISIBLE);
+                        resetBreathingState();  // 重置所有状态
                     })
                     .show();
                 return;
@@ -478,6 +464,23 @@ public class BreathingActivity extends AppCompatActivity {
                 stopBreathingExercise();
             }
         }.start();
+    }
+
+    // 添加一个新方法来重置所有状态
+    private void resetBreathingState() {
+        // 取消开始练习
+        isBreathing = false;
+        startButton.setText("开始练习");
+        
+        // 恢复引导文字
+        guidanceText.setText("你是万千星辰中的一颗\n于我而言却是整个世界");
+        guidanceText.setTextColor(getResources().getColor(R.color.free_breathing_text));
+        
+        // 隐藏计时器
+        timerText.setVisibility(View.INVISIBLE);
+        
+        // 重新启用导入按钮
+        invalidateOptionsMenu();
     }
 
     private void startBackgroundMusic() {
