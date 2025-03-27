@@ -856,25 +856,44 @@ public class BreathingActivity extends AppCompatActivity {
         Spinner playModeSpinner = dialogView.findViewById(R.id.playModeSpinner);
         playModeSpinner.setDropDownVerticalOffset(1);  // 确保下拉框紧贴选择器
         
-        ArrayAdapter<String> playModeAdapter = new ArrayAdapter<String>(this, R.layout.item_play_mode) {
+        // 创建自定义适配器，显示图标和文本
+        ArrayAdapter<PlayMode> playModeAdapter = new ArrayAdapter<PlayMode>(this, R.layout.item_play_mode, PlayMode.values()) {
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
                 TextView view = (TextView) super.getView(position, convertView, parent);
-                view.setHeight(ViewGroup.LayoutParams.WRAP_CONTENT);  // 确保文字完全显示
+                view.setText(getItem(position).description);
+                view.setHeight(ViewGroup.LayoutParams.WRAP_CONTENT);
                 return view;
             }
 
             @Override
             public View getDropDownView(int position, View convertView, ViewGroup parent) {
-                TextView view = (TextView) super.getDropDownView(position, convertView, parent);
-                view.setHeight(ViewGroup.LayoutParams.WRAP_CONTENT);  // 确保下拉项文字完全显示
-                return view;
+                if (convertView == null) {
+                    convertView = getLayoutInflater().inflate(R.layout.item_play_mode_dropdown, parent, false);
+                }
+                
+                TextView textView = convertView.findViewById(R.id.text);
+                ImageView iconView = convertView.findViewById(R.id.icon);
+                
+                PlayMode mode = getItem(position);
+                textView.setText(mode.description);
+                
+                // 设置对应的图标
+                switch (mode) {
+                    case LOOP:
+                        iconView.setImageResource(R.drawable.ic_play_mode_loop);
+                        break;
+                    case SEQUENCE:
+                        iconView.setImageResource(R.drawable.ic_play_mode_sequence);
+                        break;
+                    case RANDOM:
+                        iconView.setImageResource(R.drawable.ic_play_mode_random);
+                        break;
+                }
+                
+                return convertView;
             }
         };
-
-        playModeAdapter.addAll(Arrays.stream(PlayMode.values())
-                .map(mode -> mode.description)
-                .toArray(String[]::new));
         
         playModeSpinner.setAdapter(playModeAdapter);
 
