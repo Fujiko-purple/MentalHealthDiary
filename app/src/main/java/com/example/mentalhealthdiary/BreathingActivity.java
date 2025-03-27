@@ -24,8 +24,10 @@ import android.os.CountDownTimer;
 import android.os.Handler;
 import android.provider.OpenableColumns;
 import android.provider.Settings;
+import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableString;
+import android.text.TextWatcher;
 import android.text.style.RelativeSizeSpan;
 import android.text.style.ScaleXSpan;
 import android.text.style.StyleSpan;
@@ -39,6 +41,7 @@ import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -769,6 +772,21 @@ public class BreathingActivity extends AppCompatActivity {
         if (selectedFreeBreathingMusic != null) {
             playlistAdapter.setCurrentPlayingSong(selectedFreeBreathingMusic);
         }
+
+        // 设置搜索功能
+        EditText searchEditText = dialogView.findViewById(R.id.searchEditText);
+        searchEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                filterSongs(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
     }
 
     private void showSelectionToolbar() {
@@ -2367,5 +2385,24 @@ public class BreathingActivity extends AppCompatActivity {
         prefs.edit()
             .putString("last_selected_song", song)
             .apply();
+    }
+
+    // 添加搜索过滤方法
+    private void filterSongs(String query) {
+        if (currentSongs == null || playlistAdapter == null) return;
+        
+        if (query.isEmpty()) {
+            // 如果搜索框为空，显示所有歌曲
+            playlistAdapter.updateSongs(new ArrayList<>(currentSongs));
+        } else {
+            // 否则过滤匹配的歌曲
+            List<String> filteredList = new ArrayList<>();
+            for (String song : currentSongs) {
+                if (song.toLowerCase().contains(query.toLowerCase())) {
+                    filteredList.add(song);
+                }
+            }
+            playlistAdapter.updateSongs(filteredList);
+        }
     }
 } 
