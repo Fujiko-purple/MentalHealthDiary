@@ -79,4 +79,13 @@
         <item name="android:windowEnterAnimation">@anim/import_dialog_enter</item>
         <item name="android:windowExitAnimation">@anim/import_dialog_exit</item>
     </style>
+    <style name="PopupMenuStyle" parent="Widget.AppCompat.PopupMenu.Overflow">
+        <item name="android:dropDownVerticalOffset">0dp</item>
+        <item name="android:overlapAnchor">false</item>
+        <item name="android:popupAnimationStyle">@style/PopupMenuAnimation</item>
+    </style>
+    <style name="PopupMenuAnimation">
+        <item name="android:windowEnterAnimation">@anim/popup_enter</item>
+        <item name="android:windowExitAnimation">@anim/popup_exit</item>
+    </style>
 </resources> 
