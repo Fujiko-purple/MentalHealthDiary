@@ -1,9 +1,102 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <gradient
-        android:type="linear"
-        android:startColor="#49CAD7"
-        android:centerColor="#61D8E2"
-        android:endColor="#25BACB"
-        android:angle="135"/>
-</shape>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 基础渐变层 - 使用低饱和度的蓝紫色调 -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="linear"
+                android:startColor="#3B7B9E"
+                android:centerColor="#4A8CAD"
+                android:endColor="#2A6A8E"
+                android:angle="135"/>
+        </shape>
+    </item>
+    
+    <!-- 梦幻光晕层 - 右下角 -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:centerX="0.8"
+                android:centerY="0.8"
+                android:startColor="#263A5F8E"
+                android:centerColor="#1A3A5F8E"
+                android:endColor="#003A5F8E"
+                android:gradientRadius="400dp"/>
+        </shape>
+    </item>
+    
+    <!-- 梦幻光晕层 - 左上角 -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:centerX="0.2"
+                android:centerY="0.2"
+                android:startColor="#266E8DA6"
+                android:centerColor="#136E8DA6"
+                android:endColor="#006E8DA6"
+                android:gradientRadius="350dp"/>
+        </shape>
+    </item>
+
+    <!-- 微光粒子效果 - 上部 -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:centerX="0.3"
+                android:centerY="0.3"
+                android:startColor="#1AFFFFFF"
+                android:centerColor="#0AFFFFFF"
+                android:endColor="#00FFFFFF"
+                android:gradientRadius="200dp"/>
+        </shape>
+    </item>
+    
+    <!-- 微光粒子效果 - 中部 -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:centerX="0.7"
+                android:centerY="0.4"
+                android:startColor="#12FFFFFF"
+                android:centerColor="#08FFFFFF"
+                android:endColor="#00FFFFFF"
+                android:gradientRadius="150dp"/>
+        </shape>
+    </item>
+    
+    <!-- 微光粒子效果 - 下部 -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:centerX="0.4"
+                android:centerY="0.7"
+                android:startColor="#15FFFFFF"
+                android:centerColor="#0AFFFFFF"
+                android:endColor="#00FFFFFF"
+                android:gradientRadius="180dp"/>
+        </shape>
+    </item>
+
+    <!-- 流动光带 - 增强梦幻感 -->
+    <item>
+        <rotate
+            android:fromDegrees="-20"
+            android:pivotX="50%"
+            android:pivotY="50%">
+            <shape android:shape="rectangle">
+                <gradient
+                    android:type="linear"
+                    android:startColor="#1A9EAEC7"
+                    android:centerColor="#0D9EAEC7"
+                    android:endColor="#009EAEC7"
+                    android:angle="45"/>
+                <size android:height="800dp"/>
+            </shape>
+        </rotate>
+    </item>
+</layer-list>
