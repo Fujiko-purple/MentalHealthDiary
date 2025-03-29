@@ -49,6 +49,11 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.view.LayoutInflater;
+import android.view.animation.AnimationUtils;
+import android.view.animation.LayoutAnimationController;
+import android.graphics.drawable.ColorDrawable;
+import android.view.Window;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -861,19 +866,7 @@ public class BreathingActivity extends AppCompatActivity {
         deleteButton.setOnClickListener(v -> {
             List<String> selectedSongs = playlistAdapter.getSelectedSongs();
             if (!selectedSongs.isEmpty()) {
-                new AlertDialog.Builder(this)
-                    .setTitle("删除歌曲")
-                    .setMessage("确定要删除选中的 " + selectedSongs.size() + " 首歌曲吗？")
-                    .setPositiveButton("确定", (dialogInterface, which) -> {
-                        deleteSongs(selectedSongs);
-                        playlistAdapter.setSelectionMode(false);
-                        selectionToolbar.setVisibility(View.GONE);
-                        // 同时隐藏全选按钮
-                        ImageButton selectAllButton = dialogView.findViewById(R.id.selectAllButton);
-                        selectAllButton.setVisibility(View.GONE);
-                    })
-                    .setNegativeButton("取消", null)
-                    .show();
+                showDeleteConfirmationDialog(selectedSongs);
             }
         });
 
@@ -1270,18 +1263,11 @@ public class BreathingActivity extends AppCompatActivity {
                     playlistAdapter.updateSongs(new ArrayList<>(currentSongs));  // 传入新的列表副本
                 }
 
-                // 构建导入歌曲的提示信息
-                StringBuilder message = new StringBuilder("已导入:\n");
-                for (String song : importedFiles) {
-                    message.append("• ").append(song).append("\n");
-                }
-
-                // 显示导入提示，使用 AlertDialog
-                new AlertDialog.Builder(BreathingActivity.this)
-                    .setTitle("导入成功")
-                    .setMessage(message.toString())
-                    .setPositiveButton("确定", null)
-                    .show();
+                // 使用新的自定义对话框显示导入成功
+                showImportSuccessDialog(importedFiles);
+            } else {
+                // 没有导入任何文件
+                Snackbar.make(findViewById(android.R.id.content), "没有导入任何文件", Snackbar.LENGTH_SHORT).show();
             }
         }
     }
@@ -2844,19 +2830,7 @@ public class BreathingActivity extends AppCompatActivity {
         deleteButton.setOnClickListener(v -> {
             List<String> selectedSongs = playlistAdapter.getSelectedSongs();
             if (!selectedSongs.isEmpty()) {
-                new AlertDialog.Builder(this)
-                    .setTitle("删除歌曲")
-                    .setMessage("确定要删除选中的 " + selectedSongs.size() + " 首歌曲吗？")
-                    .setPositiveButton("删除", (dialog, which) -> {
-                        // 删除选中的歌曲
-                        deleteSelectedSongs(selectedSongs);
-                        // 退出选择模式
-                        playlistAdapter.setSelectionMode(false);
-                        selectAllButton.setVisibility(View.GONE);
-                        selectionToolbar.setVisibility(View.GONE);
-                    })
-                    .setNegativeButton("取消", null)
-                    .show();
+                showDeleteConfirmationDialog(selectedSongs);
             }
         });
     }
@@ -2889,10 +2863,8 @@ public class BreathingActivity extends AppCompatActivity {
         currentSongs = new ArrayList<>(playlist);
         playlistAdapter.updateSongs(currentSongs);
         
-        // 显示提示
-        Snackbar.make(findViewById(R.id.breathing_root_layout),
-            "已删除 " + selectedSongs.size() + " 首歌曲",
-            Snackbar.LENGTH_SHORT).show();
+        // 显示删除成功对话框
+        showDeleteSuccessDialog(selectedSongs);
     }
 
     private void handlePlaybackCompletion() {
@@ -2927,5 +2899,151 @@ public class BreathingActivity extends AppCompatActivity {
         
         // 保存当前选中的歌曲
         saveSelectedSong(selectedFreeBreathingMusic);
+    }
+
+    // 删除歌曲确认对话框
+    private void showDeleteConfirmationDialog(List<String> selectedSongs) {
+        Dialog dialog = new Dialog(this, R.style.CustomDialog);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_delete_confirmation, null);
+        dialog.setContentView(dialogView);
+        
+        // 设置消息
+        TextView messageText = dialogView.findViewById(R.id.deleteMessageText);
+        messageText.setText("确定要删除选中的 " + selectedSongs.size() + " 首歌曲吗？");
+        
+        // 设置取消按钮
+        Button cancelButton = dialogView.findViewById(R.id.cancelButton);
+        cancelButton.setOnClickListener(v -> dialog.dismiss());
+        
+        // 设置确认按钮
+        Button confirmButton = dialogView.findViewById(R.id.confirmButton);
+        confirmButton.setOnClickListener(v -> {
+            dialog.dismiss();
+            deleteSelectedSongs(selectedSongs);
+            
+            // 退出选择模式
+            playlistAdapter.setSelectionMode(false);
+            ImageButton selectAllButton = playlistDialog.findViewById(R.id.selectAllButton);
+            View selectionToolbar = playlistDialog.findViewById(R.id.selectionToolbar);
+            selectAllButton.setVisibility(View.GONE);
+            selectionToolbar.setVisibility(View.GONE);
+        });
+        
+        dialog.show();
+    }
+
+    // 显示删除成功对话框
+    private void showDeleteSuccessDialog(List<String> deletedSongs) {
+        Dialog dialog = new Dialog(this, R.style.CustomDialog);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_operation_success, null);
+        dialog.setContentView(dialogView);
+        
+        // 设置标题和消息
+        TextView titleText = dialogView.findViewById(R.id.successTitleText);
+        TextView messageText = dialogView.findViewById(R.id.successMessageText);
+        titleText.setText("删除成功");
+        
+        // 构建删除的歌曲列表文本
+        StringBuilder sb = new StringBuilder("已删除：\n");
+        for (String song : deletedSongs) {
+            sb.append("• ").append(song).append("\n");
+        }
+        messageText.setText(sb.toString());
+        
+        // 设置确认按钮
+        Button confirmButton = dialogView.findViewById(R.id.confirmButton);
+        confirmButton.setOnClickListener(v -> dialog.dismiss());
+        
+        dialog.show();
+    }
+
+    // 显示导入成功对话框
+    private void showImportSuccessDialog(List<String> importedSongs) {
+        // 创建自定义对话框
+        final Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_import_success_new);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        
+        // 设置动画
+        dialog.getWindow().getAttributes().windowAnimations = R.style.ImportDialogAnimation;
+        
+        // 获取视图引用
+        TextView titleText = dialog.findViewById(R.id.importTitleText);
+        TextView messageText = dialog.findViewById(R.id.importMessageText);
+        ImageView iconView = dialog.findViewById(R.id.importIcon);
+        Button confirmButton = dialog.findViewById(R.id.importConfirmButton);
+        RecyclerView songsList = dialog.findViewById(R.id.importedSongsList);
+        
+        // 设置标题和消息
+        titleText.setText("导入成功");
+        if (importedSongs.size() == 1) {
+            messageText.setText("已成功导入 1 首歌曲");
+        } else {
+            messageText.setText("已成功导入 " + importedSongs.size() + " 首歌曲");
+        }
+        
+        // 设置图标动画
+        ObjectAnimator scaleX = ObjectAnimator.ofFloat(iconView, "scaleX", 0.6f, 1.2f, 1.0f);
+        ObjectAnimator scaleY = ObjectAnimator.ofFloat(iconView, "scaleY", 0.6f, 1.2f, 1.0f);
+        ObjectAnimator rotation = ObjectAnimator.ofFloat(iconView, "rotation", 0f, 20f, -20f, 10f, -10f, 0f);
+        
+        AnimatorSet animatorSet = new AnimatorSet();
+        animatorSet.playTogether(scaleX, scaleY, rotation);
+        animatorSet.setDuration(1200);
+        animatorSet.start();
+        
+        // 设置歌曲列表
+        songsList.setLayoutManager(new LinearLayoutManager(this));
+        ImportSongsListAdapter adapter = new ImportSongsListAdapter(importedSongs);
+        songsList.setAdapter(adapter);
+        
+        // 添加列表动画
+        LayoutAnimationController animation = AnimationUtils.loadLayoutAnimation(
+                this, R.anim.layout_animation_fall_down);
+        songsList.setLayoutAnimation(animation);
+        
+        // 设置确认按钮
+        confirmButton.setOnClickListener(v -> dialog.dismiss());
+        
+        // 显示对话框
+        dialog.show();
+    }
+
+    // 导入歌曲列表适配器
+    private class ImportSongsListAdapter extends RecyclerView.Adapter<ImportSongsListAdapter.ViewHolder> {
+        private List<String> songs;
+        
+        public ImportSongsListAdapter(List<String> songs) {
+            this.songs = songs;
+        }
+        
+        @Override
+        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.item_imported_song_new, parent, false);
+            return new ViewHolder(view);
+        }
+        
+        @Override
+        public void onBindViewHolder(ViewHolder holder, int position) {
+            String song = songs.get(position);
+            holder.songNameText.setText(song);
+        }
+        
+        @Override
+        public int getItemCount() {
+            return songs.size();
+        }
+        
+        class ViewHolder extends RecyclerView.ViewHolder {
+            TextView songNameText;
+            
+            ViewHolder(View itemView) {
+                super(itemView);
+                songNameText = itemView.findViewById(R.id.importedSongName);
+            }
+        }
     }
 } 

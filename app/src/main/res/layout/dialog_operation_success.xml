@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/dialog_background_card"
+    android:padding="24dp">
+
+    <ImageView
+        android:id="@+id/successIcon"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:src="@drawable/ic_success"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="16dp"
+        app:tint="@color/success_color" />
+
+    <TextView
+        android:id="@+id/successTitleText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="操作成功"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:gravity="center"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:id="@+id/successMessageText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="操作已成功完成"
+        android:textSize="16sp"
+        android:textColor="@color/text_secondary"
+        android:gravity="center"
+        android:layout_marginBottom="16dp" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/itemsRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/confirmButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="确定"
+        android:textColor="@android:color/white"
+        android:background="@drawable/button_success_background" />
+</LinearLayout> 

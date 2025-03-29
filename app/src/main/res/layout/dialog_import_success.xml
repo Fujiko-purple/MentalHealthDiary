@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/import_dialog_background"
+    android:padding="24dp">
+
+    <ImageView
+        android:id="@+id/successIcon"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:src="@drawable/ic_music_import_success"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="16dp"
+        app:tint="@color/import_success_color" />
+
+    <TextView
+        android:id="@+id/successTitleText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="导入成功"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:gravity="center"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:id="@+id/successMessageText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="已成功导入歌曲"
+        android:textSize="16sp"
+        android:textColor="@color/text_secondary"
+        android:gravity="center"
+        android:layout_marginBottom="20dp" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/importedSongsRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:maxHeight="200dp"
+        android:background="@drawable/imported_songs_list_background"
+        android:padding="8dp"
+        android:overScrollMode="never"
+        android:nestedScrollingEnabled="true" />
+
+    <Button
+        android:id="@+id/confirmButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="太棒了"
+        android:textColor="@android:color/white"
+        android:background="@drawable/button_import_success_background"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"
+        android:textSize="16sp" />
+</LinearLayout> 
