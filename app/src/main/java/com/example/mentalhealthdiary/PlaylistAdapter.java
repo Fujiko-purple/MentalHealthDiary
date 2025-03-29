@@ -13,6 +13,7 @@ import java.util.List;
 import android.content.SharedPreferences;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
+import androidx.annotation.NonNull;
 
 public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHolder> 
         implements View.OnTouchListener {
@@ -20,7 +21,7 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
     private List<String> selectedSongs = new ArrayList<>();
     private Context context;
     private boolean isSelectionMode = false;
-    private String selectedFreeBreathingMusic;
+    private String currentPlayingSong;
     private GestureDetector gestureDetector;
 
     public interface OnItemClickListener {
@@ -37,7 +38,7 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
         
         // 从 SharedPreferences 获取上次选择的歌曲
         SharedPreferences prefs = context.getSharedPreferences("custom_playlist", Context.MODE_PRIVATE);
-        this.selectedFreeBreathingMusic = prefs.getString("last_selected_song", null);
+        this.currentPlayingSong = prefs.getString("last_selected_song", null);
 
         gestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
             @Override
@@ -75,8 +76,8 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
     }
 
     public void setCurrentPlayingSong(String song) {
-        this.selectedFreeBreathingMusic = song;
-        notifyDataSetChanged();  // 确保刷新列表显示
+        this.currentPlayingSong = song;
+        notifyDataSetChanged();
     }
 
     @Override
@@ -86,20 +87,19 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         String song = songs.get(position);
         
-        // 显示歌曲名称，如果是当前选中的歌曲则加上标记和特殊样式
-        String displayText = song;
-        if (song.equals(selectedFreeBreathingMusic)) {
-            displayText = "▶ " + song;  // 添加播放标记
-            holder.textView.setTextColor(context.getResources().getColor(R.color.free_breathing_text));
+        // 只使用 currentPlayingSong 来控制高亮
+        if (song.equals(currentPlayingSong)) {
+            holder.songName.setText("▶ " + song);  // 添加播放标记
+            holder.songName.setTextColor(context.getResources().getColor(R.color.free_breathing_text));
             holder.itemView.setBackgroundColor(context.getResources().getColor(R.color.selected_song_background));
         } else {
-            holder.textView.setTextColor(Color.BLACK);
+            holder.songName.setText(song);
             holder.itemView.setBackgroundColor(Color.TRANSPARENT);
+            holder.songName.setTextColor(context.getResources().getColor(R.color.song_text_color));
         }
-        holder.textView.setText(displayText);
         
         // 显示/隐藏复选框
         holder.checkBox.setVisibility(isSelectionMode ? View.VISIBLE : View.GONE);
@@ -128,12 +128,12 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView textView;
+        TextView songName;
         CheckBox checkBox;
 
         ViewHolder(View itemView) {
             super(itemView);
-            textView = itemView.findViewById(R.id.songName);
+            songName = itemView.findViewById(R.id.songName);
             checkBox = itemView.findViewById(R.id.checkBox);
         }
     }

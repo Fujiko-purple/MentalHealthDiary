@@ -1877,11 +1877,15 @@ public class BreathingActivity extends AppCompatActivity {
 
     private void initializeMediaPlayer() {
         try {
-            // 根据当前模式选择合适的音乐
-            int musicResId = getMusicResourceForMode(currentMode);
-            mediaPlayer = MediaPlayer.create(this, musicResId);
-            mediaPlayer.setLooping(true); // 循环播放
-            mediaPlayer.setVolume(1.0f, 1.0f); // 设置最大音量
+            mediaPlayer = new MediaPlayer();
+            // ... 其他初始化代码 ...
+
+            // 设置播放完成监听器
+            mediaPlayer.setOnCompletionListener(mp -> {
+                // 处理播放完成事件
+                handlePlaybackCompletion();
+            });
+
         } catch (Exception e) {
             Log.e("BreathingActivity", "初始化MediaPlayer失败", e);
         }
@@ -2618,15 +2622,15 @@ public class BreathingActivity extends AppCompatActivity {
                 mediaPlayer.release();
             }
             
+            // 更新当前选中的歌曲
+            selectedFreeBreathingMusic = musicFileName;
+            
             mediaPlayer = new MediaPlayer();
             File musicFile = new File(getFilesDir(), "music/" + musicFileName);
             
             if (musicFile.exists()) {
                 mediaPlayer.setDataSource(musicFile.getAbsolutePath());
-                
-                // 只有在循环播放模式下才设置循环
                 mediaPlayer.setLooping(currentPlayMode == PlayMode.LOOP);
-                
                 mediaPlayer.prepare();
                 
                 // 设置进度条最大值
@@ -2640,22 +2644,24 @@ public class BreathingActivity extends AppCompatActivity {
                 }
                 
                 mediaPlayer.start();
-                
-                // 开始更新进度条
                 startProgressUpdate();
                 
-                // 设置播放完成监听器，根据播放模式决定下一步操作
+                // 设置播放完成监听器
                 mediaPlayer.setOnCompletionListener(mp -> {
                     if (currentPlayMode != PlayMode.LOOP) {
-                        // 如果不是循环播放，则播放下一首
-                        playNextSong();
+                        handlePlaybackCompletion();  // 使用 handlePlaybackCompletion 来处理播放完成
                     }
-                    // 循环播放模式下，MediaPlayer会自动循环，无需额外处理
                 });
                 
                 // 更新当前播放的歌曲索引
                 if (currentSongs.contains(musicFileName)) {
                     currentSongIndex = currentSongs.indexOf(musicFileName);
+                }
+                
+                // 更新歌单UI
+                if (playlistAdapter != null) {
+                    playlistAdapter.setCurrentPlayingSong(selectedFreeBreathingMusic);
+                    playlistAdapter.notifyDataSetChanged();
                 }
                 
                 updateMusicFeedback(musicFileName);
@@ -2700,6 +2706,12 @@ public class BreathingActivity extends AppCompatActivity {
                 // 但如果到这里，说明循环设置可能有问题，重新播放当前歌曲
                 playCustomMusic(currentSongs.get(currentSongIndex));
                 break;
+        }
+        
+        // 更新歌单UI - 使用 setCurrentPlayingSong 替代 setSelectedSong
+        if (playlistAdapter != null) {
+            playlistAdapter.setCurrentPlayingSong(selectedFreeBreathingMusic);
+            playlistAdapter.notifyDataSetChanged();
         }
     }
 
@@ -2881,5 +2893,39 @@ public class BreathingActivity extends AppCompatActivity {
         Snackbar.make(findViewById(R.id.breathing_root_layout),
             "已删除 " + selectedSongs.size() + " 首歌曲",
             Snackbar.LENGTH_SHORT).show();
+    }
+
+    private void handlePlaybackCompletion() {
+        switch (currentPlayMode) {
+            case RANDOM:
+                // 随机播放下一首
+                int nextIndex = new Random().nextInt(currentSongs.size());
+                currentSongIndex = nextIndex;
+                selectedFreeBreathingMusic = currentSongs.get(currentSongIndex);
+                break;
+
+            case SEQUENCE:
+                // 顺序播放下一首
+                currentSongIndex = (currentSongIndex + 1) % currentSongs.size();
+                selectedFreeBreathingMusic = currentSongs.get(currentSongIndex);
+                break;
+
+            case LOOP:
+                // 循环播放当前歌曲
+                break;
+        }
+
+        // 更新歌单UI
+        if (playlistAdapter != null) {
+            playlistAdapter.setCurrentPlayingSong(selectedFreeBreathingMusic);
+        }
+        
+        // 播放新选择的歌曲
+        if (currentPlayMode != PlayMode.LOOP) {
+            playCustomMusic(selectedFreeBreathingMusic);
+        }
+        
+        // 保存当前选中的歌曲
+        saveSelectedSong(selectedFreeBreathingMusic);
     }
 } 
