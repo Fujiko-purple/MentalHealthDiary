@@ -9,6 +9,7 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.AssetFileDescriptor;
 import android.content.res.ColorStateList;
 import android.database.Cursor;
 import android.graphics.Color;
@@ -1743,15 +1744,48 @@ public class BreathingActivity extends AppCompatActivity {
 
     private void initializeMediaPlayer() {
         try {
+            if (mediaPlayer != null) {
+                mediaPlayer.release();
+            }
             mediaPlayer = new MediaPlayer();
-            // ... 其他初始化代码 ...
-
-            // 设置播放完成监听器
-            mediaPlayer.setOnCompletionListener(mp -> {
-                // 处理播放完成事件
-                handlePlaybackCompletion();
-            });
-
+            
+            // 根据当前模式选择对应的音乐资源
+            int musicResId;
+            switch (currentMode) {
+                case NORMAL:
+                    musicResId = R.raw.calm_breathing;
+                    break;
+                case FOCUS:
+                    musicResId = R.raw.focus_breathing;
+                    break;
+                case ENERGIZING:
+                    musicResId = R.raw.energizing_breathing;
+                    break;
+                case CALMING:
+                    musicResId = R.raw.calming_breathing;
+                    break;
+                case FREE:
+                    // 自由呼吸模式使用自定义音乐
+                    if (selectedFreeBreathingMusic != null) {
+                        playCustomMusic(selectedFreeBreathingMusic);
+                        return;
+                    }
+                    musicResId = R.raw.calm_breathing; // 默认音乐
+                    break;
+                default:
+                    musicResId = R.raw.calm_breathing;
+            }
+            
+            // 设置音乐资源
+            AssetFileDescriptor afd = getResources().openRawResourceFd(musicResId);
+            if (afd != null) {
+                mediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+                afd.close();
+                mediaPlayer.setLooping(true);
+                mediaPlayer.prepare();
+            }
+            
+            Log.d("BreathingActivity", "初始化MediaPlayer成功，模式: " + currentMode);
         } catch (Exception e) {
             Log.e("BreathingActivity", "初始化MediaPlayer失败", e);
         }
@@ -1788,8 +1822,8 @@ public class BreathingActivity extends AppCompatActivity {
         }
     }
 
+    // 获取音乐反馈文本
     private String getMusicFeedbackForMode(BreathingMode mode) {
-        // 根据不同的呼吸模式返回不同的音乐反馈文本
         switch (mode) {
             case NORMAL:
                 return "Call of silence";
@@ -1799,8 +1833,13 @@ public class BreathingActivity extends AppCompatActivity {
                 return "钢琴曲";
             case CALMING:
                 return "皎洁的笑颜";
+            case FREE:
+                if (selectedFreeBreathingMusic != null) {
+                    return "正在播放：" + selectedFreeBreathingMusic;
+                }
+                return "正在播放：自由呼吸音乐";
             default:
-                return "冥想音乐";
+                return "正在播放：冥想音乐";
         }
     }
 

@@ -26,9 +26,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class BreathingHistoryActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
@@ -247,78 +245,6 @@ public class BreathingHistoryActivity extends AppCompatActivity {
         sessionCountText.setText(String.format("%d", sessionCount));
     }
 
-    private void showStatistics() {
-        new Thread(() -> {
-            AppDatabase db = AppDatabase.getInstance(this);
-            List<BreathingSession> sessions = db.breathingSessionDao().getAllSessions();
-            
-            // 计算每日平均时长
-            Map<String, Double> dailyAverage = sessions.stream()
-                .collect(Collectors.groupingBy(
-                    s -> new SimpleDateFormat("yyyy-MM-dd").format(new Date(s.timestamp)),
-                    Collectors.averagingInt(s -> s.duration)
-                ));
-            
-            // 计算最长练习时间
-            int maxDuration = sessions.stream()
-                .mapToInt(s -> s.duration)
-                .max()
-                .orElse(0);
-                
-            runOnUiThread(() -> {
-                showStatsDialog(dailyAverage, maxDuration);
-            });
-        }).start();
-    }
-
-    private void checkAchievements() {
-        new Thread(() -> {
-            AppDatabase db = AppDatabase.getInstance(this);
-            int totalSessions = db.breathingSessionDao().getTotalSessions();
-            int totalDuration = db.breathingSessionDao().getTotalDuration();
-            
-            if (totalSessions >= 7) {
-                unlockAchievement("坚持一周", "连续练习7天");
-            }
-            if (totalDuration >= 3600) { // 1小时
-                unlockAchievement("专注修行", "累计练习1小时");
-            }
-        }).start();
-    }
-
-    private void unlockAchievement(String title, String description) {
-        runOnUiThread(() -> {
-            View rootView = findViewById(android.R.id.content);
-            Snackbar.make(rootView, 
-                "解锁成就：" + title + "\n" + description, 
-                Snackbar.LENGTH_LONG)
-                .setAction("查看", v -> showAchievementsDialog())
-                .show();
-        });
-    }
-
-    private void showAchievementsDialog() {
-        // TODO: 显示所有成就的对话框
-    }
-
-    private void showStatsDialog(Map<String, Double> dailyAverage, int maxDuration) {
-        StringBuilder message = new StringBuilder();
-        message.append("练习统计\n\n");
-        message.append(String.format("最长单次练习: %d分%d秒\n\n", 
-            maxDuration / 60, maxDuration % 60));
-        
-        message.append("每日平均时长:\n");
-        for (Map.Entry<String, Double> entry : dailyAverage.entrySet()) {
-            message.append(String.format("%s: %.1f秒\n", 
-                entry.getKey(), entry.getValue()));
-        }
-
-        new AlertDialog.Builder(this)
-            .setTitle("练习统计")
-            .setMessage(message.toString())
-            .setPositiveButton("确定", null)
-            .show();
-    }
 
     private void updateActionBar() {
         if (isSelectionMode) {
