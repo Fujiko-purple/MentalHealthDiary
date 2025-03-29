@@ -2,49 +2,46 @@ package com.example.mentalhealthdiary;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
+import android.util.TypedValue;
 import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
 import android.widget.TextView;
+
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.mentalhealthdiary.database.AppDatabase;
+import com.example.mentalhealthdiary.model.MoodEntry;
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.charts.PieChart;
+import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
-import com.github.mikephil.charting.formatter.ValueFormatter;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Locale;
-import java.util.TreeMap;
-import com.example.mentalhealthdiary.database.AppDatabase;
-import com.example.mentalhealthdiary.model.MoodEntry;
-import com.github.mikephil.charting.listener.OnChartGestureListener;
-import com.github.mikephil.charting.listener.ChartTouchListener;
-import android.view.MotionEvent;
-import android.widget.Toast;
-import java.util.Map;
-import java.util.HashMap;
-import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
-import com.github.mikephil.charting.highlight.Highlight;
-import java.util.List;
-import android.util.Log;
-import android.widget.Spinner;
-import android.widget.ArrayAdapter;
-import android.view.View;
-import android.widget.AdapterView;
-import com.github.mikephil.charting.components.Legend;
-import android.graphics.Paint;
-import com.google.android.material.snackbar.Snackbar;
-import android.util.TypedValue;
-import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
-import java.util.Calendar;
-import java.util.stream.Collectors;
-import java.util.Collections;
+import com.github.mikephil.charting.formatter.ValueFormatter;
+import com.github.mikephil.charting.highlight.Highlight;
+import com.github.mikephil.charting.listener.ChartTouchListener;
+import com.github.mikephil.charting.listener.OnChartGestureListener;
+import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.snackbar.Snackbar;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 public class MoodChartActivity extends AppCompatActivity {
     private LineChart moodChart;
@@ -476,112 +473,8 @@ public class MoodChartActivity extends AppCompatActivity {
     }
 
     // 添加更多统计信息
-    private void updateStatistics(List<MoodEntry> entries) {
-        float monthlyAvg = calculateMonthlyAverage(entries);
-        float weeklyAvg = calculateWeeklyAverage(entries);
-        float dailyAvg = calculateDailyAverage(entries);
-        
-        String statsText = String.format(
-            "日平均: %.1f\n周平均: %.1f\n月平均: %.1f",
-            dailyAvg, weeklyAvg, monthlyAvg
-        );
-        averageMoodText.setText(statsText);
-    }
 
-    // 添加心情预测趋势
-    private String analyzeMoodTrend(List<Float> recentMoods) {
-        // 简单的线性回归分析
-        float trend = calculateTrendSlope(recentMoods);
-        if (trend > 0.1) {
-            return "心情呈上升趋势 ↑";
-        } else if (trend < -0.1) {
-            return "心情呈下降趋势 ↓";
-        }
-        return "心情较为稳定 →";
-    }
-
-    private void handleDataLoadError(Exception e) {
-        Log.e("MoodChart", "数据加载错误", e);
-        moodChart.setNoDataText("数据加载失败，请重试");
-        
-        // 显示重试按钮
-        Snackbar.make(moodChart, "数据加载失败", Snackbar.LENGTH_INDEFINITE)
-                .setAction("重试", v -> loadMoodData())
-                .show();
-    }
-
-    private float calculateMonthlyAverage(List<MoodEntry> entries) {
-        if (entries == null || entries.isEmpty()) return 0;
-        
-        long thirtyDaysAgo = System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000);
-        float sum = 0;
-        int count = 0;
-        
-        for (MoodEntry entry : entries) {
-            if (entry.getDate().getTime() >= thirtyDaysAgo) {
-                sum += entry.getMoodScore();
-                count++;
-            }
-        }
-        
-        return count > 0 ? sum / count : 0;
-    }
-
-    private float calculateWeeklyAverage(List<MoodEntry> entries) {
-        if (entries == null || entries.isEmpty()) return 0;
-        
-        long sevenDaysAgo = System.currentTimeMillis() - (7L * 24 * 60 * 60 * 1000);
-        float sum = 0;
-        int count = 0;
-        
-        for (MoodEntry entry : entries) {
-            if (entry.getDate().getTime() >= sevenDaysAgo) {
-                sum += entry.getMoodScore();
-                count++;
-            }
-        }
-        
-        return count > 0 ? sum / count : 0;
-    }
-
-    private float calculateDailyAverage(List<MoodEntry> entries) {
-        if (entries == null || entries.isEmpty()) return 0;
-        
-        long oneDayAgo = System.currentTimeMillis() - (24L * 60 * 60 * 1000);
-        float sum = 0;
-        int count = 0;
-        
-        for (MoodEntry entry : entries) {
-            if (entry.getDate().getTime() >= oneDayAgo) {
-                sum += entry.getMoodScore();
-                count++;
-            }
-        }
-        
-        return count > 0 ? sum / count : 0;
-    }
-
-    private float calculateTrendSlope(List<Float> recentMoods) {
-        if (recentMoods == null || recentMoods.size() < 2) return 0;
-        
-        float sumX = 0;
-        float sumY = 0;
-        float sumXY = 0;
-        float sumXX = 0;
-        int n = recentMoods.size();
-        
-        for (int i = 0; i < n; i++) {
-            float x = i;
-            float y = recentMoods.get(i);
-            sumX += x;
-            sumY += y;
-            sumXY += x * y;
-            sumXX += x * x;
-        }
-        
-        // 计算线性回归斜率
-        return (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
-    }
+    
 
     private String getMoodEmoji(int score) {
         switch (score) {
@@ -594,25 +487,6 @@ public class MoodChartActivity extends AppCompatActivity {
         }
     }
 
-    private void setupPieChart() {
-        moodDistributionChart.getDescription().setEnabled(false);
-        moodDistributionChart.setDrawHoleEnabled(true);
-        moodDistributionChart.setHoleColor(Color.WHITE);
-        moodDistributionChart.setTransparentCircleRadius(30f);
-        moodDistributionChart.setHoleRadius(30f);
-        moodDistributionChart.setCenterText("心情分布");
-        moodDistributionChart.setCenterTextSize(14f);
-        moodDistributionChart.setRotationEnabled(false);
-        moodDistributionChart.setHighlightPerTapEnabled(true);
-
-        Legend l = moodDistributionChart.getLegend();
-        l.setVerticalAlignment(Legend.LegendVerticalAlignment.CENTER);
-        l.setHorizontalAlignment(Legend.LegendHorizontalAlignment.RIGHT);
-        l.setOrientation(Legend.LegendOrientation.VERTICAL);
-        l.setTextSize(12f);
-        l.setDrawInside(false);
-        l.setXOffset(10f);
-    }
 
     private void updatePieChart(List<MoodEntry> entries) {
         Map<Integer, Long> moodCounts = entries.stream()
