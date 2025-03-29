@@ -54,4 +54,7 @@
     <color name="delete_warning_color">#F44336</color>
     <color name="success_color">#4CAF50</color>
     <color name="import_success_color">#2196F3</color>
+    <color name="colorAccent">#80DEEA</color>
+    <color name="selected_item_background">#3380DEEA</color>
+    <color name="item_background">#26FFFFFF</color>
 </resources>

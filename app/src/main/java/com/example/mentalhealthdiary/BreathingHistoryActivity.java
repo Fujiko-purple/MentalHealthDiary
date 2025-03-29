@@ -1,17 +1,22 @@
 package com.example.mentalhealthdiary;
 
-import android.app.AlertDialog;
+import android.app.Dialog;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -147,18 +152,43 @@ public class BreathingHistoryActivity extends AppCompatActivity {
     }
 
     private void deleteSelectedItems() {
-        new AlertDialog.Builder(this)
-            .setTitle("删除记录")
-            .setMessage("确定要删除选中的 " + selectedItems.size() + " 条记录吗？")
-            .setPositiveButton("删除", (dialog, which) -> {
-                List<BreathingSession> toDelete = new ArrayList<>();
-                for (int position : selectedItems) {
-                    toDelete.add(((BreathingHistoryAdapter) recyclerView.getAdapter()).sessions.get(position));
-                }
-                batchDelete(toDelete);
-            })
-            .setNegativeButton("取消", null)
-            .show();
+        // 使用自定义对话框替代AlertDialog
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_delete_breathing_record);
+        
+        // 设置对话框宽度为屏幕宽度的85%
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setLayout(
+                (int)(getResources().getDisplayMetrics().widthPixels * 0.85),
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+            window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+        
+        // 修改对话框文本内容
+        TextView titleText = dialog.findViewById(R.id.dialogTitleText);
+        TextView messageText = dialog.findViewById(R.id.dialogMessageText);
+        
+        titleText.setText("删除记录");
+        messageText.setText("确定要删除选中的 " + selectedItems.size() + " 条记录吗？");
+        
+        Button cancelButton = dialog.findViewById(R.id.cancelButton);
+        Button deleteButton = dialog.findViewById(R.id.deleteButton);
+        
+        cancelButton.setOnClickListener(v -> dialog.dismiss());
+        
+        deleteButton.setOnClickListener(v -> {
+            List<BreathingSession> toDelete = new ArrayList<>();
+            for (int position : selectedItems) {
+                toDelete.add(((BreathingHistoryAdapter) recyclerView.getAdapter()).sessions.get(position));
+            }
+            batchDelete(toDelete);
+            dialog.dismiss();
+        });
+        
+        dialog.show();
     }
 
     private void batchDelete(List<BreathingSession> toDelete) {
@@ -185,14 +215,39 @@ public class BreathingHistoryActivity extends AppCompatActivity {
     }
 
     private void showClearAllDialog() {
-        new AlertDialog.Builder(this)
-            .setTitle("清空记录")
-            .setMessage("确定要清空所有呼吸记录吗？此操作不可撤销。")
-            .setPositiveButton("清空", (dialog, which) -> {
-                clearAllRecords();
-            })
-            .setNegativeButton("取消", null)
-            .show();
+        // 使用自定义对话框替代AlertDialog
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_delete_breathing_record);
+        
+        // 设置对话框宽度为屏幕宽度的85%
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setLayout(
+                (int)(getResources().getDisplayMetrics().widthPixels * 0.85),
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+            window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+        
+        // 修改对话框文本内容
+        TextView titleText = dialog.findViewById(R.id.dialogTitleText);
+        TextView messageText = dialog.findViewById(R.id.dialogMessageText);
+        
+        titleText.setText("清空记录");
+        messageText.setText("确定要清空所有呼吸记录吗？此操作不可撤销。");
+        
+        Button cancelButton = dialog.findViewById(R.id.cancelButton);
+        Button deleteButton = dialog.findViewById(R.id.deleteButton);
+        
+        cancelButton.setOnClickListener(v -> dialog.dismiss());
+        
+        deleteButton.setOnClickListener(v -> {
+            clearAllRecords();
+            dialog.dismiss();
+        });
+        
+        dialog.show();
     }
 
     private void clearAllRecords() {
@@ -256,37 +311,61 @@ public class BreathingHistoryActivity extends AppCompatActivity {
         }
     }
 
-    private void showDeleteDialog(BreathingSession session, int position) {
-        new AlertDialog.Builder(this)
-            .setTitle("删除记录")
-            .setMessage("确定要删除这条呼吸记录吗？")
-            .setPositiveButton("删除", (dialog, which) -> {
-                new Thread(() -> {
-                    AppDatabase.getInstance(this)
-                        .breathingSessionDao()
-                        .delete(session);
+    private void showDeleteConfirmationDialog(int position) {
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_delete_breathing_record);
+        
+        // 设置对话框宽度为屏幕宽度的85%
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setLayout(
+                (int)(getResources().getDisplayMetrics().widthPixels * 0.85),
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+            window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+        
+        Button cancelButton = dialog.findViewById(R.id.cancelButton);
+        Button deleteButton = dialog.findViewById(R.id.deleteButton);
+        
+        cancelButton.setOnClickListener(v -> dialog.dismiss());
+        
+        deleteButton.setOnClickListener(v -> {
+            // 执行删除操作
+            deleteBreathingRecord(position);
+            dialog.dismiss();
+        });
+        
+        dialog.show();
+    }
 
-                    int totalDuration = AppDatabase.getInstance(this)
-                        .breathingSessionDao()
-                        .getTotalDuration();
+    private void deleteBreathingRecord(int position) {
+        BreathingSession session = ((BreathingHistoryAdapter) recyclerView.getAdapter()).sessions.get(position);
+        
+        new Thread(() -> {
+            AppDatabase.getInstance(this)
+                .breathingSessionDao()
+                .delete(session);
 
-                    runOnUiThread(() -> {
-                        ((BreathingHistoryAdapter) recyclerView.getAdapter()).sessions.remove(position);
-                        recyclerView.getAdapter().notifyItemRemoved(position);
-                        recyclerView.getAdapter().notifyItemRangeChanged(position, recyclerView.getAdapter().getItemCount());
-                        updateStatistics(recyclerView.getAdapter().getItemCount(), totalDuration);
+            int totalDuration = AppDatabase.getInstance(this)
+                .breathingSessionDao()
+                .getTotalDuration();
 
-                        Snackbar.make(findViewById(android.R.id.content), 
-                            "已删除记录", Snackbar.LENGTH_LONG)
-                            .setAction("撤销", v -> {
-                                undoDelete(session, position);
-                            })
-                            .show();
-                    });
-                }).start();
-            })
-            .setNegativeButton("取消", null)
-            .show();
+            runOnUiThread(() -> {
+                ((BreathingHistoryAdapter) recyclerView.getAdapter()).sessions.remove(position);
+                recyclerView.getAdapter().notifyItemRemoved(position);
+                recyclerView.getAdapter().notifyItemRangeChanged(position, recyclerView.getAdapter().getItemCount());
+                updateStatistics(recyclerView.getAdapter().getItemCount(), totalDuration);
+
+                Snackbar.make(findViewById(android.R.id.content), 
+                    "已删除记录", Snackbar.LENGTH_LONG)
+                    .setAction("撤销", v -> {
+                        undoDelete(session, position);
+                    })
+                    .show();
+            });
+        }).start();
     }
 
     private void undoDelete(BreathingSession session, int position) {
@@ -335,32 +414,37 @@ public class BreathingHistoryActivity extends AppCompatActivity {
             if (session.duration >= 900) { // 15分钟以上
                 holder.achievementText.setText("禅定大师");
                 holder.achievementIcon.setImageResource(R.drawable.ic_achievement_master);
+                holder.achievementText.setBackgroundResource(R.drawable.achievement_master_background);
             } else if (session.duration >= 300) { // 5分钟以上
                 holder.achievementText.setText("进阶者");
                 holder.achievementIcon.setImageResource(R.drawable.ic_achievement_intermediate);
+                holder.achievementText.setBackgroundResource(R.drawable.achievement_intermediate_background);
             } else {
                 holder.achievementText.setText("初心者");
                 holder.achievementIcon.setImageResource(R.drawable.ic_achievement_beginner);
+                holder.achievementText.setBackgroundResource(R.drawable.achievement_beginner_background);
             }
 
             // 设置长按删除
             holder.itemView.setOnLongClickListener(v -> {
                 if (!isSelectionMode) {
-                    showDeleteDialog(session, position);
+                    showDeleteConfirmationDialog(position);
                 }
                 return true;
             });
 
             // 设置选择模式的点击效果
             if (isSelectionMode) {
-                boolean isSelected = selectedItems.contains(position);
-                holder.itemView.setBackgroundResource(
-                    isSelected ? R.drawable.selected_item_background : 
-                               android.R.color.transparent);
-                
-                // 添加选择标记
                 holder.checkBox.setVisibility(View.VISIBLE);
-                holder.checkBox.setChecked(isSelected);
+                holder.checkBox.setChecked(selectedItems.contains(position));
+                
+                // 使用背景资源来表示选中状态，而不是CardView的stroke
+                CardView cardView = (CardView) holder.itemView;
+                if (selectedItems.contains(position)) {
+                    cardView.setCardBackgroundColor(getResources().getColor(R.color.selected_item_background));
+                } else {
+                    cardView.setCardBackgroundColor(getResources().getColor(R.color.item_background));
+                }
                 
                 holder.itemView.setOnClickListener(v -> {
                     if (selectedItems.contains(position)) {
@@ -373,8 +457,8 @@ public class BreathingHistoryActivity extends AppCompatActivity {
                     updateActionBar();
                 });
             } else {
-                holder.itemView.setBackgroundResource(android.R.color.transparent);
                 holder.checkBox.setVisibility(View.GONE);
+                ((CardView) holder.itemView).setCardBackgroundColor(getResources().getColor(R.color.item_background));
                 holder.itemView.setOnClickListener(null);
             }
         }

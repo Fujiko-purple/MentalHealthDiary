@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="16dp"
-    android:layout_marginVertical="8dp"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="4dp"
-    app:cardBackgroundColor="#1A4A90E2">
+    app:cardCornerRadius="12dp"
+    app:cardElevation="0dp"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginTop="8dp"
+    android:layout_marginBottom="8dp"
+    app:cardBackgroundColor="#26FFFFFF">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="16dp">
@@ -19,57 +20,58 @@
             android:id="@+id/checkBox"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
             android:visibility="gone"
-            android:clickable="false"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
+            android:buttonTint="#80DEEA"/>
 
         <ImageView
             android:id="@+id/achievementIcon"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:tint="#80FFFFFF"
-            android:alpha="0.9"
-            app:layout_constraintStart_toEndOf="@id/checkBox"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
+            android:layout_toEndOf="@id/checkBox"
+            android:layout_centerVertical="true"
+            android:src="@drawable/ic_achievement_beginner"/>
 
-        <TextView
-            android:id="@+id/dateText"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_toEndOf="@id/achievementIcon"
+            android:layout_toStartOf="@id/achievementText"
+            android:layout_centerVertical="true"
+            android:orientation="vertical"
             android:layout_marginStart="16dp"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:fontFamily="sans-serif-medium"
-            app:layout_constraintStart_toEndOf="@id/achievementIcon"
-            app:layout_constraintTop_toTopOf="parent"/>
+            android:layout_marginEnd="8dp">
 
-        <TextView
-            android:id="@+id/durationText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:textColor="#B3FFFFFF"
-            android:textSize="14sp"
-            app:layout_constraintStart_toStartOf="@id/dateText"
-            app:layout_constraintTop_toBottomOf="@id/dateText"/>
+            <TextView
+                android:id="@+id/dateText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:id="@+id/durationText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#E6FFFFFF"
+                android:textSize="14sp"
+                android:layout_marginTop="4dp"/>
+        </LinearLayout>
 
         <TextView
             android:id="@+id/achievementText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#E6FFFFFF"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:textColor="#FFFFFF"
             android:textSize="14sp"
-            android:layout_marginEnd="8dp"
-            android:background="@drawable/achievement_text_background"
-            android:paddingHorizontal="8dp"
-            android:paddingVertical="4dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
+            android:background="@drawable/achievement_badge_background"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"/>
+    </RelativeLayout>
 </androidx.cardview.widget.CardView> 

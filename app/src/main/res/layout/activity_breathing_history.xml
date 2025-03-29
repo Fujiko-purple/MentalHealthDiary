@@ -3,100 +3,96 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/breathing_background">
+    android:background="@drawable/breathing_history_background">
 
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/statsCard"
+    <LinearLayout
+        android:id="@+id/statsContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        app:cardCornerRadius="20dp"
-        app:cardElevation="4dp"
-        app:cardBackgroundColor="#1AFFFFFF"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        android:orientation="horizontal"
+        android:layout_marginTop="24dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:baselineAligned="false"
+        app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="24dp"
+            android:layout_width="0dp"
+            android:layout_height="120dp"
+            android:layout_weight="1"
+            android:orientation="vertical"
             android:background="@drawable/stats_card_background"
-            android:baselineAligned="false">
+            android:padding="16dp"
+            android:gravity="center">
 
-            <LinearLayout
-                android:layout_width="0dp"
+            <TextView
+                android:id="@+id/totalTimeText"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
+                android:textColor="#FFFFFF"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:maxLines="2"
+                android:gravity="center"
+                android:letterSpacing="0.05"
+                android:fontFamily="sans-serif-medium"/>
 
-                <TextView
-                    android:id="@+id/totalTimeText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="#FFFFFF"
-                    android:textSize="28sp"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.05"
-                    android:fontFamily="sans-serif-medium"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="总练习时长"
-                    android:textColor="#E6FFFFFF"
-                    android:textSize="15sp"
-                    android:layout_marginTop="8dp"
-                    android:fontFamily="sans-serif"/>
-
-            </LinearLayout>
-
-            <Space
-                android:layout_width="32dp"
-                android:layout_height="match_parent"/>
-
-            <LinearLayout
-                android:layout_width="0dp"
+            <TextView
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
-
-                <TextView
-                    android:id="@+id/sessionCountText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="#FFFFFF"
-                    android:textSize="28sp"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.05"
-                    android:fontFamily="sans-serif-medium"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="练习次数"
-                    android:textColor="#E6FFFFFF"
-                    android:textSize="15sp"
-                    android:layout_marginTop="8dp"
-                    android:fontFamily="sans-serif"/>
-
-            </LinearLayout>
+                android:text="总练习时长"
+                android:textColor="#E6FFFFFF"
+                android:textSize="14sp"
+                android:layout_marginTop="8dp"
+                android:fontFamily="sans-serif"/>
 
         </LinearLayout>
 
-    </com.google.android.material.card.MaterialCardView>
+        <Space
+            android:layout_width="16dp"
+            android:layout_height="match_parent"/>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="120dp"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:background="@drawable/stats_card_background"
+            android:padding="16dp"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/sessionCountText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.05"
+                android:fontFamily="sans-serif-medium"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="练习次数"
+                android:textColor="#E6FFFFFF"
+                android:textSize="14sp"
+                android:layout_marginTop="8dp"
+                android:fontFamily="sans-serif"/>
+
+        </LinearLayout>
+    </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/historyRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="16dp"
         android:clipToPadding="false"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
         android:paddingBottom="16dp"
-        app:layout_constraintTop_toBottomOf="@id/statsCard"
+        app:layout_constraintTop_toBottomOf="@id/statsContainer"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
