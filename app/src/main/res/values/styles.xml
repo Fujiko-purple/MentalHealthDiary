@@ -35,8 +35,10 @@
     <style name="PlayModeSpinnerStyle" parent="Widget.AppCompat.Spinner">
         <item name="android:background">@android:color/transparent</item>
         <item name="android:popupBackground">@android:color/white</item>
-        <item name="android:dropDownVerticalOffset">1dp</item>
-        <item name="android:dropDownHorizontalOffset">0dp</item>
+        <item name="android:dropDownVerticalOffset">36dp</item>
+        <item name="android:dropDownHorizontalOffset">-12dp</item>
+        <item name="android:dropDownWidth">140dp</item>
+        <item name="android:overlapAnchor">false</item>
     </style>
     <style name="TrainingCompleteDialog" parent="Theme.MaterialComponents.Light.Dialog.Alert">
         <item name="android:windowBackground">@android:color/transparent</item>

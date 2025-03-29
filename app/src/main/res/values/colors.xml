@@ -49,4 +49,6 @@
     <color name="free_breathing_end">#F0E6FF</color>
     <color name="free_breathing_text">#00BCD4</color>
     <color name="selected_song_background">#1A2196F3</color>
+    <color name="song_text_color">#333333</color>
+    <color name="song_selected_background">#E8F5FF</color>
 </resources>
