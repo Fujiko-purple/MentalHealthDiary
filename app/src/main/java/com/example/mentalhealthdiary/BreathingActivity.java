@@ -5,8 +5,6 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -16,6 +14,7 @@ import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -34,12 +33,16 @@ import android.text.style.ScaleXSpan;
 import android.text.style.StyleSpan;
 import android.util.Log;
 import android.view.GestureDetector;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.AnimationUtils;
+import android.view.animation.LayoutAnimationController;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -49,11 +52,6 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.view.LayoutInflater;
-import android.view.animation.AnimationUtils;
-import android.view.animation.LayoutAnimationController;
-import android.graphics.drawable.ColorDrawable;
-import android.view.Window;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -64,8 +62,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.mentalhealthdiary.database.AppDatabase;
 import com.example.mentalhealthdiary.database.BreathingSession;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
-import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -737,47 +735,6 @@ public class BreathingActivity extends AppCompatActivity {
         breathingTimer.start();
     }
 
-    private void updateGuidanceText() {
-        // 根据当前模式设置不同的文字颜色
-        int textColor;
-        switch (currentMode) {
-            case NORMAL:
-                textColor = getResources().getColor(R.color.calm_breathing);
-                break;
-            case FOCUS:
-                textColor = getResources().getColor(R.color.focus_breathing);
-                break;
-            case ENERGIZING:
-                textColor = getResources().getColor(R.color.deep_breathing);
-                break;
-            case CALMING:
-                textColor = getResources().getColor(R.color.relax_breathing);
-                break;
-            default:
-                textColor = getResources().getColor(R.color.calm_breathing);
-        }
-        
-        // 设置文字颜色
-        guidanceText.setTextColor(textColor);
-        
-        // 设置文字阴影，增加可读性
-        guidanceText.setShadowLayer(3, 1, 1, Color.parseColor("#33000000"));
-        
-        // 设置背景透明度
-        Drawable background = guidanceText.getBackground();
-        if (background != null) {
-            background.setAlpha(180); // 0-255，值越小越透明
-        }
-        
-        // 添加文字动画效果
-        if (isBreathing) {
-            // 呼吸时的文字淡入淡出效果
-            guidanceText.animate()
-                .alpha(0.9f)
-                .setDuration(300)
-                .start();
-        }
-    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -1054,48 +1011,6 @@ public class BreathingActivity extends AppCompatActivity {
         }
     }
 
-    private void deleteSongs(List<String> songsToDelete) {
-        // 获取当前的歌单
-        SharedPreferences prefs = getSharedPreferences("custom_playlist", MODE_PRIVATE);
-        Set<String> existingPlaylist = new HashSet<>(prefs.getStringSet("playlist", new HashSet<>()));
-        
-        // 删除选中的歌曲
-        existingPlaylist.removeAll(songsToDelete);
-        
-        // 更新 SharedPreferences
-        prefs.edit()
-            .putStringSet("playlist", existingPlaylist)
-            .apply();
-
-        // 更新当前显示的列表
-        currentSongs = new ArrayList<>(existingPlaylist);  // 创建新的列表
-        
-        // 更新适配器
-        if (playlistAdapter != null) {
-            playlistAdapter.updateSongs(new ArrayList<>(currentSongs));  // 传入新的列表副本
-        }
-
-        // 删除文件
-        for (String song : songsToDelete) {
-            File file = new File(getFilesDir(), "music/" + song);
-            if (file.exists()) {
-                file.delete();
-            }
-        }
-
-        // 构建删除歌曲的提示信息
-        StringBuilder message = new StringBuilder("已删除:\n");
-        for (String song : songsToDelete) {
-            message.append("• ").append(song).append("\n");
-        }
-
-        // 显示删除提示，使用 AlertDialog 而不是 Snackbar
-        new AlertDialog.Builder(this)
-            .setTitle("删除成功")
-            .setMessage(message.toString())
-            .setPositiveButton("确定", null)
-            .show();
-    }
 
     // 处理权限请求结果
     @Override
@@ -1355,28 +1270,6 @@ public class BreathingActivity extends AppCompatActivity {
     }
 
 
-
-    private void updateBreathingAnimation() {
-        if (breathingAnimation != null) {
-            breathingAnimation.cancel();
-
-        }
-        
-        int totalDuration = currentMode.inhaleSeconds + currentMode.exhaleSeconds;
-        breathingAnimation.setDuration(totalDuration * 1000L);
-        
-        if (!isBreathing) {
-            breathingCircle.setScaleX(1f);
-            breathingCircle.setScaleY(1f);
-            breathingCircle.setAlpha(0.7f);
-        } else {
-            breathingAnimation.start();
-        }
-        
-        guidanceText.setText(String.format("吸气%d秒，呼气%d秒", 
-            currentMode.inhaleSeconds, 
-            currentMode.exhaleSeconds));
-    }
 
     // 修改onModeSelected方法，使其在呼吸练习中也能切换模式
     private void onModeSelected(BreathingMode mode) {
@@ -1708,19 +1601,6 @@ public class BreathingActivity extends AppCompatActivity {
     }
 
 
-    private void createNotificationChannel() {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
-                CHANNEL_ID,
-                CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_DEFAULT
-            );
-            channel.setDescription(CHANNEL_DESC);
-            
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(channel);
-        }
-    }
 
 
 
@@ -1877,22 +1757,6 @@ public class BreathingActivity extends AppCompatActivity {
         }
     }
 
-    private int getMusicResourceForMode(BreathingMode mode) {
-
-        switch (mode) {
-            case NORMAL:
-                return R.raw.calm_breathing;
-            case FOCUS:
-                return R.raw.focus_breathing;
-            case ENERGIZING:
-                return R.raw.energizing_breathing;
-            case CALMING:
-                return R.raw.calming_breathing;
-            default:
-                return R.raw.calm_breathing;
-        }
-
-    }
 
 
 
@@ -2154,26 +2018,6 @@ public class BreathingActivity extends AppCompatActivity {
         
         // 立即开始第一次运行
         noteHandler.post(noteRunnable);
-    }
-
-    // 修改stopMusicNoteAnimation方法，确保正确停止动画
-    private void stopMusicNoteAnimation() {
-        if (noteHandler != null && noteRunnable != null) {
-            noteHandler.removeCallbacks(noteRunnable);
-            isShowingNotes = false;
-            
-            // 清除所有现有音符
-            if (rootLayout != null) {
-                for (int i = 0; i < rootLayout.getChildCount(); i++) {
-                    View child = rootLayout.getChildAt(i);
-                    if (child instanceof ImageView && child.getTag() != null && 
-                        "music_note".equals(child.getTag())) {
-                        rootLayout.removeView(child);
-                        i--; // 调整索引，因为移除了一个元素
-                    }
-                }
-            }
-        }
     }
 
 
@@ -2660,46 +2504,7 @@ public class BreathingActivity extends AppCompatActivity {
         }
     }
 
-    // 优化 playNextSong 方法，确保正确处理不同的播放模式
-    private void playNextSong() {
-        if (currentSongs.isEmpty()) return;
 
-        switch (currentPlayMode) {
-            case SEQUENCE:
-                // 列表播放：播放下一首，到末尾后回到第一首
-                currentSongIndex = (currentSongIndex + 1) % currentSongs.size();
-                playCustomMusic(currentSongs.get(currentSongIndex));
-                break;
-
-            case RANDOM:
-                // 随机播放：随机选择一首歌播放
-                if (currentSongs.size() > 1) {
-                    // 如果有多首歌，确保不会连续播放同一首
-                    int nextIndex = random.nextInt(currentSongs.size());
-                    while (nextIndex == currentSongIndex) {
-                        nextIndex = random.nextInt(currentSongs.size());
-                    }
-                    currentSongIndex = nextIndex;
-                } else {
-                    // 只有一首歌时，继续播放
-                    currentSongIndex = 0;
-                }
-                playCustomMusic(currentSongs.get(currentSongIndex));
-                break;
-
-            case LOOP:
-                // 循环播放：MediaPlayer已设置循环，无需处理
-                // 但如果到这里，说明循环设置可能有问题，重新播放当前歌曲
-                playCustomMusic(currentSongs.get(currentSongIndex));
-                break;
-        }
-        
-        // 更新歌单UI - 使用 setCurrentPlayingSong 替代 setSelectedSong
-        if (playlistAdapter != null) {
-            playlistAdapter.setCurrentPlayingSong(selectedFreeBreathingMusic);
-            playlistAdapter.notifyDataSetChanged();
-        }
-    }
 
     // 保存选中的歌曲
     private void saveSelectedSong(String song) {
@@ -2787,53 +2592,7 @@ public class BreathingActivity extends AppCompatActivity {
         progressHandler.removeCallbacks(progressRunnable);
     }
 
-    // 在显示歌单对话框的方法中添加全选按钮的处理
-    private void showPlaylistDialog() {
-        // ... 现有代码 ...
-        
-        // 获取全选按钮
-        ImageButton selectAllButton = playlistDialog.findViewById(R.id.selectAllButton);
-        
-        // 设置长按监听器
-        playlistRecyclerView.addOnItemTouchListener(new RecyclerView.SimpleOnItemTouchListener() {
-            @Override
-            public void onTouchEvent(RecyclerView rv, MotionEvent e) {
-                if (e.getAction() == MotionEvent.ACTION_BUTTON_PRESS) {
-                    // 进入选择模式
-                    playlistAdapter.setSelectionMode(true);
-                    selectAllButton.setVisibility(View.VISIBLE);
-                    selectionToolbar.setVisibility(View.VISIBLE);
-                }
-            }
-        });
-        
-        // 设置全选按钮点击事件
-        selectAllButton.setOnClickListener(v -> {
-            List<String> allSongs = playlistAdapter.getSongs();
-            for (String song : allSongs) {
-                if (!playlistAdapter.getSelectedSongs().contains(song)) {
-                    playlistAdapter.toggleSelection(song);
-                }
-            }
-        });
-        
-        // 设置取消选择按钮点击事件
-        Button cancelButton = playlistDialog.findViewById(R.id.cancelButton);
-        cancelButton.setOnClickListener(v -> {
-            playlistAdapter.setSelectionMode(false);
-            selectAllButton.setVisibility(View.GONE);
-            selectionToolbar.setVisibility(View.GONE);
-        });
-        
-        // 设置删除按钮点击事件
-        Button deleteButton = playlistDialog.findViewById(R.id.deleteButton);
-        deleteButton.setOnClickListener(v -> {
-            List<String> selectedSongs = playlistAdapter.getSelectedSongs();
-            if (!selectedSongs.isEmpty()) {
-                showDeleteConfirmationDialog(selectedSongs);
-            }
-        });
-    }
+
 
     // 添加删除选中歌曲的方法
     private void deleteSelectedSongs(List<String> selectedSongs) {
