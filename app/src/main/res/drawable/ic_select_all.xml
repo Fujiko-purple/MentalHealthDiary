@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    
+    <!-- 主要轮廓 - 简化的选择框 -->
+    <path
+        android:fillColor="@color/free_breathing_text"
+        android:pathData="M9,9h6v6h-6z"/>
+
+    <!-- 外框 - 更细的线条 -->
+    <path
+        android:fillColor="@color/free_breathing_text"
+        android:pathData="M3,3v18h18V3H3zM19,19H5V5h14V19z"
+        android:strokeWidth="0.8"/>
+
+    <!-- 右上角的小加号 -->
+    <path
+        android:fillColor="@color/free_breathing_text"
+        android:pathData="M20,0v3h3v2h-3v3h-2V5h-3V3h3V0H20z"/>
+</vector> 

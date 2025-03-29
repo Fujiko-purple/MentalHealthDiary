@@ -11,13 +11,17 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 import android.content.SharedPreferences;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 
-public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHolder> {
+public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHolder> 
+        implements View.OnTouchListener {
     private List<String> songs;
     private List<String> selectedSongs = new ArrayList<>();
     private Context context;
     private boolean isSelectionMode = false;
     private String selectedFreeBreathingMusic;
+    private GestureDetector gestureDetector;
 
     public interface OnItemClickListener {
         void onItemClick(String song);
@@ -34,6 +38,13 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
         // 从 SharedPreferences 获取上次选择的歌曲
         SharedPreferences prefs = context.getSharedPreferences("custom_playlist", Context.MODE_PRIVATE);
         this.selectedFreeBreathingMusic = prefs.getString("last_selected_song", null);
+
+        gestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
+            @Override
+            public void onLongPress(MotionEvent e) {
+                // 处理长按事件
+            }
+        });
     }
 
     public void setSelectionMode(boolean selectionMode) {
@@ -57,6 +68,10 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
             selectedSongs.add(song);
         }
         notifyDataSetChanged();
+    }
+
+    public boolean isSelected(String song) {
+        return selectedSongs.contains(song);
     }
 
     public void setCurrentPlayingSong(String song) {
@@ -88,7 +103,10 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
         
         // 显示/隐藏复选框
         holder.checkBox.setVisibility(isSelectionMode ? View.VISIBLE : View.GONE);
-        holder.checkBox.setChecked(selectedSongs.contains(song));
+        holder.checkBox.setChecked(isSelected(song));
+
+        // 设置触摸监听器
+        holder.itemView.setOnTouchListener(this);
 
         holder.itemView.setOnClickListener(v -> {
             if (isSelectionMode) {
@@ -127,5 +145,10 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
 
     public List<String> getSongs() {
         return songs;
+    }
+
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        return gestureDetector.onTouchEvent(event);
     }
 } 

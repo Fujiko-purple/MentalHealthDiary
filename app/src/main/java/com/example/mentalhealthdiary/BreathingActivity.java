@@ -32,6 +32,7 @@ import android.text.style.RelativeSizeSpan;
 import android.text.style.ScaleXSpan;
 import android.text.style.StyleSpan;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -42,11 +43,13 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -150,6 +153,10 @@ public class BreathingActivity extends AppCompatActivity {
     private View musicProgressContainer;
     private Handler progressHandler = new Handler();
     private Runnable progressRunnable;
+
+    // ... 在类的成员变量区域添加以下变量
+    private View selectionToolbar;
+    private RecyclerView playlistRecyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -753,9 +760,11 @@ public class BreathingActivity extends AppCompatActivity {
         // 设置动画
         playlistDialog.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
         
-        RecyclerView recyclerView = dialogView.findViewById(R.id.playlistRecyclerView);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-
+        // 初始化 RecyclerView 和工具栏
+        playlistRecyclerView = dialogView.findViewById(R.id.playlistRecyclerView);
+        playlistRecyclerView.setLayoutManager(new LinearLayoutManager(this));  // 添加这行
+        selectionToolbar = dialogView.findViewById(R.id.selectionToolbar);
+        
         // 获取已保存的歌曲列表
         SharedPreferences prefs = getSharedPreferences("custom_playlist", MODE_PRIVATE);
         Set<String> playlist = prefs.getStringSet("playlist", new HashSet<>());
@@ -793,7 +802,7 @@ public class BreathingActivity extends AppCompatActivity {
             }
         });
 
-        recyclerView.setAdapter(playlistAdapter);
+        playlistRecyclerView.setAdapter(playlistAdapter);  // 使用 playlistRecyclerView 替代 recyclerView
 
         // 获取工具栏和按钮
         View selectionToolbar = dialogView.findViewById(R.id.selectionToolbar);
@@ -804,6 +813,9 @@ public class BreathingActivity extends AppCompatActivity {
         cancelButton.setOnClickListener(v -> {
             playlistAdapter.setSelectionMode(false);
             selectionToolbar.setVisibility(View.GONE);
+            // 同时隐藏全选按钮
+            ImageButton selectAllButton = dialogView.findViewById(R.id.selectAllButton);
+            selectAllButton.setVisibility(View.GONE);
         });
 
         // 设置删除按钮点击事件
@@ -817,6 +829,9 @@ public class BreathingActivity extends AppCompatActivity {
                         deleteSongs(selectedSongs);
                         playlistAdapter.setSelectionMode(false);
                         selectionToolbar.setVisibility(View.GONE);
+                        // 同时隐藏全选按钮
+                        ImageButton selectAllButton = dialogView.findViewById(R.id.selectAllButton);
+                        selectAllButton.setVisibility(View.GONE);
                     })
                     .setNegativeButton("取消", null)
                     .show();
@@ -952,6 +967,50 @@ public class BreathingActivity extends AppCompatActivity {
                 playModeIcon.setImageResource(R.drawable.ic_play_mode_random);
                 break;
         }
+
+        // 设置长按监听器
+        final GestureDetector gestureDetector = new GestureDetector(this,
+            new GestureDetector.SimpleOnGestureListener() {
+                @Override
+                public void onLongPress(MotionEvent e) {  // 改为 void 返回类型
+                    View child = playlistRecyclerView.findChildViewUnder(e.getX(), e.getY());
+                    if (child != null) {
+                        int position = playlistRecyclerView.getChildAdapterPosition(child);
+                        if (position != RecyclerView.NO_POSITION) {
+                            // 进入选择模式
+                            playlistAdapter.setSelectionMode(true);
+                            ImageButton selectAllButton = dialogView.findViewById(R.id.selectAllButton);
+                            selectAllButton.setVisibility(View.VISIBLE);
+                            selectionToolbar.setVisibility(View.VISIBLE);
+                        }
+                    }
+                }
+        });
+
+        playlistRecyclerView.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
+            @Override
+            public boolean onInterceptTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
+                gestureDetector.onTouchEvent(e);
+                return false;
+            }
+
+            @Override
+            public void onTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
+            }
+
+            @Override
+            public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
+            }
+        });
+
+        // 在 openImportPlaylist() 方法中修改全选按钮的点击事件
+        ImageButton selectAllButton = dialogView.findViewById(R.id.selectAllButton);
+        selectAllButton.setOnClickListener(v -> {
+            List<String> allSongs = playlistAdapter.getSongs();
+            for (String song : allSongs) {
+                playlistAdapter.toggleSelection(song);  // 直接调用 toggleSelection
+            }
+        });
     }
 
     private void showSelectionToolbar() {
@@ -2689,5 +2748,99 @@ public class BreathingActivity extends AppCompatActivity {
     // 停止更新进度条
     private void stopProgressUpdate() {
         progressHandler.removeCallbacks(progressRunnable);
+    }
+
+    // 在显示歌单对话框的方法中添加全选按钮的处理
+    private void showPlaylistDialog() {
+        // ... 现有代码 ...
+        
+        // 获取全选按钮
+        ImageButton selectAllButton = playlistDialog.findViewById(R.id.selectAllButton);
+        
+        // 设置长按监听器
+        playlistRecyclerView.addOnItemTouchListener(new RecyclerView.SimpleOnItemTouchListener() {
+            @Override
+            public void onTouchEvent(RecyclerView rv, MotionEvent e) {
+                if (e.getAction() == MotionEvent.ACTION_BUTTON_PRESS) {
+                    // 进入选择模式
+                    playlistAdapter.setSelectionMode(true);
+                    selectAllButton.setVisibility(View.VISIBLE);
+                    selectionToolbar.setVisibility(View.VISIBLE);
+                }
+            }
+        });
+        
+        // 设置全选按钮点击事件
+        selectAllButton.setOnClickListener(v -> {
+            List<String> allSongs = playlistAdapter.getSongs();
+            for (String song : allSongs) {
+                if (!playlistAdapter.getSelectedSongs().contains(song)) {
+                    playlistAdapter.toggleSelection(song);
+                }
+            }
+        });
+        
+        // 设置取消选择按钮点击事件
+        Button cancelButton = playlistDialog.findViewById(R.id.cancelButton);
+        cancelButton.setOnClickListener(v -> {
+            playlistAdapter.setSelectionMode(false);
+            selectAllButton.setVisibility(View.GONE);
+            selectionToolbar.setVisibility(View.GONE);
+        });
+        
+        // 设置删除按钮点击事件
+        Button deleteButton = playlistDialog.findViewById(R.id.deleteButton);
+        deleteButton.setOnClickListener(v -> {
+            List<String> selectedSongs = playlistAdapter.getSelectedSongs();
+            if (!selectedSongs.isEmpty()) {
+                new AlertDialog.Builder(this)
+                    .setTitle("删除歌曲")
+                    .setMessage("确定要删除选中的 " + selectedSongs.size() + " 首歌曲吗？")
+                    .setPositiveButton("删除", (dialog, which) -> {
+                        // 删除选中的歌曲
+                        deleteSelectedSongs(selectedSongs);
+                        // 退出选择模式
+                        playlistAdapter.setSelectionMode(false);
+                        selectAllButton.setVisibility(View.GONE);
+                        selectionToolbar.setVisibility(View.GONE);
+                    })
+                    .setNegativeButton("取消", null)
+                    .show();
+            }
+        });
+    }
+
+    // 添加删除选中歌曲的方法
+    private void deleteSelectedSongs(List<String> selectedSongs) {
+        // 获取当前歌单
+        SharedPreferences prefs = getSharedPreferences("custom_playlist", MODE_PRIVATE);
+        Set<String> playlist = new HashSet<>(prefs.getStringSet("playlist", new HashSet<>()));
+        
+        // 删除选中的歌曲文件
+        for (String song : selectedSongs) {
+            File musicFile = new File(getFilesDir(), "music/" + song);
+            if (musicFile.exists()) {
+                musicFile.delete();
+            }
+            playlist.remove(song);
+            
+            // 如果删除的是当前播放的歌曲，停止播放
+            if (song.equals(selectedFreeBreathingMusic)) {
+                stopBackgroundMusic();
+                selectedFreeBreathingMusic = null;
+            }
+        }
+        
+        // 保存更新后的歌单
+        prefs.edit().putStringSet("playlist", playlist).apply();
+        
+        // 更新适配器
+        currentSongs = new ArrayList<>(playlist);
+        playlistAdapter.updateSongs(currentSongs);
+        
+        // 显示提示
+        Snackbar.make(findViewById(R.id.breathing_root_layout),
+            "已删除 " + selectedSongs.size() + " 首歌曲",
+            Snackbar.LENGTH_SHORT).show();
     }
 } 

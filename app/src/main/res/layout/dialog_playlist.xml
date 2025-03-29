@@ -52,8 +52,7 @@
             android:background="@drawable/play_mode_container_background"
             android:gravity="center_vertical"
             android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:minWidth="120dp">
+            android:paddingEnd="8dp">
 
             <ImageView
                 android:id="@+id/playModeIcon"
@@ -73,6 +72,16 @@
                 android:overlapAnchor="false"
                 android:dropDownVerticalOffset="0dp"/>
         </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/selectAllButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_select_all"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="8dp"
+            android:visibility="gone"
+            android:layout_marginStart="8dp"/>
     </LinearLayout>
 
     <EditText
