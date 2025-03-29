@@ -566,9 +566,6 @@ public class BreathingActivity extends AppCompatActivity {
         isBreathing = false;
         startButton.setText("开始练习");
         
-        // 启用导入歌单按钮
-        invalidateOptionsMenu();
-        
         // 停止动画
         breathingAnimation.cancel();
         breathingCircle.setScaleX(1f);
@@ -586,8 +583,9 @@ public class BreathingActivity extends AppCompatActivity {
             durationTimer.cancel();
         }
         
-        // 保存练习记录
+        // 如果训练时间超过5秒，显示训练时长对话框
         if (sessionSeconds >= 5) {
+            showTrainingCompletionDialog();
             saveBreathingSession();
         }
         
@@ -615,6 +613,38 @@ public class BreathingActivity extends AppCompatActivity {
         musicProgressContainer.setVisibility(View.GONE);
         // 停止进度条更新
         stopProgressUpdate();
+    }
+
+    // 添加显示训练完成对话框的方法
+    private void showTrainingCompletionDialog() {
+        // 格式化时间
+        int minutes = sessionSeconds / 60;
+        int seconds = sessionSeconds % 60;
+        String timeText = String.format("%d分%d秒", minutes, seconds);
+        
+        // 创建一个自定义布局
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_training_complete, null);
+        TextView timeTextView = dialogView.findViewById(R.id.trainingTimeText);
+        timeTextView.setText(timeText);
+        
+        new AlertDialog.Builder(this)
+            .setTitle("训练完成")
+            .setView(dialogView)
+            .setPositiveButton("太棒了", (dialog, which) -> {
+                // 重置引导文本
+                if (currentMode == BreathingMode.FREE) {
+                    guidanceText.setText("你是万千星辰中的一颗\n于我而言却是整个世界");
+                    guidanceText.setTextColor(getResources().getColor(R.color.free_breathing_text));
+                } else {
+                    guidanceText.setText(String.format("跟随圆圈呼吸\n吸气%d秒，呼气%d秒", 
+                        currentMode.inhaleSeconds, currentMode.exhaleSeconds));
+                }
+                guidanceText.setGravity(android.view.Gravity.CENTER);
+                guidanceText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                sessionSeconds = 0;
+                timerText.setText("");
+            })
+            .show();
     }
 
     private void saveBreathingSession() {
