@@ -1,34 +1,34 @@
 package com.example.mentalhealthdiary;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
-import android.widget.TextView;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import com.example.mentalhealthdiary.database.AppDatabase;
-import com.example.mentalhealthdiary.database.BreathingSession;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.util.Log;
-import java.util.Map;
-import java.util.stream.Collectors;
-import android.widget.ImageView;
-import com.google.android.material.snackbar.Snackbar;
-import java.util.Calendar;
-import android.app.AlertDialog;
-import androidx.recyclerview.widget.DividerItemDecoration;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.ArrayList;
 import android.widget.CheckBox;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.mentalhealthdiary.database.AppDatabase;
+import com.example.mentalhealthdiary.database.BreathingSession;
+import com.google.android.material.snackbar.Snackbar;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class BreathingHistoryActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
