@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- 半透明背景层 -->
+    <!-- 背景层 -->
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#80FFFFFF"/>
+            <solid android:color="#F5FFFFFF"/>
             <corners android:radius="20dp"/>
         </shape>
     </item>
-    <!-- 内容层 -->
-    <item android:left="1dp" android:right="1dp" android:top="1dp" android:bottom="1dp">
+    <!-- 顶部微妙渐变 -->
+    <item>
         <shape android:shape="rectangle">
             <gradient
-                android:startColor="#F8FFFFFF"
-                android:endColor="#F2FFFFFF"
-                android:angle="135"/>
+                android:startColor="#08FFFFFF"
+                android:endColor="#00FFFFFF"
+                android:angle="90"/>
             <corners android:radius="20dp"/>
         </shape>
     </item>

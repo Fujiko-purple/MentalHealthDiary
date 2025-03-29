@@ -4,6 +4,7 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.ProgressDialog;
@@ -59,6 +60,7 @@ import com.example.mentalhealthdiary.database.AppDatabase;
 import com.example.mentalhealthdiary.database.BreathingSession;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.button.MaterialButton;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -622,29 +624,36 @@ public class BreathingActivity extends AppCompatActivity {
         int seconds = sessionSeconds % 60;
         String timeText = String.format("%d分%d秒", minutes, seconds);
         
-        // 创建一个自定义布局
+        // 创建对话框
+        Dialog dialog = new Dialog(this, R.style.TrainingCompleteDialog);
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_training_complete, null);
+        dialog.setContentView(dialogView);
+        
+        // 设置时间文本
         TextView timeTextView = dialogView.findViewById(R.id.trainingTimeText);
         timeTextView.setText(timeText);
         
-        new AlertDialog.Builder(this)
-            .setTitle("训练完成")
-            .setView(dialogView)
-            .setPositiveButton("太棒了", (dialog, which) -> {
-                // 重置引导文本
-                if (currentMode == BreathingMode.FREE) {
-                    guidanceText.setText("你是万千星辰中的一颗\n于我而言却是整个世界");
-                    guidanceText.setTextColor(getResources().getColor(R.color.free_breathing_text));
-                } else {
-                    guidanceText.setText(String.format("跟随圆圈呼吸\n吸气%d秒，呼气%d秒", 
-                        currentMode.inhaleSeconds, currentMode.exhaleSeconds));
-                }
-                guidanceText.setGravity(android.view.Gravity.CENTER);
-                guidanceText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-                sessionSeconds = 0;
-                timerText.setText("");
-            })
-            .show();
+
+        
+        // 设置确认按钮
+        MaterialButton confirmButton = dialogView.findViewById(R.id.confirmButton);
+        confirmButton.setOnClickListener(v -> {
+            dialog.dismiss();
+            // 重置引导文本
+            if (currentMode == BreathingMode.FREE) {
+                guidanceText.setText("你是万千星辰中的一颗\n于我而言却是整个世界");
+                guidanceText.setTextColor(getResources().getColor(R.color.free_breathing_text));
+            } else {
+                guidanceText.setText(String.format("跟随圆圈呼吸\n吸气%d秒，呼气%d秒", 
+                    currentMode.inhaleSeconds, currentMode.exhaleSeconds));
+            }
+            guidanceText.setGravity(android.view.Gravity.CENTER);
+            guidanceText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+            sessionSeconds = 0;
+            timerText.setText("");
+        });
+        
+        dialog.show();
     }
 
     private void saveBreathingSession() {

@@ -4,11 +4,15 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="24dp"
-    android:gravity="center">
+    android:gravity="center"
+    android:background="@drawable/dialog_background_card"
+    android:elevation="0dp"
+    android:outlineProvider="none">
 
     <ImageView
-        android:layout_width="64dp"
-        android:layout_height="64dp"
+        android:id="@+id/celebrationIcon"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:src="@drawable/ic_celebration"
         android:tint="@color/free_breathing_text"
         android:layout_marginBottom="16dp"/>
@@ -17,9 +21,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="本次训练时长"
-        android:textSize="16sp"
+        android:textSize="14sp"
         android:textColor="@android:color/darker_gray"
-        android:layout_marginBottom="8dp"/>
+        android:layout_marginBottom="8dp"
+        android:alpha="0.8"/>
 
     <TextView
         android:id="@+id/trainingTimeText"
@@ -27,13 +32,27 @@
         android:layout_height="wrap_content"
         android:textSize="24sp"
         android:textStyle="bold"
-        android:textColor="@color/free_breathing_text"/>
+        android:textColor="@color/free_breathing_text"
+        android:letterSpacing="0.05"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="继续保持，让呼吸成为习惯"
-        android:textSize="14sp"
+        android:textSize="13sp"
         android:textColor="@android:color/darker_gray"
-        android:layout_marginTop="16dp"/>
+        android:layout_marginTop="16dp"
+        android:alpha="0.7"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/confirmButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="太棒了"
+        android:textSize="14sp"
+        android:layout_marginTop="20dp"
+        android:padding="10dp"
+        android:backgroundTint="@color/free_breathing_text"
+        android:textColor="@android:color/white"
+        android:elevation="0dp"/>
 </LinearLayout> 
