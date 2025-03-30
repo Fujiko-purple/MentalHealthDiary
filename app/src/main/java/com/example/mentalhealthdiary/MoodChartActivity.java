@@ -3,22 +3,35 @@ package com.example.mentalhealthdiary;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.mentalhealthdiary.database.AppDatabase;
 import com.example.mentalhealthdiary.model.MoodEntry;
+import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.components.Legend;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
 import com.github.mikephil.charting.formatter.ValueFormatter;
+import com.google.android.material.tabs.TabLayout;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -35,6 +48,15 @@ public class MoodChartActivity extends AppCompatActivity {
     private long lastUpdateTime = 0;
     private static final long CACHE_DURATION = 5 * 60 * 1000; // 5分钟缓存
     private PieChart moodDistributionChart;
+    private LineChart moodTrendChart;
+    private TabLayout timeRangeTabs;
+    private LinearLayout monthSelectorLayout;
+    private TextView currentMonthText;
+    private ImageButton prevMonthButton, nextMonthButton;
+    private Calendar currentMonth = Calendar.getInstance();
+    private static final int WEEK_VIEW = 0;
+    private static final int MONTH_VIEW = 1;
+    private int currentView = WEEK_VIEW;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +74,9 @@ public class MoodChartActivity extends AppCompatActivity {
 
         setupChart();
         loadMoodData();
+        
+        // 初始化趋势图
+        initTrendChart();
     }
 
     private void setupChart() {
@@ -218,5 +243,277 @@ public class MoodChartActivity extends AppCompatActivity {
 
         moodDistributionChart.setData(data);
         moodDistributionChart.invalidate();
+    }
+
+    private void initTrendChart() {
+        // 初始化视图
+        moodTrendChart = findViewById(R.id.moodTrendChart);
+        timeRangeTabs = findViewById(R.id.timeRangeTabs);
+        monthSelectorLayout = findViewById(R.id.monthSelectorLayout);
+        currentMonthText = findViewById(R.id.currentMonthText);
+        prevMonthButton = findViewById(R.id.prevMonthButton);
+        nextMonthButton = findViewById(R.id.nextMonthButton);
+        
+        // 设置月份选择按钮事件
+        prevMonthButton.setOnClickListener(v -> {
+            currentMonth.add(Calendar.MONTH, -1);
+            updateMonthText();
+            loadMoodTrendData();
+        });
+        
+        nextMonthButton.setOnClickListener(v -> {
+            // 不允许超过当前月份
+            Calendar now = Calendar.getInstance();
+            if (currentMonth.get(Calendar.YEAR) < now.get(Calendar.YEAR) || 
+                (currentMonth.get(Calendar.YEAR) == now.get(Calendar.YEAR) && 
+                 currentMonth.get(Calendar.MONTH) < now.get(Calendar.MONTH))) {
+                currentMonth.add(Calendar.MONTH, 1);
+                updateMonthText();
+                loadMoodTrendData();
+            }
+        });
+        
+        // 设置时间范围选择事件
+        timeRangeTabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                currentView = tab.getPosition();
+                monthSelectorLayout.setVisibility(currentView == MONTH_VIEW ? View.VISIBLE : View.GONE);
+                
+                if (currentView == MONTH_VIEW) {
+                    // 重置为当前月
+                    currentMonth = Calendar.getInstance();
+                    updateMonthText();
+                }
+                
+                setupTrendChart(); // 重新设置图表
+                loadMoodTrendData(); // 加载数据
+            }
+            
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {}
+            
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {}
+        });
+        
+        // 设置折线图
+        setupTrendChart();
+        
+        // 加载数据
+        loadMoodTrendData();
+    }
+
+    private void updateMonthText() {
+        SimpleDateFormat monthFormat = new SimpleDateFormat("yyyy年MM月", Locale.getDefault());
+        currentMonthText.setText(monthFormat.format(currentMonth.getTime()));
+    }
+
+    private void setupTrendChart() {
+        // 基本设置
+        moodTrendChart.getDescription().setEnabled(false);
+        moodTrendChart.setTouchEnabled(currentView == MONTH_VIEW); // 只有月视图可滑动
+        moodTrendChart.setDragEnabled(currentView == MONTH_VIEW);
+        moodTrendChart.setScaleEnabled(false);
+        moodTrendChart.setPinchZoom(false);
+        moodTrendChart.setDrawGridBackground(false);
+        moodTrendChart.setMaxHighlightDistance(300); // 高亮点击的点
+        
+        // 设置图例
+        Legend l = moodTrendChart.getLegend();
+        l.setEnabled(false);
+        
+        // 设置Y轴（心情分数）
+        YAxis leftAxis = moodTrendChart.getAxisLeft();
+        leftAxis.setAxisMinimum(0f); // 最小值为0
+        leftAxis.setAxisMaximum(5.5f); // 最大值为5.5，给顶部留点空间
+        leftAxis.setDrawZeroLine(true); // 绘制零线
+        leftAxis.setDrawGridLines(true); // 绘制网格线
+        leftAxis.setGranularity(1f); // 设置Y轴标签间隔
+        
+        // 右轴不显示
+        moodTrendChart.getAxisRight().setEnabled(false);
+        
+        // 设置X轴（日期）
+        XAxis xAxis = moodTrendChart.getXAxis();
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM); // X轴在底部
+        xAxis.setDrawGridLines(false); // 不绘制网格线
+        xAxis.setGranularity(1f); // 设置X轴标签间隔
+        
+        // 设置动画
+        moodTrendChart.animateX(1000);
+    }
+
+    private void loadMoodTrendData() {
+        database.moodEntryDao().getAllEntries().observe(this, entries -> {
+            if (entries == null || entries.isEmpty()) {
+                moodTrendChart.setData(null);
+                moodTrendChart.invalidate();
+                return;
+            }
+            
+            List<MoodEntry> filteredEntries = filterEntriesByTimeRange(entries);
+            updateTrendChart(filteredEntries);
+        });
+    }
+
+    private List<MoodEntry> filterEntriesByTimeRange(List<MoodEntry> entries) {
+        Calendar cal = Calendar.getInstance();
+        Calendar entryDate = Calendar.getInstance();
+        List<MoodEntry> filteredEntries = new ArrayList<>();
+        
+        if (currentView == WEEK_VIEW) {
+            // 最近一周的数据
+            cal.add(Calendar.DAY_OF_YEAR, -6); // 往前6天（加上今天共7天）
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
+            
+            for (MoodEntry entry : entries) {
+                entryDate.setTime(entry.getDate());
+                if (!entryDate.before(cal)) {
+                    filteredEntries.add(entry);
+                }
+            }
+        } else {
+            // 月视图：获取当前选择月份的数据
+            cal.setTime(currentMonth.getTime());
+            cal.set(Calendar.DAY_OF_MONTH, 1); // 月初
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
+            
+            Calendar monthEnd = (Calendar) cal.clone();
+            monthEnd.add(Calendar.MONTH, 1); // 下个月初
+            
+            for (MoodEntry entry : entries) {
+                entryDate.setTime(entry.getDate());
+                if (!entryDate.before(cal) && entryDate.before(monthEnd)) {
+                    filteredEntries.add(entry);
+                }
+            }
+        }
+        
+        return filteredEntries;
+    }
+
+    private void updateTrendChart(List<MoodEntry> entries) {
+        ArrayList<Entry> values = new ArrayList<>();
+        List<String> xLabels = new ArrayList<>();
+        
+        // 按日期分组数据（一天多个记录取平均值）
+        Map<String, List<MoodEntry>> entriesByDay = new HashMap<>();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        SimpleDateFormat xLabelFormat = new SimpleDateFormat("d日", Locale.getDefault());
+
+        // 生成日期范围
+        List<Date> dateRange = new ArrayList<>();
+        Calendar cal = Calendar.getInstance();
+        
+        if (currentView == WEEK_VIEW) {
+            // 最近一周
+            cal.add(Calendar.DAY_OF_YEAR, -6); // 往前6天（加上今天共7天）
+            
+            for (int i = 0; i < 7; i++) {
+                dateRange.add(cal.getTime());
+                cal.add(Calendar.DAY_OF_YEAR, 1);
+            }
+        } else {
+            // 当月所有日期
+            cal.setTime(currentMonth.getTime());
+            cal.set(Calendar.DAY_OF_MONTH, 1);
+            
+            int daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
+            for (int i = 0; i < daysInMonth; i++) {
+                dateRange.add(cal.getTime());
+                cal.add(Calendar.DAY_OF_YEAR, 1);
+            }
+        }
+        
+        // 创建每天的容器
+        for (Date date : dateRange) {
+            String dayKey = dateFormat.format(date);
+            entriesByDay.put(dayKey, new ArrayList<>());
+            xLabels.add(xLabelFormat.format(date));
+        }
+        
+        // 按日分组
+        for (MoodEntry entry : entries) {
+            String dayKey = dateFormat.format(entry.getDate());
+            if (entriesByDay.containsKey(dayKey)) {
+                entriesByDay.get(dayKey).add(entry);
+            }
+        }
+        
+        // 计算每天的平均心情分数
+        for (int i = 0; i < dateRange.size(); i++) {
+            String dayKey = dateFormat.format(dateRange.get(i));
+            List<MoodEntry> dayEntries = entriesByDay.get(dayKey);
+            
+            float avgMood = 0;
+            if (!dayEntries.isEmpty()) {
+                float sum = 0;
+                for (MoodEntry entry : dayEntries) {
+                    sum += entry.getMoodScore();
+                }
+                avgMood = sum / dayEntries.size();
+            }
+            
+            // 添加到值集合
+            values.add(new Entry(i, avgMood));
+        }
+        
+        // 创建数据集
+        LineDataSet set;
+        
+        if (moodTrendChart.getData() != null &&
+            moodTrendChart.getData().getDataSetCount() > 0) {
+            set = (LineDataSet) moodTrendChart.getData().getDataSetByIndex(0);
+            set.setValues(values);
+            moodTrendChart.getData().notifyDataChanged();
+            moodTrendChart.notifyDataSetChanged();
+        } else {
+            // 创建新的数据集
+            set = new LineDataSet(values, "心情分数");
+            set.setColor(Color.rgb(54, 162, 235));
+            set.setCircleColor(Color.rgb(54, 162, 235));
+            set.setCircleHoleColor(Color.WHITE);
+            set.setLineWidth(2f);
+            set.setCircleRadius(4f);
+            set.setValueTextSize(10f);
+            set.setDrawValues(false);
+            set.setMode(LineDataSet.Mode.LINEAR); // 线性连接
+            set.setDrawCircleHole(true);
+            
+            // 高亮处理
+            set.setHighlightEnabled(true);
+            set.setHighLightColor(Color.rgb(255, 159, 64));
+            
+            // 为空值绘制断点
+            set.setDrawCircles(true);
+            set.setDrawValues(true);
+            
+            // 创建LineData对象
+            LineData data = new LineData(set);
+            moodTrendChart.setData(data);
+        }
+        
+        // 设置X轴标签
+        XAxis xAxis = moodTrendChart.getXAxis();
+        xAxis.setValueFormatter(new IndexAxisValueFormatter(xLabels));
+        xAxis.setLabelCount(xLabels.size());
+        
+        // 设置月视图的可视区域
+        if (currentView == MONTH_VIEW) {
+            // 如果天数超过7天，默认只显示前7天，需要滑动查看更多
+            if (dateRange.size() > 7) {
+                moodTrendChart.setVisibleXRangeMaximum(7);
+                moodTrendChart.moveViewToX(0);
+            }
+        }
+        
+        moodTrendChart.invalidate();
     }
 } 
