@@ -348,7 +348,22 @@ public class MoodChartActivity extends AppCompatActivity {
         leftAxis.setGranularity(1f);
         leftAxis.setLabelCount(6, true);
         leftAxis.setTextSize(11f);
-        leftAxis.setXOffset(10f);
+        leftAxis.setXOffset(0f); // 将Y轴标签的水平偏移设为0
+        
+        // 添加emoji到Y轴标签
+        leftAxis.setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getFormattedValue(float value) {
+                if (value == 0) return "0";
+                String emoji = "";
+                if (value >= 5) emoji = "😄";
+                else if (value >= 4) emoji = "😊";
+                else if (value >= 3) emoji = "😐";
+                else if (value >= 2) emoji = "😕";
+                else if (value >= 1) emoji = "😢";
+                return emoji + " " + (int)value;
+            }
+        });
         
         // 禁用右轴
         moodTrendChart.getAxisRight().setEnabled(false);
@@ -360,11 +375,12 @@ public class MoodChartActivity extends AppCompatActivity {
         xAxis.setGranularity(1f);
         xAxis.setGranularityEnabled(true);
         xAxis.setTextSize(10f);
-        xAxis.setYOffset(5f); // 调整Y方向偏移，避免与X轴线重叠
-        xAxis.setXOffset(10f); // 调整X方向偏移，避免第一个标签与Y轴重叠
+        xAxis.setYOffset(5f);
+        xAxis.setXOffset(0f); // 将X轴标签的水平偏移设为0
         
-        // 设置图表整体边距，给左侧和底部留出更多空间
-        moodTrendChart.setExtraLeftOffset(20f);
+        // 减小图表整体的左边距到最小
+        moodTrendChart.setExtraLeftOffset(0f); // 将左边距设为0
+        moodTrendChart.setExtraRightOffset(5f);
         moodTrendChart.setExtraBottomOffset(10f);
         
         if (currentView == WEEK_VIEW) {
@@ -541,8 +557,14 @@ public class MoodChartActivity extends AppCompatActivity {
             set.setValueFormatter(new ValueFormatter() {
                 @Override
                 public String getFormattedValue(float value) {
-                    if (value == 0) return ""; // 不显示0值
-                    return String.format("%.1f", value);
+                    if (value == 0) return "";
+                    String emoji = "";
+                    if (value >= 5) emoji = "😄";
+                    else if (value >= 4) emoji = "😊";
+                    else if (value >= 3) emoji = "😐";
+                    else if (value >= 2) emoji = "😕";
+                    else if (value >= 1) emoji = "😢";
+                    return "\n" + emoji + " " + String.format("%.1f", value);
                 }
             });
             
