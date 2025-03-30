@@ -342,11 +342,13 @@ public class MoodChartActivity extends AppCompatActivity {
         // 设置Y轴
         YAxis leftAxis = moodTrendChart.getAxisLeft();
         leftAxis.setAxisMinimum(0f);
-        leftAxis.setAxisMaximum(5.5f);
+        leftAxis.setAxisMaximum(5f);
         leftAxis.setDrawZeroLine(true);
         leftAxis.setDrawGridLines(true);
         leftAxis.setGranularity(1f);
         leftAxis.setLabelCount(6, true);
+        leftAxis.setTextSize(11f);
+        leftAxis.setXOffset(10f);
         
         // 禁用右轴
         moodTrendChart.getAxisRight().setEnabled(false);
@@ -358,6 +360,12 @@ public class MoodChartActivity extends AppCompatActivity {
         xAxis.setGranularity(1f);
         xAxis.setGranularityEnabled(true);
         xAxis.setTextSize(10f);
+        xAxis.setYOffset(5f); // 调整Y方向偏移，避免与X轴线重叠
+        xAxis.setXOffset(10f); // 调整X方向偏移，避免第一个标签与Y轴重叠
+        
+        // 设置图表整体边距，给左侧和底部留出更多空间
+        moodTrendChart.setExtraLeftOffset(20f);
+        moodTrendChart.setExtraBottomOffset(10f);
         
         if (currentView == WEEK_VIEW) {
             // 周视图特定设置
@@ -526,18 +534,36 @@ public class MoodChartActivity extends AppCompatActivity {
             set.setCircleHoleColor(Color.WHITE);
             set.setLineWidth(2f);
             set.setCircleRadius(4f);
-            set.setValueTextSize(10f);
-            set.setDrawValues(false);
-            set.setMode(LineDataSet.Mode.LINEAR); // 线性连接
-            set.setDrawCircleHole(true);
+            set.setValueTextSize(11f);
             
-            // 高亮处理
+            // 修改数值显示的位置和格式
+            set.setDrawValues(true);
+            set.setValueFormatter(new ValueFormatter() {
+                @Override
+                public String getFormattedValue(float value) {
+                    if (value == 0) return ""; // 不显示0值
+                    return String.format("%.1f", value);
+                }
+            });
+            
+            // 将数值显示在点的上方，通过调整Y轴位置来实现
+            set.setValueTextColor(Color.rgb(54, 162, 235));
+            set.setValueTextSize(11f);
+            
+            // 改用设置数值的相对位置
+            set.setValueFormatter(new ValueFormatter() {
+                @Override
+                public String getFormattedValue(float value) {
+                    if (value == 0) return "";
+                    return "\n" + String.format("%.1f", value); // 添加换行符使数值显示在点的上方
+                }
+            });
+            
+            set.setMode(LineDataSet.Mode.LINEAR);
+            set.setDrawCircleHole(true);
             set.setHighlightEnabled(true);
             set.setHighLightColor(Color.rgb(255, 159, 64));
-            
-            // 为空值绘制断点
             set.setDrawCircles(true);
-            set.setDrawValues(true);
             
             // 创建LineData对象
             LineData data = new LineData(set);
