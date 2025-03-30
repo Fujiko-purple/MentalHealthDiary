@@ -284,6 +284,11 @@ public class MoodChartActivity extends AppCompatActivity {
                     // 重置为当前月
                     currentMonth = Calendar.getInstance();
                     updateMonthText();
+                } else {
+                    // 重置周视图的状态
+                    moodTrendChart.fitScreen(); // 重置缩放
+                    moodTrendChart.setVisibleXRangeMaximum(7); // 设置最大可见范围为7天
+                    moodTrendChart.moveViewToX(0); // 移动到起始位置
                 }
                 
                 setupTrendChart(); // 重新设置图表
@@ -317,7 +322,10 @@ public class MoodChartActivity extends AppCompatActivity {
         moodTrendChart.setScaleEnabled(false);
         moodTrendChart.setPinchZoom(false);
         moodTrendChart.setDrawGridBackground(false);
-        moodTrendChart.setMaxHighlightDistance(300); // 高亮点击的点
+        moodTrendChart.setMaxHighlightDistance(300);
+        
+        // 清除现有数据
+        moodTrendChart.clear();
         
         // 设置图例
         Legend l = moodTrendChart.getLegend();
@@ -325,20 +333,37 @@ public class MoodChartActivity extends AppCompatActivity {
         
         // 设置Y轴（心情分数）
         YAxis leftAxis = moodTrendChart.getAxisLeft();
-        leftAxis.setAxisMinimum(0f); // 最小值为0
-        leftAxis.setAxisMaximum(5.5f); // 最大值为5.5，给顶部留点空间
-        leftAxis.setDrawZeroLine(true); // 绘制零线
-        leftAxis.setDrawGridLines(true); // 绘制网格线
-        leftAxis.setGranularity(1f); // 设置Y轴标签间隔
+        leftAxis.setAxisMinimum(0f);
+        leftAxis.setAxisMaximum(5.5f);
+        leftAxis.setDrawZeroLine(true);
+        leftAxis.setDrawGridLines(true);
+        leftAxis.setGranularity(1f);
         
         // 右轴不显示
         moodTrendChart.getAxisRight().setEnabled(false);
         
         // 设置X轴（日期）
         XAxis xAxis = moodTrendChart.getXAxis();
-        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM); // X轴在底部
-        xAxis.setDrawGridLines(false); // 不绘制网格线
-        xAxis.setGranularity(1f); // 设置X轴标签间隔
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setDrawGridLines(false);
+        xAxis.setGranularity(1f);
+        
+        if (currentView == WEEK_VIEW) {
+            // 周视图特定设置
+            moodTrendChart.setVisibleXRangeMaximum(7);
+            moodTrendChart.setScaleEnabled(false);
+            xAxis.setLabelCount(7, true);
+        } else {
+            // 月视图特定设置
+            moodTrendChart.setDragEnabled(true);
+            moodTrendChart.setScaleEnabled(false);
+            moodTrendChart.setVisibleXRangeMinimum(7);
+            moodTrendChart.setVisibleXRangeMaximum(7);
+            xAxis.setLabelRotationAngle(0); // 设置标签不旋转
+            xAxis.setGranularityEnabled(true);
+            xAxis.setGranularity(1f);
+            xAxis.setLabelCount(7); // 一次显示7个标签
+        }
         
         // 设置动画
         moodTrendChart.animateX(1000);
@@ -379,21 +404,27 @@ public class MoodChartActivity extends AppCompatActivity {
         } else {
             // 月视图：获取当前选择月份的数据
             cal.setTime(currentMonth.getTime());
-            cal.set(Calendar.DAY_OF_MONTH, 1); // 月初
+            cal.set(Calendar.DAY_OF_MONTH, 1);
             cal.set(Calendar.HOUR_OF_DAY, 0);
             cal.set(Calendar.MINUTE, 0);
             cal.set(Calendar.SECOND, 0);
             cal.set(Calendar.MILLISECOND, 0);
             
             Calendar monthEnd = (Calendar) cal.clone();
-            monthEnd.add(Calendar.MONTH, 1); // 下个月初
+            monthEnd.add(Calendar.MONTH, 1);
             
+            // 确保按日期排序
+            List<MoodEntry> monthEntries = new ArrayList<>();
             for (MoodEntry entry : entries) {
                 entryDate.setTime(entry.getDate());
                 if (!entryDate.before(cal) && entryDate.before(monthEnd)) {
-                    filteredEntries.add(entry);
+                    monthEntries.add(entry);
                 }
             }
+            
+            // 按日期排序
+            Collections.sort(monthEntries, (a, b) -> a.getDate().compareTo(b.getDate()));
+            return monthEntries;
         }
         
         return filteredEntries;
@@ -503,15 +534,35 @@ public class MoodChartActivity extends AppCompatActivity {
         // 设置X轴标签
         XAxis xAxis = moodTrendChart.getXAxis();
         xAxis.setValueFormatter(new IndexAxisValueFormatter(xLabels));
-        xAxis.setLabelCount(xLabels.size());
         
-        // 设置月视图的可视区域
-        if (currentView == MONTH_VIEW) {
-            // 如果天数超过7天，默认只显示前7天，需要滑动查看更多
+        if (currentView == WEEK_VIEW) {
+            xAxis.setLabelCount(7, true);
+            moodTrendChart.fitScreen();
+            moodTrendChart.setVisibleXRangeMaximum(7);
+            moodTrendChart.moveViewToX(0);
+        } else {
+            // 月视图的显示设置
+            xAxis.setLabelCount(7, false); // false表示不强制显示所有标签
             if (dateRange.size() > 7) {
                 moodTrendChart.setVisibleXRangeMaximum(7);
-                moodTrendChart.moveViewToX(0);
+                moodTrendChart.setVisibleXRangeMinimum(7);
+                
+                // 如果是新数据，移动到开始位置
+                if (moodTrendChart.getData() == null) {
+                    moodTrendChart.moveViewToX(0);
+                }
             }
+        }
+        
+        // 确保图表能够水平滚动
+        if (currentView == MONTH_VIEW) {
+            moodTrendChart.setDragEnabled(true);
+            moodTrendChart.setScaleXEnabled(false);
+            moodTrendChart.setScaleYEnabled(false);
+            moodTrendChart.setPinchZoom(false);
+            
+            // 设置额外的偏移量，确保标签显示完整
+            moodTrendChart.setExtraOffsets(10f, 0f, 10f, 0f);
         }
         
         moodTrendChart.invalidate();
