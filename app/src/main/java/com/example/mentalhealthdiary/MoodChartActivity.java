@@ -2,8 +2,6 @@ package com.example.mentalhealthdiary;
 
 import android.graphics.Color;
 import android.os.Bundle;
-import android.util.Log;
-import android.util.TypedValue;
 import android.view.MenuItem;
 import android.widget.TextView;
 
@@ -83,33 +81,7 @@ public class MoodChartActivity extends AppCompatActivity {
         // 添加动画效果
         moodDistributionChart.animateY(1000); // 添加1秒的动画效果
     }
-
-    private void applyTheme() {
-        try {
-            // 获取当前主题颜色
-            TypedValue typedValue = new TypedValue();
-            getTheme().resolveAttribute(android.R.attr.colorPrimary, typedValue, true);
-            int primaryColor = typedValue.data;
-            
-            // 确保图表数据存在
-            if (moodDistributionChart != null && moodDistributionChart.getData() != null && 
-                moodDistributionChart.getData().getDataSetByIndex(0) != null) {
-                
-                PieDataSet dataSet = (PieDataSet) moodDistributionChart.getData().getDataSetByIndex(0);
-                dataSet.setColors(
-                    Color.rgb(255, 107, 107),  // 暗红色
-                    Color.rgb(255, 159, 64),   // 暗橙色
-                    Color.rgb(255, 205, 86),   // 暗黄色
-                    Color.rgb(75, 192, 192),   // 青绿色
-                    Color.rgb(54, 162, 235)    // 深蓝色
-                );
-                
-                moodDistributionChart.invalidate();
-            }
-        } catch (Exception e) {
-            Log.e("MoodChart", "Error applying theme", e);
-        }
-    }
+    
 
     private void loadMoodData() {
         // 检查缓存是否有效
