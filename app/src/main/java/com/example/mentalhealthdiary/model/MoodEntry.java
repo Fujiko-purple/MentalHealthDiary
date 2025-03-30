@@ -41,15 +41,10 @@ public class MoodEntry {
         return moodScore;
     }
 
-    public void setMoodScore(int moodScore) {
-        this.moodScore = moodScore;
-    }
+
 
     public String getDiaryContent() {
         return diaryContent;
     }
 
-    public void setDiaryContent(String diaryContent) {
-        this.diaryContent = diaryContent;
-    }
 } 

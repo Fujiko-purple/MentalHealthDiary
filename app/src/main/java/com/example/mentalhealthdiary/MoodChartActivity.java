@@ -81,7 +81,7 @@ public class MoodChartActivity extends AppCompatActivity {
         // 添加动画效果
         moodDistributionChart.animateY(1000); // 添加1秒的动画效果
     }
-    
+
 
     private void loadMoodData() {
         // 检查缓存是否有效
