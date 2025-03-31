@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_light">
+    android:background="@drawable/elegant_gradient_background">
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -20,18 +20,25 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="让我们静下心来，感受此刻的心情..."
+                android:text="「半亩方塘一鉴开，天光云影共徘徊」\n今日心情，如何？"
                 android:textSize="16sp"
-                android:textColor="@color/text_primary"
-                android:layout_marginBottom="16dp"/>
+                android:textColor="#555555"
+                android:fontFamily="serif"
+                android:gravity="center"
+                android:letterSpacing="0.05"
+                android:lineSpacingMultiplier="1.2"
+                android:layout_marginBottom="20dp"/>
 
             <!-- 日期选择 -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                app:cardCornerRadius="8dp"
-                app:cardElevation="2dp">
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:strokeWidth="0.5dp"
+                app:strokeColor="#E0E0E0"
+                app:cardBackgroundColor="#FFFFFF">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -160,8 +167,11 @@
                         android:minHeight="120dp"
                         android:gravity="top"
                         android:background="@null"
-                        android:hint="写下你的感受..."
-                        android:textColorHint="@color/text_hint"/>
+                        android:hint="写下此刻的心情，记录生活的点滴..."
+                        android:textColorHint="#AAAAAA"
+                        android:textSize="15sp"
+                        android:lineSpacingMultiplier="1.2"
+                        android:padding="4dp"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

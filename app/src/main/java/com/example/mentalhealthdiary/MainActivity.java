@@ -178,7 +178,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateDateButtonText() {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy年MM月dd日 HH:mm", Locale.CHINESE);
         datePickerButton.setText(dateFormat.format(selectedDate != null ? selectedDate : new Date()));
     }
 
