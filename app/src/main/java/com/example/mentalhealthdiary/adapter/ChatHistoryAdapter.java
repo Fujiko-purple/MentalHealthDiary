@@ -30,6 +30,7 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy年MM月dd日 HH:mm", Locale.getDefault());
     private Set<Long> selectedItems = new HashSet<>();
     private int selectedPosition = -1;
+    private boolean isSelectionMode = false;
 
     public interface OnHistoryClickListener {
         void onHistoryClick(ChatHistory history);
@@ -54,14 +55,19 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
         ChatHistory history = histories.get(position);
         holder.bind(history);
         
-        holder.checkBox.setOnClickListener(v -> {
-            toggleSelection(history.getId());
-        });
-
         holder.itemView.setOnClickListener(v -> {
-            if (listener != null) {
-                selectedPosition = holder.getAdapterPosition();
-                listener.onHistoryClick(history);
+            if (isSelectionMode) {
+                if (selectedItems.contains(history.getId())) {
+                    selectedItems.remove(history.getId());
+                } else {
+                    selectedItems.add(history.getId());
+                }
+                notifyItemChanged(position);
+            } else {
+                if (listener != null) {
+                    selectedPosition = holder.getAdapterPosition();
+                    listener.onHistoryClick(history);
+                }
             }
         });
 
@@ -125,17 +131,23 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
         for (ChatHistory history : histories) {
             selectedItems.add(history.getId());
         }
+        setSelectionMode(true);
         notifyDataSetChanged();
     }
 
     public void clearSelection() {
         selectedItems.clear();
-        selectedPosition = -1;
+        setSelectionMode(false);
         notifyDataSetChanged();
     }
 
     public Set<Long> getSelectedItems() {
         return selectedItems;
+    }
+
+    public void setSelectionMode(boolean selectionMode) {
+        this.isSelectionMode = selectionMode;
+        notifyDataSetChanged();
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
@@ -155,7 +167,13 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
         public void bind(ChatHistory history) {
             titleText.setText(history.getTitle());
             timeText.setText(formatDate(history.getTimestamp()));
-            checkBox.setChecked(selectedItems.contains(history.getId()));
+            
+            if (isSelectionMode) {
+                checkBox.setVisibility(View.VISIBLE);
+                checkBox.setChecked(selectedItems.contains(history.getId()));
+            } else {
+                checkBox.setVisibility(View.GONE);
+            }
             
             String personalityId = history.getPersonalityId();
             Log.d("ChatHistoryAdapter", String.format(
