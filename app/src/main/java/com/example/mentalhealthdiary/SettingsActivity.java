@@ -26,6 +26,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import android.util.Log;
 import android.content.Context;
+import com.example.mentalhealthdiary.config.RemoteConfig;
 
 public class SettingsActivity extends AppCompatActivity {
     @Override
@@ -92,13 +93,13 @@ public class SettingsActivity extends AppCompatActivity {
             SwitchPreference customApiSwitch = findPreference("use_custom_api");
             if (customApiSwitch != null) {
                 // 设置初始状态
-                customApiSwitch.setChecked(ApiConfig.isCustomApiEnabled(getContext()));
+                customApiSwitch.setChecked(RemoteConfig.isCustomApiEnabled());
                 
                 // 监听开关状态变化
                 customApiSwitch.setOnPreferenceChangeListener((preference, newValue) -> {
                     boolean enabled = (Boolean) newValue;
                     // 保存状态
-                    ApiConfig.setCustomApiEnabled(getContext(), enabled);
+                    RemoteConfig.setCustomApiEnabled(enabled);
                     
                     // 更新其他相关设置的可用状态
                     updateDependentPreferences(enabled);

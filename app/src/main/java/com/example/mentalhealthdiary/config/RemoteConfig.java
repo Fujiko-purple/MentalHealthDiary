@@ -36,8 +36,10 @@ public class RemoteConfig {
         if (!prefs.contains("custom_model_name")) {
             editor.putString("custom_model_name", DEFAULT_MODEL);
         }
-        // 确保启用自定义 API
-        editor.putBoolean("use_custom_api", true);
+        // 只在第一次初始化时设置默认值
+        if (!prefs.contains("use_custom_api")) {
+            editor.putBoolean("use_custom_api", true);
+        }
         editor.apply();
     }
     
@@ -75,6 +77,18 @@ public class RemoteConfig {
     }
     
     public static boolean isCustomApiEnabled() {
-        return true;  // 始终返回 true
+        if (context == null) return false;
+        return PreferenceManager
+            .getDefaultSharedPreferences(context)
+            .getBoolean("use_custom_api", false);  // 默认为 false
+    }
+
+    public static void setCustomApiEnabled(boolean enabled) {
+        if (context == null) return;
+        PreferenceManager
+            .getDefaultSharedPreferences(context)
+            .edit()
+            .putBoolean("use_custom_api", enabled)
+            .apply();
     }
 } 
