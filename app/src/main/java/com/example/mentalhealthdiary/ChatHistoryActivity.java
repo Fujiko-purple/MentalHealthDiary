@@ -14,6 +14,13 @@ import androidx.annotation.NonNull;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
+import android.app.Dialog;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.view.Gravity;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.TextView;
 
 import com.example.mentalhealthdiary.adapter.ChatHistoryAdapter;
 import com.example.mentalhealthdiary.database.AppDatabase;
@@ -80,44 +87,7 @@ public class ChatHistoryActivity extends AppCompatActivity implements ChatHistor
                 return;
             }
 
-            new AlertDialog.Builder(this)
-                .setTitle("删除记录")
-                .setMessage("确定要删除选中的 " + selectedIds.size() + " 条记录吗？")
-                .setPositiveButton("删除", (dialog, which) -> {
-                    executorService.execute(() -> {
-                        // 获取当前对话ID
-                        long currentChatId = PreferenceManager.getLastChatId(this);
-                        
-                        // 执行批量删除
-                        database.chatHistoryDao().deleteByIds(new ArrayList<>(selectedIds));
-
-                        // 获取最新的历史记录列表
-                        List<ChatHistory> remainingHistories = database.chatHistoryDao().getAllHistoriesSync();
-                        
-                        runOnUiThread(() -> {
-                            // 更新UI
-                            if (remainingHistories.isEmpty()) {
-                                PreferenceManager.saveLastChatId(this, -1);
-                                findViewById(R.id.emptyView).setVisibility(View.VISIBLE);
-                                findViewById(R.id.chatHistoryRecyclerView).setVisibility(View.GONE);
-                            } else {
-                                if (selectedIds.contains(currentChatId)) {
-                                    ChatHistory latest = remainingHistories.get(0);
-                                    PreferenceManager.saveLastChatId(this, latest.getId());
-                                }
-                                findViewById(R.id.emptyView).setVisibility(View.GONE);
-                                findViewById(R.id.chatHistoryRecyclerView).setVisibility(View.VISIBLE);
-                            }
-                            
-                            adapter.setHistories(remainingHistories);
-                            adapter.clearSelection();
-                            selectAllButton.setText("全选");
-                            Toast.makeText(this, "删除成功", Toast.LENGTH_SHORT).show();
-                        });
-                    });
-                })
-                .setNegativeButton("取消", null)
-                .show();
+            showBatchDeleteConfirmationDialog(selectedIds);
         });
 
         // 观察聊天历史记录
@@ -144,42 +114,7 @@ public class ChatHistoryActivity extends AppCompatActivity implements ChatHistor
                 int position = viewHolder.getAdapterPosition();
                 ChatHistory history = adapter.getHistories().get(position);
                 
-                // 显示删除确认对话框，并在用户取消时恢复item
-                new AlertDialog.Builder(ChatHistoryActivity.this)
-                    .setTitle("删除对话")
-                    .setMessage("确定要删除这个对话吗？")
-                    .setPositiveButton("删除", (dialog, which) -> {
-                        new Thread(() -> {
-                            database.chatHistoryDao().delete(history);
-                            
-                            if (PreferenceManager.getLastChatId(ChatHistoryActivity.this) == history.getId()) {
-                                List<ChatHistory> histories = database.chatHistoryDao().getAllHistoriesSync();
-                                
-                                runOnUiThread(() -> {
-                                    if (histories.isEmpty()) {
-                                        PreferenceManager.saveLastChatId(ChatHistoryActivity.this, -1);
-                                    } else {
-                                        ChatHistory latest = histories.get(0);
-                                        PreferenceManager.saveLastChatId(ChatHistoryActivity.this, latest.getId());
-                                    }
-                                    Toast.makeText(ChatHistoryActivity.this, "删除成功", Toast.LENGTH_SHORT).show();
-                                });
-                            } else {
-                                runOnUiThread(() -> {
-                                    Toast.makeText(ChatHistoryActivity.this, "删除成功", Toast.LENGTH_SHORT).show();
-                                });
-                            }
-                        }).start();
-                    })
-                    .setNegativeButton("取消", (dialog, which) -> {
-                        // 用户取消删除，恢复item的显示
-                        adapter.notifyItemChanged(position);
-                    })
-                    .setOnCancelListener(dialog -> {
-                        // 用户点击对话框外部，也要恢复item的显示
-                        adapter.notifyItemChanged(position);
-                    })
-                    .show();
+                showDeleteConfirmationDialog(history);
             }
         }).attachToRecyclerView(recyclerView);
 
@@ -285,5 +220,120 @@ public class ChatHistoryActivity extends AppCompatActivity implements ChatHistor
                 });
             }
         }).start();
+    }
+
+    private void showDeleteConfirmationDialog(ChatHistory history) {
+        Dialog dialog = new Dialog(this, R.style.ChatDeleteDialog);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_delete_chat_confirmation, null);
+        dialog.setContentView(dialogView);
+        
+        // 设置消息
+        TextView messageText = dialogView.findViewById(R.id.deleteMessageText);
+        messageText.setText("确定要删除这个对话吗？");
+        
+        // 设置取消按钮
+        Button cancelButton = dialogView.findViewById(R.id.cancelButton);
+        cancelButton.setOnClickListener(v -> {
+            dialog.dismiss();
+            // 恢复滑动状态
+            adapter.notifyDataSetChanged();
+        });
+        
+        // 设置确认按钮
+        Button confirmButton = dialogView.findViewById(R.id.confirmButton);
+        confirmButton.setOnClickListener(v -> {
+            dialog.dismiss();
+            deleteHistory(history);
+        });
+        
+        // 设置对话框位置和动画
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            window.setGravity(Gravity.CENTER);
+            
+            // 设置对话框宽度为屏幕宽度的85%
+            WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
+            lp.copyFrom(window.getAttributes());
+            lp.width = (int) (getResources().getDisplayMetrics().widthPixels * 0.85);
+            window.setAttributes(lp);
+        }
+        
+        dialog.show();
+    }
+
+    // 批量删除确认对话框
+    private void showBatchDeleteConfirmationDialog(Set<Long> selectedIds) {
+        Dialog dialog = new Dialog(this, R.style.ChatDeleteDialog);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_delete_chat_confirmation, null);
+        dialog.setContentView(dialogView);
+        
+        // 设置消息
+        TextView messageText = dialogView.findViewById(R.id.deleteMessageText);
+        messageText.setText("确定要删除选中的 " + selectedIds.size() + " 个对话吗？");
+        
+        // 设置取消按钮
+        Button cancelButton = dialogView.findViewById(R.id.cancelButton);
+        cancelButton.setOnClickListener(v -> dialog.dismiss());
+        
+        // 设置确认按钮
+        Button confirmButton = dialogView.findViewById(R.id.confirmButton);
+        confirmButton.setOnClickListener(v -> {
+            dialog.dismiss();
+            executorService.execute(() -> {
+                // 获取当前对话ID
+                long currentChatId = PreferenceManager.getLastChatId(this);
+                
+                // 执行批量删除
+                database.chatHistoryDao().deleteByIds(new ArrayList<>(selectedIds));
+
+                // 获取最新的历史记录列表
+                List<ChatHistory> remainingHistories = database.chatHistoryDao().getAllHistoriesSync();
+                
+                runOnUiThread(() -> {
+                    // 更新UI
+                    if (remainingHistories.isEmpty()) {
+                        PreferenceManager.saveLastChatId(this, -1);
+                        findViewById(R.id.emptyView).setVisibility(View.VISIBLE);
+                        findViewById(R.id.chatHistoryRecyclerView).setVisibility(View.GONE);
+                    } else {
+                        if (selectedIds.contains(currentChatId)) {
+                            ChatHistory latest = remainingHistories.get(0);
+                            PreferenceManager.saveLastChatId(this, latest.getId());
+                        }
+                        findViewById(R.id.emptyView).setVisibility(View.GONE);
+                        findViewById(R.id.chatHistoryRecyclerView).setVisibility(View.VISIBLE);
+                    }
+                    
+                    adapter.setHistories(remainingHistories);
+                    adapter.clearSelection();
+                    selectAllButton.setText("全选");
+                    Toast.makeText(this, "删除成功", Toast.LENGTH_SHORT).show();
+                });
+            });
+        });
+        
+        // 设置对话框位置和动画
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            window.setGravity(Gravity.CENTER);
+            
+            // 设置对话框宽度为屏幕宽度的85%
+            WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
+            lp.copyFrom(window.getAttributes());
+            lp.width = (int) (getResources().getDisplayMetrics().widthPixels * 0.85);
+            window.setAttributes(lp);
+        }
+        
+        dialog.show();
+    }
+
+    private void deleteHistory(ChatHistory history) {
+        // 调用已有的删除方法
+        onHistoryDelete(history);
+        
+        // 恢复 RecyclerView 的状态
+        adapter.notifyDataSetChanged();
     }
 } 
