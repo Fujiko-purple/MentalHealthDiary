@@ -96,7 +96,7 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
         // 创建自定义弹出窗口
         View popupView = LayoutInflater.from(view.getContext()).inflate(R.layout.popup_menu_custom, null);
         
-        // 创建PopupWindow - 移到前面来定义
+        // 创建PopupWindow
         PopupWindow popupWindow = new PopupWindow(
                 popupView,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -133,11 +133,15 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
                 View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
         );
         
-        // 计算显示位置
+        // 计算显示位置 - 修改为显示在右下方
         int[] location = new int[2];
         view.getLocationOnScreen(location);
+        
+        // 计算水平位置 - 显示在右侧
         int x = location[0] + view.getWidth() - popupView.getMeasuredWidth();
-        int y = location[1];
+        
+        // 计算垂直位置 - 显示在项目下方
+        int y = location[1] + view.getHeight();
         
         // 显示弹出窗口
         popupWindow.showAtLocation(view, Gravity.NO_GRAVITY, x, y);
