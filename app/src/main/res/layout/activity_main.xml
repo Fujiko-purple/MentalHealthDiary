@@ -158,7 +158,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="记录心情，留住瞬间"
+                        android:text="在记忆的宣纸上，晕染未命名的情绪褶皱"
                         android:textSize="16sp"
                         android:textColor="#555555"
                         android:fontFamily="serif"

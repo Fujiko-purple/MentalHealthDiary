@@ -4,7 +4,16 @@
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
+    <!-- 外框 - 使用柔和的蓝色 -->
     <path
-        android:fillColor="#757575"
-        android:pathData="M21,19V5c0,-1.1 -0.9,-2 -2,-2H5c-1.1,0 -2,0.9 -2,2v14c0,1.1 0.9,2 2,2h14c1.1,0 2,-0.9 2,-2zM8.5,13.5l2.5,3.01L14.5,12l4.5,6H5l3.5,-4.5z"/>
+        android:fillColor="#4A90E2"
+        android:pathData="M21,19V5c0,-1.1 -0.9,-2 -2,-2H5c-1.1,0 -2,0.9 -2,2v14c0,1.1 0.9,2 2,2h14c1.1,0 2,-0.9 2,-2z"/>
+    <!-- 山峰 - 使用清新的青绿色 -->
+    <path
+        android:fillColor="#50C4AA"
+        android:pathData="M8.5,13.5l2.5,3.01L14.5,12l4.5,6H5l3.5,-4.5z"/>
+    <!-- 太阳 - 使用温暖的橙色 -->
+    <path
+        android:fillColor="#FFB74D"
+        android:pathData="M9,8m-1,0a1,1 0,1 1,2 0a1,1 0,1 1,-2 0"/>
 </vector> 

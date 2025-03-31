@@ -16,7 +16,6 @@
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="插入图片"
         android:src="@drawable/ic_insert_image"
-        app:tint="#757575"
         tools:ignore="TouchTargetSizeCheck" />
 
     <ImageButton
@@ -27,7 +26,6 @@
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="插入位置"
         android:src="@drawable/ic_insert_location"
-        app:tint="#757575"
         tools:ignore="TouchTargetSizeCheck" />
         
     <View
@@ -39,8 +37,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
-        android:text="当前天气:" 
-        android:textSize="14sp" />
+        android:text="天色如何"
+        android:textSize="14sp"
+        android:textColor="#666666"
+        android:fontFamily="serif"
+        android:letterSpacing="0.1"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp" />
 
     <HorizontalScrollView
         android:layout_width="wrap_content"
