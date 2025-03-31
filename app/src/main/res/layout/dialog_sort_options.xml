@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="4dp"
+    app:cardBackgroundColor="#F8FEFF">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="编排你的故事"
+            android:textSize="20sp"
+            android:textColor="#333333"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:layout_marginBottom="4dp"/>
+            
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="如何整理心情的章节？"
+            android:textSize="14sp"
+            android:textColor="#666666"
+            android:gravity="center"
+            android:layout_marginBottom="16dp"/>
+
+        <RadioGroup
+            android:id="@+id/sortOptionsGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <RadioButton
+                android:id="@+id/sort_date_desc"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="从最新故事开始阅读"
+                android:textSize="16sp"
+                android:textColor="#555555"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:buttonTint="#6EFFE2"
+                android:layout_marginBottom="2dp"
+                android:checked="true"
+                android:background="@drawable/selectable_sort_background"/>
+
+            <RadioButton
+                android:id="@+id/sort_date_asc"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="从最早记忆开始回溯"
+                android:textSize="16sp"
+                android:textColor="#555555"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:buttonTint="#6EFFE2"
+                android:layout_marginBottom="2dp"
+                android:background="@drawable/selectable_sort_background"/>
+
+            <RadioButton
+                android:id="@+id/sort_mood_desc"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="先看看美好的时光"
+                android:textSize="16sp"
+                android:textColor="#555555"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:buttonTint="#6EFFE2"
+                android:layout_marginBottom="2dp"
+                android:background="@drawable/selectable_sort_background"/>
+
+            <RadioButton
+                android:id="@+id/sort_mood_asc"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="从阴霾走向阳光"
+                android:textSize="16sp"
+                android:textColor="#555555"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:buttonTint="#6EFFE2"
+                android:background="@drawable/selectable_sort_background"/>
+        </RadioGroup>
+    </LinearLayout>
+</androidx.cardview.widget.CardView> 

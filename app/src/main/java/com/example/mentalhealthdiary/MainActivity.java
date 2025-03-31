@@ -100,6 +100,13 @@ public class MainActivity extends AppCompatActivity {
     private LocationListener locationListener;
     private View weatherIndicator;
     private TimeFilter currentTimeFilter = TimeFilter.ALL;
+    private enum SortOrder {
+        DATE_DESC,    // 时间从新到旧
+        DATE_ASC,     // 时间从旧到新
+        MOOD_DESC,    // 心情从好到坏
+        MOOD_ASC      // 心情从坏到好
+    }
+    private SortOrder currentSortOrder = SortOrder.DATE_DESC; // 默认排序方式
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -496,18 +503,58 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showSortDialog() {
-        String[] options = {"时间从新到旧", "时间从旧到新", "心情从好到坏", "心情从坏到好"};
-        new AlertDialog.Builder(this)
-            .setTitle("排序方式")
-            .setItems(options, (dialog, which) -> {
-                switch (which) {
-                    case 0: adapter.sortByDateDesc(); break;
-                    case 1: adapter.sortByDateAsc(); break;
-                    case 2: adapter.sortByMoodDesc(); break;
-                    case 3: adapter.sortByMoodAsc(); break;
-                }
-            })
-            .show();
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View view = getLayoutInflater().inflate(R.layout.dialog_sort_options, null);
+        RadioGroup sortOptionsGroup = view.findViewById(R.id.sortOptionsGroup);
+        
+        // 根据当前排序方式设置选中项
+        switch (currentSortOrder) {
+            case DATE_DESC:
+                sortOptionsGroup.check(R.id.sort_date_desc);
+                break;
+            case DATE_ASC:
+                sortOptionsGroup.check(R.id.sort_date_asc);
+                break;
+            case MOOD_DESC:
+                sortOptionsGroup.check(R.id.sort_mood_desc);
+                break;
+            case MOOD_ASC:
+                sortOptionsGroup.check(R.id.sort_mood_asc);
+                break;
+        }
+        
+        AlertDialog dialog = builder.setView(view)
+                .setCancelable(true)
+                .create();
+                
+        // 设置对话框窗口属性
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+        
+        // 设置选项点击监听
+        sortOptionsGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            if (checkedId == R.id.sort_date_desc) {
+                adapter.sortByDateDesc();
+                currentSortOrder = SortOrder.DATE_DESC;
+                Toast.makeText(MainActivity.this, "📝 按时间从新到旧排序", Toast.LENGTH_SHORT).show();
+            } else if (checkedId == R.id.sort_date_asc) {
+                adapter.sortByDateAsc();
+                currentSortOrder = SortOrder.DATE_ASC;
+                Toast.makeText(MainActivity.this, "🕰️ 按时间从旧到新排序", Toast.LENGTH_SHORT).show();
+            } else if (checkedId == R.id.sort_mood_desc) {
+                adapter.sortByMoodDesc();
+                currentSortOrder = SortOrder.MOOD_DESC;
+                Toast.makeText(MainActivity.this, "😊 按心情从好到坏排序", Toast.LENGTH_SHORT).show();
+            } else if (checkedId == R.id.sort_mood_asc) {
+                adapter.sortByMoodAsc();
+                currentSortOrder = SortOrder.MOOD_ASC;
+                Toast.makeText(MainActivity.this, "🌈 按心情从坏到好排序", Toast.LENGTH_SHORT).show();
+            }
+            dialog.dismiss();
+        });
+        
+        dialog.show();
     }
 
     private void showFilterDialog() {
