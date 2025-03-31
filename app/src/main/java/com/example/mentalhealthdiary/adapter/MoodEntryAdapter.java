@@ -2,6 +2,8 @@ package com.example.mentalhealthdiary.adapter;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.style.ImageSpan;
@@ -10,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -33,6 +36,13 @@ public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.View
     private OnEntryClickListener listener;
     private OnEntryDeleteListener deleteListener;
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy年MM月dd日 HH:mm", Locale.getDefault());
+
+    // 心情常量定义 - 匹配MoodEntry中的现有分数
+    private static final int MOOD_AWFUL = 1;
+    private static final int MOOD_SAD = 2;
+    private static final int MOOD_NEUTRAL = 3;
+    private static final int MOOD_GOOD = 4;
+    private static final int MOOD_HAPPY = 5;
 
     public interface OnEntryClickListener {
         void onEntryClick(MoodEntry entry);
@@ -61,79 +71,39 @@ public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.View
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         MoodEntry entry = entries.get(position);
-        holder.dateText.setText(dateFormat.format(entry.getDate()));
         
-        // 处理日记内容中的图片
-        String content = entry.getDiaryContent();
-        if (content != null && content.contains("[[IMG:")) {
-            // 创建可变文本
-            SpannableStringBuilder builder = new SpannableStringBuilder(content);
-            
-            // 查找所有图片标记
-            Pattern pattern = Pattern.compile("\\[\\[IMG:(.*?)\\]\\]");
-            Matcher matcher = pattern.matcher(content);
-            
-            // 记录偏移量
-            int offset = 0;
-            
-            while (matcher.find()) {
-                int start = matcher.start() - offset;
-                int end = matcher.end() - offset;
-                String fileName = matcher.group(1);
-                
-                // 加载图片
-                File imageFile = new File(new File(holder.itemView.getContext().getFilesDir(), "diary_images"), fileName);
-                if (imageFile.exists()) {
-                    try {
-                        // 加载并缩放图片
-                        Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
-                        int width = Math.min(bitmap.getWidth(), 200);
-                        int height = (int)(width * ((float)bitmap.getHeight() / bitmap.getWidth()));
-                        bitmap = Bitmap.createScaledBitmap(bitmap, width, height, true);
-                        
-                        // 创建图片Span
-                        ImageSpan imageSpan = new ImageSpan(holder.itemView.getContext(), bitmap);
-                        
-                        // 替换文本为图片
-                        builder.setSpan(imageSpan, start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                        
-                        // 更新偏移量
-                        offset += (end - start - 1);
-                    } catch (Exception e) {
-                        Log.e("MoodEntryAdapter", "Error loading image: " + fileName, e);
-                    }
-                }
-            }
-            
-            // 设置处理后的文本
-            holder.contentText.setText(builder);
-        } else {
-            // 没有图片，直接设置文本
-            holder.contentText.setText(content);
-        }
+        // 设置日期
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日 HH:mm", Locale.getDefault());
+        holder.dateText.setText(sdf.format(entry.getDate()));
         
+        // 设置心情表情
         holder.moodEmoji.setText(getMoodEmoji(entry.getMoodScore()));
         
-        // 设置天气信息
-        String weather = entry.getWeather();
-        if (weather != null && !weather.isEmpty()) {
-            switch (weather) {
-                case "晴":
-                    holder.weatherText.setText("☀️ 晴天");
-                    break;
-                case "多云":
-                    holder.weatherText.setText("☁️ 多云");
-                    break;
-                case "雨":
-                    holder.weatherText.setText("🌧️ 雨天");
-                    break;
-                default:
-                    holder.weatherText.setText("");
-                    break;
-            }
-            holder.weatherText.setVisibility(View.VISIBLE);
+        // 设置心情颜色指示
+        holder.moodColorIndicator.setBackgroundColor(getMoodColor(entry.getMoodScore()));
+        
+        // 设置心情气泡背景色
+        GradientDrawable bubbleBackground = (GradientDrawable) holder.moodBubbleBackground.getBackground();
+        bubbleBackground.setColor(getMoodBubbleColor(entry.getMoodScore()));
+        
+        // 设置内容
+        holder.contentText.setText(entry.getDiaryContent());
+        
+        // 设置天气
+        if (entry.getWeather() != null && !entry.getWeather().isEmpty()) {
+            holder.weatherEmoji.setText(getWeatherEmoji(entry.getWeather()));
+            holder.weatherText.setText(entry.getWeather());
+            holder.weatherContainer.setVisibility(View.VISIBLE);
         } else {
-            holder.weatherText.setVisibility(View.GONE);
+            holder.weatherContainer.setVisibility(View.GONE);
+        }
+        
+        // 检查内容是否需要展开按钮
+        String content = entry.getDiaryContent();
+        if (content != null && content.length() > 100) {
+            holder.expandButton.setVisibility(View.VISIBLE);
+        } else {
+            holder.expandButton.setVisibility(View.GONE);
         }
         
         holder.editButton.setOnClickListener(v -> {
@@ -200,17 +170,6 @@ public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.View
         notifyDataSetChanged();
     }
 
-    private String getMoodEmoji(int score) {
-        switch (score) {
-            case 1: return "😢";
-            case 2: return "😕";
-            case 3: return "😐";
-            case 4: return "😊";
-            case 5: return "😄";
-            default: return "";
-        }
-    }
-
     public void filterByMood(int moodScore) {
         List<MoodEntry> filteredList = new ArrayList<>();
         for (MoodEntry entry : originalEntries) {
@@ -222,6 +181,79 @@ public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.View
         notifyDataSetChanged();
     }
 
+    /**
+     * 根据心情分数获取对应的颜色
+     */
+    private int getMoodColor(int mood) {
+        switch (mood) {
+            case MOOD_HAPPY:
+                return Color.parseColor("#FF8A65"); // 橙色
+            case MOOD_GOOD:
+                return Color.parseColor("#4FC3F7"); // 蓝色
+            case MOOD_NEUTRAL:
+                return Color.parseColor("#81C784"); // 绿色
+            case MOOD_SAD:
+                return Color.parseColor("#9575CD"); // 紫色
+            case MOOD_AWFUL:
+                return Color.parseColor("#E57373"); // 红色
+            default:
+                return Color.parseColor("#BDBDBD"); // 灰色（默认）
+        }
+    }
+    
+    /**
+     * 根据心情分数获取对应的气泡背景色（更浅的色调）
+     */
+    private int getMoodBubbleColor(int mood) {
+        switch (mood) {
+            case MOOD_HAPPY:
+                return Color.parseColor("#FFF3E0"); // 淡橙色
+            case MOOD_GOOD:
+                return Color.parseColor("#E1F5FE"); // 淡蓝色
+            case MOOD_NEUTRAL:
+                return Color.parseColor("#E8F5E9"); // 淡绿色
+            case MOOD_SAD:
+                return Color.parseColor("#EDE7F6"); // 淡紫色
+            case MOOD_AWFUL:
+                return Color.parseColor("#FFEBEE"); // 淡红色
+            default:
+                return Color.parseColor("#F5F5F5"); // 淡灰色（默认）
+        }
+    }
+    
+    /**
+     * 根据心情分数获取对应的表情
+     */
+    private String getMoodEmoji(int mood) {
+        switch (mood) {
+            case MOOD_HAPPY:
+                return "😄";
+            case MOOD_GOOD:
+                return "😊";
+            case MOOD_NEUTRAL:
+                return "😐";
+            case MOOD_SAD:
+                return "😔";
+            case MOOD_AWFUL:
+                return "😩";
+            default:
+                return "😶";
+        }
+    }
+    
+    /**
+     * 根据天气类型获取对应的表情
+     */
+    private String getWeatherEmoji(String weather) {
+        if (weather.contains("晴")) return "☀️";
+        if (weather.contains("多云")) return "⛅";
+        if (weather.contains("阴")) return "☁️";
+        if (weather.contains("雨")) return "🌧️";
+        if (weather.contains("雪")) return "❄️";
+        if (weather.contains("雾")) return "🌫️";
+        return "🌤️"; // 默认
+    }
+
     public class ViewHolder extends RecyclerView.ViewHolder {
         private final TextView dateText;
         private final TextView contentText;
@@ -229,6 +261,11 @@ public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.View
         private final ImageButton editButton;
         private final ImageButton deleteButton;
         private final TextView weatherText;
+        private final View moodColorIndicator;
+        private final View moodBubbleBackground;
+        private final TextView weatherEmoji;
+        private final LinearLayout weatherContainer;
+        private final ImageButton expandButton;
 
         public ViewHolder(View view) {
             super(view);
@@ -238,6 +275,11 @@ public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.View
             editButton = view.findViewById(R.id.editButton);
             deleteButton = view.findViewById(R.id.deleteButton);
             weatherText = view.findViewById(R.id.weatherText);
+            moodColorIndicator = view.findViewById(R.id.moodColorIndicator);
+            moodBubbleBackground = view.findViewById(R.id.moodBubbleBackground);
+            weatherEmoji = view.findViewById(R.id.weatherEmoji);
+            weatherContainer = view.findViewById(R.id.weatherContainer);
+            expandButton = view.findViewById(R.id.expandButton);
         }
     }
 } 
