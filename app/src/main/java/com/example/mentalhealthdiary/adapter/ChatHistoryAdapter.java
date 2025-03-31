@@ -171,8 +171,17 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
             if (isSelectionMode) {
                 checkBox.setVisibility(View.VISIBLE);
                 checkBox.setChecked(selectedItems.contains(history.getId()));
+                
+                checkBox.setOnClickListener(v -> {
+                    if (checkBox.isChecked()) {
+                        selectedItems.add(history.getId());
+                    } else {
+                        selectedItems.remove(history.getId());
+                    }
+                });
             } else {
                 checkBox.setVisibility(View.GONE);
+                checkBox.setOnClickListener(null);
             }
             
             String personalityId = history.getPersonalityId();
