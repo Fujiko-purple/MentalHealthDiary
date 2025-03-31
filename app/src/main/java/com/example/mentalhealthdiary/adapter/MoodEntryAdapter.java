@@ -91,16 +91,16 @@ public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.View
         GradientDrawable bubbleBackground = (GradientDrawable) holder.moodBubbleBackground.getBackground();
         bubbleBackground.setColor(getMoodBubbleColor(entry.getMoodScore()));
         
-        // 设置内容
-        holder.contentText.setText(entry.getDiaryContent());
-        
-        // 处理图片：从日记内容中查找图片标记 [[IMG:filename]]
+        // 处理图片并清理内容文本
         String content = entry.getDiaryContent();
         if (content != null) {
             // 查找图片标记
             Pattern pattern = Pattern.compile("\\[\\[IMG:(.*?)\\]\\]");
             Matcher matcher = pattern.matcher(content);
+            
+            // 检查是否存在图片标记
             if (matcher.find()) {
+                // 处理第一张图片（使用之前的代码）
                 String fileName = matcher.group(1);
                 File imageFile = new File(new File(holder.itemView.getContext().getFilesDir(), "diary_images"), fileName);
                 if (imageFile.exists()) {
@@ -145,10 +145,17 @@ public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.View
                 } else {
                     holder.contentImage.setVisibility(View.GONE);
                 }
+                
+                // 替换所有图片标记为空白
+                String cleanContent = content.replaceAll("\\[\\[IMG:.*?\\]\\]", "").trim();
+                holder.contentText.setText(cleanContent);
             } else {
+                // 没有图片标记，直接设置原始内容
+                holder.contentText.setText(content);
                 holder.contentImage.setVisibility(View.GONE);
             }
         } else {
+            holder.contentText.setText("");
             holder.contentImage.setVisibility(View.GONE);
         }
         
