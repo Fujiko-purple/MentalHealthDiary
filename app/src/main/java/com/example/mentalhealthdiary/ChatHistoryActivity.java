@@ -147,25 +147,51 @@ public class ChatHistoryActivity extends AppCompatActivity implements ChatHistor
 
     @Override
     public void onHistoryEdit(ChatHistory history) {
-        // 显示重命名对话框
-        EditText input = new EditText(this);
+        Dialog dialog = new Dialog(this, R.style.ChatDeleteDialog);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_rename_chat, null);
+        dialog.setContentView(dialogView);
+        
+        // 获取输入框并设置当前标题
+        EditText input = dialogView.findViewById(R.id.renameInput);
         input.setText(history.getTitle());
         input.setSelection(input.getText().length());
         
-        new AlertDialog.Builder(this)
-            .setTitle("重命名对话")
-            .setView(input)
-            .setPositiveButton("确定", (dialog, which) -> {
-                String newTitle = input.getText().toString().trim();
-                if (!newTitle.isEmpty()) {
-                    new Thread(() -> {
-                        history.setTitle(newTitle);
-                        database.chatHistoryDao().update(history);
-                    }).start();
-                }
-            })
-            .setNegativeButton("取消", null)
-            .show();
+        // 设置取消按钮
+        Button cancelButton = dialogView.findViewById(R.id.cancelButton);
+        cancelButton.setOnClickListener(v -> dialog.dismiss());
+        
+        // 设置确认按钮
+        Button confirmButton = dialogView.findViewById(R.id.confirmButton);
+        confirmButton.setOnClickListener(v -> {
+            String newTitle = input.getText().toString().trim();
+            if (!newTitle.isEmpty()) {
+                executorService.execute(() -> {
+                    history.setTitle(newTitle);
+                    database.chatHistoryDao().update(history);
+                    runOnUiThread(() -> {
+                        dialog.dismiss();
+                        Toast.makeText(this, "重命名成功", Toast.LENGTH_SHORT).show();
+                    });
+                });
+            } else {
+                Toast.makeText(this, "名称不能为空", Toast.LENGTH_SHORT).show();
+            }
+        });
+        
+        // 设置对话框位置和动画
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            window.setGravity(Gravity.CENTER);
+            
+            // 设置对话框宽度为屏幕宽度的85%
+            WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
+            lp.copyFrom(window.getAttributes());
+            lp.width = (int) (getResources().getDisplayMetrics().widthPixels * 0.85);
+            window.setAttributes(lp);
+        }
+        
+        dialog.show();
     }
 
     @Override
@@ -222,7 +248,7 @@ public class ChatHistoryActivity extends AppCompatActivity implements ChatHistor
         }).start();
     }
 
-    private void showDeleteConfirmationDialog(ChatHistory history) {
+    public void showDeleteConfirmationDialog(ChatHistory history) {
         Dialog dialog = new Dialog(this, R.style.ChatDeleteDialog);
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_delete_chat_confirmation, null);
         dialog.setContentView(dialogView);

@@ -26,6 +26,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.mentalhealthdiary.R;
 import com.example.mentalhealthdiary.model.ChatHistory;
+import com.example.mentalhealthdiary.ChatHistoryActivity;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -116,10 +117,11 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
         });
         
         deleteItem.setOnClickListener(v -> {
-            if (listener != null) {
-                listener.onHistoryDelete(history);
-            }
             popupWindow.dismiss();
+            // 使用 ChatHistoryActivity 的删除确认对话框
+            if (view.getContext() instanceof ChatHistoryActivity) {
+                ((ChatHistoryActivity) view.getContext()).showDeleteConfirmationDialog(history);
+            }
         });
         
         // 设置背景和动画
