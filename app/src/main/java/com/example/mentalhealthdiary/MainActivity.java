@@ -216,15 +216,21 @@ public class MainActivity extends AppCompatActivity {
             showAIAssistantDialog();
         });
 
-        // 初始化天气选择
+        // 确保使用正确的ID初始化weatherRadioGroup
         weatherRadioGroup = findViewById(R.id.weatherRadioGroup);
+        Log.d("WeatherDebug", "天气RadioGroup ID: " + R.id.weatherRadioGroup);
+        Log.d("WeatherDebug", "天气RadioGroup 是否为null: " + (weatherRadioGroup == null));
+        
         weatherRadioGroup.setOnCheckedChangeListener((group, checkedId) -> {
             if (checkedId == R.id.weather_sunny) {
                 selectedWeather = "晴";
+                Log.d("WeatherDebug", "选择了晴天");
             } else if (checkedId == R.id.weather_cloudy) {
                 selectedWeather = "多云";
+                Log.d("WeatherDebug", "选择了多云");
             } else if (checkedId == R.id.weather_rainy) {
                 selectedWeather = "雨";
+                Log.d("WeatherDebug", "选择了下雨");
             }
         });
         
@@ -293,10 +299,25 @@ public class MainActivity extends AppCompatActivity {
             case 5: moodRadioGroup.check(R.id.mood_5); break;
         }
         
-        // 设置天气
+        // 设置天气 - 添加调试日志
         String weather = entry.getWeather();
+        Log.d("WeatherDebug", "读取到的天气: " + weather);
+        
         if (weather != null) {
             selectedWeather = weather;
+            
+            // 打印每个RadioButton的ID
+            Log.d("WeatherDebug", "晴天ID: " + R.id.weather_sunny);
+            Log.d("WeatherDebug", "多云ID: " + R.id.weather_cloudy);
+            Log.d("WeatherDebug", "下雨ID: " + R.id.weather_rainy);
+            
+            // 检查当前选中的RadioButton
+            Log.d("WeatherDebug", "当前选中的ID: " + weatherRadioGroup.getCheckedRadioButtonId());
+            
+            // 清除之前的选择
+            weatherRadioGroup.clearCheck();
+            
+            // 根据天气值选择相应的RadioButton
             if (weather.equals("晴")) {
                 weatherRadioGroup.check(R.id.weather_sunny);
             } else if (weather.equals("多云")) {
@@ -304,6 +325,12 @@ public class MainActivity extends AppCompatActivity {
             } else if (weather.equals("雨")) {
                 weatherRadioGroup.check(R.id.weather_rainy);
             }
+            
+            // 再次检查选中状态
+            Log.d("WeatherDebug", "设置后的ID: " + weatherRadioGroup.getCheckedRadioButtonId());
+        } else {
+            // 如果没有天气数据，清除选择
+            weatherRadioGroup.clearCheck();
         }
         
         // 设置日记内容
@@ -311,8 +338,6 @@ public class MainActivity extends AppCompatActivity {
         
         // 修改保存按钮文本
         saveButton.setText("更新");
-        
-
     }
 
     private void updateEntry() {
@@ -366,6 +391,9 @@ public class MainActivity extends AppCompatActivity {
             selectedDate = new Date(); // 使用当前日期
         }
         
+        // 添加日志检查天气
+        Log.d("WeatherDebug", "保存时的天气: " + selectedWeather);
+        
         MoodEntry entry = new MoodEntry(selectedDate, moodScore, content, selectedWeather);
         
         if (currentEditingId > 0) {
@@ -379,15 +407,18 @@ public class MainActivity extends AppCompatActivity {
                 database.moodEntryDao().insert(entry);
             }
             
-            currentEditingId = 0;
+            // 重置状态
             runOnUiThread(() -> {
-                Toast.makeText(MainActivity.this, "保存成功", Toast.LENGTH_SHORT).show();
                 diaryContent.setText("");
                 moodRadioGroup.clearCheck();
-                weatherRadioGroup.clearCheck();
-                selectedWeather = null;
+                weatherRadioGroup.clearCheck();  // 确保清除天气选择
+                selectedWeather = null;  // 重置天气变量
                 selectedDate = null;
                 updateDateButtonText();
+                currentEditingId = 0;
+                saveButton.setText("记录");
+                
+                Toast.makeText(MainActivity.this, "保存成功", Toast.LENGTH_SHORT).show();
             });
         });
     }

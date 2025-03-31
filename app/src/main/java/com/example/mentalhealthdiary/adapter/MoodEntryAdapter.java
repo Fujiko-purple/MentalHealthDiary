@@ -114,6 +114,28 @@ public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.View
         
         holder.moodEmoji.setText(getMoodEmoji(entry.getMoodScore()));
         
+        // 设置天气信息
+        String weather = entry.getWeather();
+        if (weather != null && !weather.isEmpty()) {
+            switch (weather) {
+                case "晴":
+                    holder.weatherText.setText("☀️ 晴天");
+                    break;
+                case "多云":
+                    holder.weatherText.setText("☁️ 多云");
+                    break;
+                case "雨":
+                    holder.weatherText.setText("🌧️ 雨天");
+                    break;
+                default:
+                    holder.weatherText.setText("");
+                    break;
+            }
+            holder.weatherText.setVisibility(View.VISIBLE);
+        } else {
+            holder.weatherText.setVisibility(View.GONE);
+        }
+        
         holder.editButton.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onEntryClick(entry);
@@ -206,6 +228,7 @@ public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.View
         private final TextView moodEmoji;
         private final ImageButton editButton;
         private final ImageButton deleteButton;
+        private final TextView weatherText;
 
         public ViewHolder(View view) {
             super(view);
@@ -214,6 +237,7 @@ public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.View
             moodEmoji = view.findViewById(R.id.moodEmoji);
             editButton = view.findViewById(R.id.editButton);
             deleteButton = view.findViewById(R.id.deleteButton);
+            weatherText = view.findViewById(R.id.weatherText);
         }
     }
 } 
