@@ -1,74 +1,204 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView 
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
-    app:cardCornerRadius="8dp"
-    app:cardElevation="4dp">
+    android:layout_marginVertical="6dp"
+    android:layout_marginHorizontal="4dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="3dp"
+    app:strokeWidth="0dp"
+    android:clickable="true"
+    android:focusable="true"
+    app:rippleColor="#33000000"
+    app:cardBackgroundColor="#FFFFFF">
+
+    <!-- 左侧情绪色彩指示条 -->
+    <View
+        android:id="@+id/moodColorIndicator"
+        android:layout_width="4dp"
+        android:layout_height="match_parent"
+        android:background="@drawable/mood_color_gradient"
+        tools:background="#FFC107"/>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="16dp">
+        android:orientation="vertical"
+        android:paddingStart="12dp"
+        android:paddingEnd="8dp">
 
-        <LinearLayout
-            android:layout_width="0dp"
+        <!-- 顶部日期和操作区 -->
+        <RelativeLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
+            android:paddingTop="10dp"
+            android:paddingBottom="6dp">
 
-            <TextView
-                android:id="@+id/dateText"
+            <!-- 日期时间组 -->
+            <LinearLayout
+                android:id="@+id/dateContainer"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textStyle="bold"/>
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true">
 
-            <TextView
-                android:id="@+id/moodEmoji"
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:src="@drawable/ic_time_small"
+                    app:tint="#9E9E9E"/>
+
+                <TextView
+                    android:id="@+id/dateText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:textSize="12sp"
+                    android:textColor="#787878"
+                    android:fontFamily="sans-serif"
+                    tools:text="2025年03月31日 15:15"/>
+            </LinearLayout>
+            
+            <!-- 天气信息（移到日期右边）-->
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:textSize="20sp"/>
-
-            <TextView
-                android:id="@+id/contentText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"/>
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_toEndOf="@id/dateContainer"
+                android:layout_marginStart="12dp"
+                android:layout_centerVertical="true"
+                android:background="@drawable/weather_info_background"
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp">
                 
-            <!-- 天气放在内容下方 -->
-            <TextView
-                android:id="@+id/weatherText"
+                <TextView
+                    android:id="@+id/weatherEmoji"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp"
+                    tools:text="☀️"/>
+                    
+                <TextView
+                    android:id="@+id/weatherText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="2dp"
+                    android:textSize="11sp"
+                    android:textColor="#757575"
+                    tools:text="晴天"/>
+            </LinearLayout>
+
+            <!-- 操作按钮组 -->
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:textSize="14sp"
-                android:textColor="#757575"/>
+                android:orientation="horizontal"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true">
+
+                <ImageButton
+                    android:id="@+id/editButton"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="编辑"
+                    android:src="@drawable/ic_edit"
+                    app:tint="#9E9E9E"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <ImageButton
+                    android:id="@+id/deleteButton"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="删除"
+                    android:src="@drawable/ic_delete"
+                    app:tint="#9E9E9E"
+                    tools:ignore="TouchTargetSizeCheck" />
+            </LinearLayout>
+        </RelativeLayout>
+
+        <!-- 分隔线 -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0.5dp"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
+            android:background="#F0F0F0"/>
+
+        <!-- 内容区域 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingTop="10dp"
+            android:paddingBottom="12dp">
+
+            <!-- 左侧心情表情容器 -->
+            <FrameLayout
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="10dp">
+                
+                <!-- 心情气泡背景 -->
+                <View
+                    android:id="@+id/moodBubbleBackground"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/mood_bubble_background"
+                    tools:backgroundTint="#FFEBEE"/>
+                
+                <!-- 心情表情 -->
+                <TextView
+                    android:id="@+id/moodEmoji"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:textSize="26sp"
+                    tools:text="😊"/>
+            </FrameLayout>
+
+            <!-- 右侧内容 -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <!-- 日记内容 -->
+                <TextView
+                    android:id="@+id/contentText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="15sp"
+                    android:textColor="#333333"
+                    android:lineSpacingMultiplier="1.2"
+                    android:ellipsize="end"
+                    android:maxLines="3"
+                    tools:text="Hhh"/>
+
+                <!-- 移除底部信息栏，因为天气已经移到顶部 -->
+                <ImageButton
+                    android:id="@+id/expandButton"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="end"
+                    android:layout_marginTop="4dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_expand_more"
+                    android:visibility="gone"
+                    app:tint="#9E9E9E"
+                    tools:ignore="TouchTargetSizeCheck,SpeakableTextPresentCheck"
+                    tools:visibility="visible" />
+            </LinearLayout>
         </LinearLayout>
-
-        <ImageButton
-            android:id="@+id/editButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="编辑"
-            android:padding="8dp"
-            android:src="@drawable/ic_edit"
-            tools:ignore="TouchTargetSizeCheck" />
-
-        <ImageButton
-            android:id="@+id/deleteButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="删除"
-            android:padding="8dp"
-            android:src="@drawable/ic_delete"
-            tools:ignore="TouchTargetSizeCheck" />
     </LinearLayout>
-</androidx.cardview.widget.CardView> 
+</com.google.android.material.card.MaterialCardView> 
