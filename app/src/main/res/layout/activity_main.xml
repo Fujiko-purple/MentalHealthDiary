@@ -143,8 +143,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                app:cardCornerRadius="8dp"
-                app:cardElevation="2dp">
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:strokeWidth="0.5dp"
+                app:strokeColor="#E0E0E0"
+                app:cardBackgroundColor="#FFFFFF">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -155,23 +158,46 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="记录下当下的想法..."
+                        android:text="记录心情，留住瞬间"
                         android:textSize="16sp"
-                        android:textColor="@color/text_primary"
-                        android:layout_marginBottom="8dp"/>
+                        android:textColor="#555555"
+                        android:fontFamily="serif"
+                        android:layout_marginBottom="12dp"/>
 
-                    <EditText
-                        android:id="@+id/diaryContent"
+                    <FrameLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:minHeight="120dp"
-                        android:gravity="top"
-                        android:background="@null"
-                        android:hint="写下此刻的心情，记录生活的点滴..."
-                        android:textColorHint="#AAAAAA"
-                        android:textSize="15sp"
-                        android:lineSpacingMultiplier="1.2"
-                        android:padding="4dp"/>
+                        android:layout_height="wrap_content">
+
+                        <EditText
+                            android:id="@+id/diaryContent"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:minHeight="120dp"
+                            android:gravity="top"
+                            android:background="@drawable/diary_input_background"
+                            android:hint="写下此刻的心情，记录生活的点滴..."
+                            android:textColorHint="#AAAAAA"
+                            android:textSize="15sp"
+                            android:textColor="#333333"
+                            android:lineSpacingMultiplier="1.3"
+                            android:padding="12dp"
+                            android:scrollbars="vertical"
+                            android:fadeScrollbars="false"
+                            android:importantForAutofill="no"
+                            android:inputType="textMultiLine|textCapSentences"/>
+
+                        <TextView
+                            android:id="@+id/charCountText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="bottom|end"
+                            android:layout_margin="8dp"
+                            android:text="0/500"
+                            android:textSize="12sp"
+                            android:textColor="#99000000"
+                            android:padding="4dp"
+                            android:background="#22FFFFFF"/>
+                    </FrameLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

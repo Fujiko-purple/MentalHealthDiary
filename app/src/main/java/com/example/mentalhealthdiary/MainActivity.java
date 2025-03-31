@@ -6,14 +6,18 @@ import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -35,6 +39,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
     private RadioGroup moodRadioGroup;
@@ -50,6 +55,14 @@ public class MainActivity extends AppCompatActivity {
     private MaterialButton filterButton;
     private MaterialButton sortButton;
     private MaterialButton aiButton;
+    private String[] writingPrompts = {
+        "写下此刻的心情，记录生活的点滴...",
+        "今天有什么令你印象深刻的事情吗？",
+        "分享一个让你感到愉快的小事...",
+        "此刻的感受是什么？为何会有这样的感受？",
+        "有什么困扰着你？写下来或许会舒缓些...",
+        "记录下这一刻，让时光定格于此..."
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,7 +100,31 @@ public class MainActivity extends AppCompatActivity {
         diaryContent = findViewById(R.id.diaryContent);
         saveButton = findViewById(R.id.saveButton);
         datePickerButton = findViewById(R.id.datePickerButton);
+        TextView charCountText = findViewById(R.id.charCountText);
         updateDateButtonText();
+
+        // 添加文本变化监听器以更新字数统计
+        diaryContent.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                int length = s.length();
+                int maxLength = 500; // 设置最大字数
+                charCountText.setText(length + "/" + maxLength);
+                
+                // 超出字数限制时改变颜色提醒
+                if (length > maxLength) {
+                    charCountText.setTextColor(getResources().getColor(android.R.color.holo_red_light));
+                } else {
+                    charCountText.setTextColor(Color.parseColor("#99000000"));
+                }
+            }
+        });
 
         // 设置RecyclerView
         RecyclerView historyRecyclerView = findViewById(R.id.historyRecyclerView);
@@ -106,7 +143,13 @@ public class MainActivity extends AppCompatActivity {
         saveButton.setOnClickListener(v -> saveMoodEntry());
 
         // 设置日期选择按钮点击事件
-        datePickerButton.setOnClickListener(v -> showDatePickerDialog());
+        datePickerButton.setOnClickListener(v -> {
+            showDatePickerDialog();
+            
+            // 随机更换写作提示
+            int randomIndex = new Random().nextInt(writingPrompts.length);
+            diaryContent.setHint(writingPrompts[randomIndex]);
+        });
 
         // 初始化筛选和排序功能
         moodFilterChips = findViewById(R.id.moodFilterChips);
