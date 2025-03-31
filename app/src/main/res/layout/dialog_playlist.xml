@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
@@ -34,21 +35,21 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:layout_marginBottom="16dp"
         android:gravity="center_vertical"
-        android:layout_marginBottom="16dp">
+        android:orientation="horizontal">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="我的歌单"
+            android:textColor="@color/free_breathing_text"
             android:textSize="20sp"
-            android:textStyle="bold"
-            android:textColor="@color/free_breathing_text" />
+            android:textStyle="bold" />
 
         <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="36dp"
+            android:layout_height="match_parent"
             android:layout_marginStart="16dp"
             android:background="@drawable/play_mode_container_background"
             android:gravity="center_vertical"
@@ -59,50 +60,60 @@
                 android:id="@+id/playModeIcon"
                 android:layout_width="18dp"
                 android:layout_height="18dp"
-                android:src="@drawable/ic_play_mode_loop"
                 android:layout_marginEnd="4dp"
+                android:src="@drawable/ic_play_mode_loop"
                 app:tint="@color/free_breathing_text" />
 
             <Spinner
                 android:id="@+id/playModeSpinner"
+                style="@style/PlayModeSpinnerStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:background="@null"
                 android:spinnerMode="dropdown"
-                style="@style/PlayModeSpinnerStyle"/>
+                tools:ignore="TouchTargetSizeCheck" />
         </LinearLayout>
 
         <Space
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"/>
+            android:layout_weight="1" />
 
         <ImageButton
             android:id="@+id/selectAllButton"
             android:layout_width="36dp"
             android:layout_height="36dp"
-            android:src="@drawable/ic_select_all"
+            android:layout_marginStart="8dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:padding="8dp"
-            android:visibility="gone"
-            android:layout_marginStart="8dp"/>
+            android:src="@drawable/ic_select_all"
+            android:visibility="gone" />
     </LinearLayout>
 
-    <EditText
-        android:id="@+id/searchEditText"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:hint="搜索歌曲..."
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
-        android:background="@drawable/search_background"
-        android:drawableStart="@drawable/ic_search"
-        android:drawablePadding="8dp"
-        android:textSize="14sp"
-        android:layout_marginBottom="16dp"
-        android:maxLines="1"
-        android:inputType="text"
-        android:imeOptions="actionSearch"/>
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="8dp">
+
+        <EditText
+            android:id="@+id/searchEditText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:autofillHints=""
+            android:background="@drawable/search_background"
+            android:drawableStart="@drawable/ic_search"
+            android:drawablePadding="8dp"
+            android:hint="搜索音乐..."
+            android:imeOptions="actionSearch"
+            android:inputType="text"
+            android:maxLines="1"
+            android:minHeight="48dp"
+            android:padding="8dp" />
+
+    </LinearLayout>
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
