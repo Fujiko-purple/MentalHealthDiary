@@ -30,7 +30,7 @@
             android:textSize="14sp"
             android:textColor="#666666"
             android:gravity="center"
-            android:layout_marginBottom="16dp"/>
+            android:layout_marginBottom="24dp"/>
 
         <RadioGroup
             android:id="@+id/timeFilterGroup"
@@ -41,53 +41,69 @@
             <RadioButton
                 android:id="@+id/filter_week"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="wrap_content"
+                android:minHeight="60dp"
                 android:text="刚刚过去的一周"
                 android:textSize="16sp"
                 android:textColor="#555555"
-                android:paddingStart="8dp"
-                android:paddingEnd="8dp"
-                android:buttonTint="#6EFFE2"
-                android:layout_marginBottom="2dp"
-                android:background="@drawable/selectable_item_background"/>
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:button="@null"
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/time_filter_option_bg"
+                android:elevation="2dp"
+                android:drawableStart="@drawable/time_filter_week_icon"
+                android:drawablePadding="12dp"/>
 
             <RadioButton
                 android:id="@+id/filter_two_weeks"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="wrap_content"
+                android:minHeight="60dp"
                 android:text="前两周的故事"
                 android:textSize="16sp"
                 android:textColor="#555555"
-                android:paddingStart="8dp"
-                android:paddingEnd="8dp"
-                android:buttonTint="#6EFFE2"
-                android:layout_marginBottom="2dp"
-                android:background="@drawable/selectable_item_background"/>
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:button="@null"
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/time_filter_option_bg"
+                android:elevation="2dp"
+                android:drawableStart="@drawable/time_filter_fortnight_icon"
+                android:drawablePadding="12dp"/>
 
             <RadioButton
                 android:id="@+id/filter_month"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="wrap_content"
+                android:minHeight="60dp"
                 android:text="一个月的心情旅程"
                 android:textSize="16sp"
                 android:textColor="#555555"
-                android:paddingStart="8dp"
-                android:paddingEnd="8dp"
-                android:buttonTint="#6EFFE2"
-                android:layout_marginBottom="2dp"
-                android:background="@drawable/selectable_item_background"/>
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:button="@null"
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/time_filter_option_bg"
+                android:elevation="2dp"
+                android:drawableStart="@drawable/time_filter_month_icon"
+                android:drawablePadding="12dp"/>
 
             <RadioButton
                 android:id="@+id/filter_all"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="wrap_content"
+                android:minHeight="60dp"
                 android:text="回顾全部人生剧场"
                 android:textSize="16sp"
                 android:textColor="#555555"
-                android:paddingStart="8dp"
-                android:paddingEnd="8dp"
-                android:buttonTint="#6EFFE2"
-                android:background="@drawable/selectable_item_background"/>
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:button="@null"
+                android:background="@drawable/time_filter_option_bg"
+                android:elevation="2dp"
+                android:drawableStart="@drawable/time_filter_all_icon"
+                android:drawablePadding="12dp"/>
         </RadioGroup>
     </LinearLayout>
 </androidx.cardview.widget.CardView> 
