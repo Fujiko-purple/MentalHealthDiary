@@ -4,21 +4,28 @@ import android.Manifest;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.ProgressDialog;
+import android.app.TimePickerDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
-import android.location.LocationManager;
-import android.location.LocationListener;
 import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
+import android.os.Looper;
 import android.provider.MediaStore;
 import android.text.Editable;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
 import android.text.TextWatcher;
+import android.text.style.ImageSpan;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -43,20 +50,22 @@ import com.example.mentalhealthdiary.utils.PreferenceManager;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.ChipGroup;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Random;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.Random;
-import android.content.Context;
-import android.os.Looper;
-import android.app.TimePickerDialog;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_LOCATION_PERMISSION = 100;
@@ -220,9 +229,7 @@ public class MainActivity extends AppCompatActivity {
         });
         
         // 设置图片插入按钮
-        findViewById(R.id.btnInsertImage).setOnClickListener(v -> {
-            openImagePicker();
-        });
+        findViewById(R.id.btnInsertImage).setOnClickListener(v -> pickImage());
         
         // 设置位置插入按钮
         findViewById(R.id.btnInsertLocation).setOnClickListener(v -> {
@@ -270,29 +277,42 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showEditDialog(MoodEntry entry) {
-        // 设置当前日期为记录的日期
+        currentEditingId = entry.getId();
+        
+        // 设置日期
         selectedDate = entry.getDate();
         updateDateButtonText();
-
-        // 设置心情评分
-        int radioButtonId = -1;
-        switch (entry.getMoodScore()) {
-            case 1: radioButtonId = R.id.mood_1; break;
-            case 2: radioButtonId = R.id.mood_2; break;
-            case 3: radioButtonId = R.id.mood_3; break;
-            case 4: radioButtonId = R.id.mood_4; break;
-            case 5: radioButtonId = R.id.mood_5; break;
+        
+        // 设置心情 - 使用正确的RadioButton ID
+        int moodScore = entry.getMoodScore();
+        switch (moodScore) {
+            case 1: moodRadioGroup.check(R.id.mood_1); break;
+            case 2: moodRadioGroup.check(R.id.mood_2); break;
+            case 3: moodRadioGroup.check(R.id.mood_3); break;
+            case 4: moodRadioGroup.check(R.id.mood_4); break;
+            case 5: moodRadioGroup.check(R.id.mood_5); break;
         }
-        moodRadioGroup.check(radioButtonId);
-
+        
+        // 设置天气
+        String weather = entry.getWeather();
+        if (weather != null) {
+            selectedWeather = weather;
+            if (weather.equals("晴")) {
+                weatherRadioGroup.check(R.id.weather_sunny);
+            } else if (weather.equals("多云")) {
+                weatherRadioGroup.check(R.id.weather_cloudy);
+            } else if (weather.equals("雨")) {
+                weatherRadioGroup.check(R.id.weather_rainy);
+            }
+        }
+        
         // 设置日记内容
-        diaryContent.setText(entry.getDiaryContent());
-
+        loadDiaryContent(entry.getDiaryContent());
+        
         // 修改保存按钮文本
         saveButton.setText("更新");
+        
 
-        // 保存正在编辑的记录ID
-        currentEditingId = entry.getId();
     }
 
     private void updateEntry() {
@@ -491,7 +511,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // 图片选择方法
-    private void openImagePicker() {
+    private void pickImage() {
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         startActivityForResult(intent, REQUEST_IMAGE_PICK);
     }
@@ -698,12 +718,130 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == REQUEST_IMAGE_PICK && resultCode == RESULT_OK && data != null) {
             Uri selectedImage = data.getData();
             if (selectedImage != null) {
-                // 在光标位置插入图片引用
-                insertTextAtCursor("📷 [图片]");
-                
-                // 您可能想要保存图片或处理图片URI
-                // 这里只是简单地插入了一个标记
+                // 保存图片到应用私有存储
+                saveImageAndInsertReference(selectedImage);
             }
         }
+    }
+
+    // 保存图片并插入引用
+    private void saveImageAndInsertReference(Uri imageUri) {
+        executorService.execute(() -> {
+            try {
+                // 生成唯一文件名
+                String fileName = "diary_img_" + System.currentTimeMillis() + ".jpg";
+                
+                // 创建应用私有目录中的文件
+                File imagesDir = new File(getFilesDir(), "diary_images");
+                if (!imagesDir.exists()) {
+                    imagesDir.mkdirs();
+                }
+                
+                File outputFile = new File(imagesDir, fileName);
+                
+                // 复制图片内容
+                InputStream inputStream = getContentResolver().openInputStream(imageUri);
+                FileOutputStream outputStream = new FileOutputStream(outputFile);
+                
+                byte[] buffer = new byte[1024];
+                int bytesRead;
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                }
+                
+                inputStream.close();
+                outputStream.close();
+                
+                // 验证图片是否成功保存
+                boolean fileExists = outputFile.exists();
+                long fileSize = outputFile.length();
+                
+                Log.d("ImageSaving", "图片保存状态: 存在=" + fileExists + ", 大小=" + fileSize + "字节");
+                
+                // 在UI线程更新文本
+                runOnUiThread(() -> {
+                    // 插入特殊标记，包含图片路径
+                    String imageTag = "[[IMG:" + fileName + "]]";
+                    insertTextAtCursor(imageTag);
+                    
+                    // 立即尝试显示图片
+                    refreshDiaryContent();
+                    
+                    // 提示用户
+                    Toast.makeText(this, "图片已插入", Toast.LENGTH_SHORT).show();
+                });
+                
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    Toast.makeText(this, "图片处理失败: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Log.e("MainActivity", "Image processing error", e);
+                });
+            }
+        });
+    }
+
+    // 添加刷新内容方法
+    private void refreshDiaryContent() {
+        String content = diaryContent.getText().toString();
+        loadDiaryContent(content);
+    }
+
+    // 在加载日记内容时处理图片标记
+    private void loadDiaryContent(String content) {
+        if (content == null) return;
+        
+        // 创建可变文本
+        SpannableStringBuilder builder = new SpannableStringBuilder(content);
+        
+        // 查找所有图片标记
+        Pattern pattern = Pattern.compile("\\[\\[IMG:(.*?)\\]\\]");
+        Matcher matcher = pattern.matcher(content);
+        
+        // 记录偏移量（因为替换后文本长度会变化）
+        int offset = 0;
+        
+        while (matcher.find()) {
+            int start = matcher.start() - offset;
+            int end = matcher.end() - offset;
+            String fileName = matcher.group(1);
+            
+            // 加载图片
+            File imageFile = new File(new File(getFilesDir(), "diary_images"), fileName);
+            if (imageFile.exists()) {
+                try {
+                    // 加载并缩放图片
+                    Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
+                    if (bitmap != null) {
+                        int maxWidth = diaryContent.getWidth() - 50; // 留出边距
+                        if (maxWidth <= 0) maxWidth = 300; // 默认宽度
+                        
+                        int width = Math.min(bitmap.getWidth(), maxWidth);
+                        int height = (int)(width * ((float)bitmap.getHeight() / bitmap.getWidth()));
+                        
+                        bitmap = Bitmap.createScaledBitmap(bitmap, width, height, true);
+                        
+                        // 创建图片Span
+                        ImageSpan imageSpan = new ImageSpan(this, bitmap);
+                        
+                        // 替换文本为图片
+                        builder.setSpan(imageSpan, start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        
+                        // 更新偏移量 - 这里是关键修复
+                        offset += (end - start - 1);
+                        
+                        Log.d("ImageLoading", "成功加载图片: " + fileName);
+                    } else {
+                        Log.e("ImageLoading", "无法解码图片: " + fileName);
+                    }
+                } catch (Exception e) {
+                    Log.e("MainActivity", "加载图片错误: " + fileName, e);
+                }
+            } else {
+                Log.e("ImageLoading", "图片文件不存在: " + imageFile.getAbsolutePath());
+            }
+        }
+        
+        // 设置处理后的文本
+        diaryContent.setText(builder);
     }
 }

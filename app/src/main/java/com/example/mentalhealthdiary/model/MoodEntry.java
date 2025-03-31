@@ -3,6 +3,10 @@ package com.example.mentalhealthdiary.model;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 import java.util.Date;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 @Entity(tableName = "mood_entries")
 public class MoodEntry {
@@ -53,5 +57,21 @@ public class MoodEntry {
 
     public void setWeather(String weather) {
         this.weather = weather;
+    }
+
+    // 获取日记中的所有图片引用
+    public List<String> getImageReferences() {
+        List<String> images = new ArrayList<>();
+        if (diaryContent == null) return images;
+        
+        // 使用正则表达式提取图片标记
+        Pattern pattern = Pattern.compile("\\[\\[IMG:(.*?)\\]\\]");
+        Matcher matcher = pattern.matcher(diaryContent);
+        
+        while (matcher.find()) {
+            images.add(matcher.group(1));
+        }
+        
+        return images;
     }
 } 

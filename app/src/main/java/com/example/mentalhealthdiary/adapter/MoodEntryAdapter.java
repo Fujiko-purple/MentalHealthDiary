@@ -1,20 +1,31 @@
 package com.example.mentalhealthdiary.adapter;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.style.ImageSpan;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.mentalhealthdiary.R;
 import com.example.mentalhealthdiary.model.MoodEntry;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.ViewHolder> {
     private List<MoodEntry> entries = new ArrayList<>();
@@ -51,7 +62,56 @@ public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.View
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         MoodEntry entry = entries.get(position);
         holder.dateText.setText(dateFormat.format(entry.getDate()));
-        holder.contentText.setText(entry.getDiaryContent());
+        
+        // 处理日记内容中的图片
+        String content = entry.getDiaryContent();
+        if (content != null && content.contains("[[IMG:")) {
+            // 创建可变文本
+            SpannableStringBuilder builder = new SpannableStringBuilder(content);
+            
+            // 查找所有图片标记
+            Pattern pattern = Pattern.compile("\\[\\[IMG:(.*?)\\]\\]");
+            Matcher matcher = pattern.matcher(content);
+            
+            // 记录偏移量
+            int offset = 0;
+            
+            while (matcher.find()) {
+                int start = matcher.start() - offset;
+                int end = matcher.end() - offset;
+                String fileName = matcher.group(1);
+                
+                // 加载图片
+                File imageFile = new File(new File(holder.itemView.getContext().getFilesDir(), "diary_images"), fileName);
+                if (imageFile.exists()) {
+                    try {
+                        // 加载并缩放图片
+                        Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
+                        int width = Math.min(bitmap.getWidth(), 200);
+                        int height = (int)(width * ((float)bitmap.getHeight() / bitmap.getWidth()));
+                        bitmap = Bitmap.createScaledBitmap(bitmap, width, height, true);
+                        
+                        // 创建图片Span
+                        ImageSpan imageSpan = new ImageSpan(holder.itemView.getContext(), bitmap);
+                        
+                        // 替换文本为图片
+                        builder.setSpan(imageSpan, start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        
+                        // 更新偏移量
+                        offset += (end - start - 1);
+                    } catch (Exception e) {
+                        Log.e("MoodEntryAdapter", "Error loading image: " + fileName, e);
+                    }
+                }
+            }
+            
+            // 设置处理后的文本
+            holder.contentText.setText(builder);
+        } else {
+            // 没有图片，直接设置文本
+            holder.contentText.setText(content);
+        }
+        
         holder.moodEmoji.setText(getMoodEmoji(entry.getMoodScore()));
         
         holder.editButton.setOnClickListener(v -> {

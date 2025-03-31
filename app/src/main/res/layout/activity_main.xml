@@ -180,18 +180,15 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:minHeight="120dp"
-                            android:gravity="top"
+                            android:gravity="top|start"
+                            android:padding="12dp"
                             android:background="@drawable/diary_input_background"
                             android:hint="写下此刻的心情，记录生活的点滴..."
-                            android:textColorHint="#AAAAAA"
-                            android:textSize="15sp"
-                            android:textColor="#333333"
-                            android:lineSpacingMultiplier="1.3"
-                            android:padding="12dp"
-                            android:scrollbars="vertical"
-                            android:fadeScrollbars="false"
+                            android:textColorHint="#99000000"
+                            android:textSize="16sp"
+                            android:inputType="textMultiLine|textCapSentences"
                             android:importantForAutofill="no"
-                            android:inputType="textMultiLine|textCapSentences"/>
+                            android:bufferType="spannable" />
 
                         <TextView
                             android:id="@+id/charCountText"
