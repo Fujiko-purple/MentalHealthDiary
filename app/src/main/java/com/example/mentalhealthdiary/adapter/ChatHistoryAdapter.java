@@ -23,6 +23,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.ViewHolder> {
     private List<ChatHistory> histories = new ArrayList<>();
@@ -82,6 +84,18 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
     private void showPopupMenu(View view, ChatHistory history) {
         PopupMenu popup = new PopupMenu(view.getContext(), view);
         popup.inflate(R.menu.menu_chat_history_item);
+        
+        // 设置弹出菜单的样式
+        try {
+            Field field = popup.getClass().getDeclaredField("mPopup");
+            field.setAccessible(true);
+            Object menuPopupHelper = field.get(popup);
+            Class<?> classPopupHelper = Class.forName(menuPopupHelper.getClass().getName());
+            Method setForceShowIcon = classPopupHelper.getMethod("setForceShowIcon", boolean.class);
+            setForceShowIcon.invoke(menuPopupHelper, true);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         
         popup.setOnMenuItemClickListener(item -> {
             if (item.getItemId() == R.id.action_edit) {
