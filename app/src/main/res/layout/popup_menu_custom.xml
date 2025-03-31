@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:orientation="vertical"
@@ -21,8 +22,8 @@
             android:layout_width="18dp"
             android:layout_height="18dp"
             android:src="@drawable/ic_edit"
-            android:tint="#757575"
-            android:layout_marginEnd="8dp"/>
+            android:layout_marginEnd="8dp"
+            app:tint="#757575" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -52,14 +53,14 @@
             android:layout_width="18dp"
             android:layout_height="18dp"
             android:src="@drawable/ic_delete"
-            android:tint="#757575"
-            android:layout_marginEnd="8dp"/>
+            android:layout_marginEnd="8dp"
+            app:tint="#E53935" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="删除"
             android:textSize="14sp"
-            android:textColor="#333333"/>
+            android:textColor="#E53935"/>
     </LinearLayout>
 </LinearLayout> 
