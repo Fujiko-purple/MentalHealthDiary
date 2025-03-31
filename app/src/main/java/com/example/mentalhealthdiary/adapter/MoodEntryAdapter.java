@@ -1,12 +1,19 @@
 package com.example.mentalhealthdiary.adapter;
 
+import android.app.Dialog;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.Outline;
 import android.graphics.drawable.GradientDrawable;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewOutlineProvider;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -16,11 +23,14 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.mentalhealthdiary.R;
 import com.example.mentalhealthdiary.model.MoodEntry;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.ViewHolder> {
     private List<MoodEntry> entries = new ArrayList<>();
@@ -84,6 +94,64 @@ public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.View
         // 设置内容
         holder.contentText.setText(entry.getDiaryContent());
         
+        // 处理图片：从日记内容中查找图片标记 [[IMG:filename]]
+        String content = entry.getDiaryContent();
+        if (content != null) {
+            // 查找图片标记
+            Pattern pattern = Pattern.compile("\\[\\[IMG:(.*?)\\]\\]");
+            Matcher matcher = pattern.matcher(content);
+            if (matcher.find()) {
+                String fileName = matcher.group(1);
+                File imageFile = new File(new File(holder.itemView.getContext().getFilesDir(), "diary_images"), fileName);
+                if (imageFile.exists()) {
+                    try {
+                        // 加载图片
+                        Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
+                        if (bitmap != null) {
+                            // 设置图片
+                            holder.contentImage.setImageBitmap(bitmap);
+                            holder.contentImage.setVisibility(View.VISIBLE);
+                            
+                            // 让图片填满整个宽度，消除边距
+                            ViewGroup.MarginLayoutParams layoutParams = (ViewGroup.MarginLayoutParams) holder.contentImage.getLayoutParams();
+                            layoutParams.width = ViewGroup.LayoutParams.MATCH_PARENT;
+                            layoutParams.height = (int)(120 * holder.itemView.getContext().getResources().getDisplayMetrics().density);
+                            layoutParams.setMargins(0, 8, 0, 8); // 只保留上下边距，左右边距设为0
+                            holder.contentImage.setLayoutParams(layoutParams);
+                            
+                            // 确保填满整个视图宽度
+                            holder.contentImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                            
+                            // 圆角效果
+                            holder.contentImage.setOutlineProvider(new ViewOutlineProvider() {
+                                @Override
+                                public void getOutline(View view, Outline outline) {
+                                    outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), 
+                                            8f * view.getContext().getResources().getDisplayMetrics().density);
+                                }
+                            });
+                            holder.contentImage.setClipToOutline(true);
+                            
+                            // 添加点击查看大图功能
+                            holder.contentImage.setOnClickListener(v -> {
+                                showFullImage(holder.itemView.getContext(), imageFile);
+                            });
+                        } else {
+                            holder.contentImage.setVisibility(View.GONE);
+                        }
+                    } catch (Exception e) {
+                        holder.contentImage.setVisibility(View.GONE);
+                    }
+                } else {
+                    holder.contentImage.setVisibility(View.GONE);
+                }
+            } else {
+                holder.contentImage.setVisibility(View.GONE);
+            }
+        } else {
+            holder.contentImage.setVisibility(View.GONE);
+        }
+        
         // 设置天气
         if (entry.getWeather() != null && !entry.getWeather().isEmpty()) {
             holder.weatherEmoji.setText(getWeatherEmoji(entry.getWeather()));
@@ -94,7 +162,6 @@ public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.View
         }
         
         // 检查内容是否需要展开按钮
-        String content = entry.getDiaryContent();
         if (content != null && content.length() > 100) {
             holder.expandButton.setVisibility(View.VISIBLE);
             
@@ -291,6 +358,7 @@ public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.View
         private final TextView weatherEmoji;
         private final LinearLayout weatherContainer;
         private final ImageButton expandButton;
+        private final ImageView contentImage;
 
         public ViewHolder(View view) {
             super(view);
@@ -305,6 +373,30 @@ public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.View
             weatherEmoji = view.findViewById(R.id.weatherEmoji);
             weatherContainer = view.findViewById(R.id.weatherContainer);
             expandButton = view.findViewById(R.id.expandButton);
+            contentImage = view.findViewById(R.id.contentImage);
         }
+    }
+
+    // 显示完整大图的方法
+    private void showFullImage(Context context, File imageFile) {
+        Dialog dialog = new Dialog(context, R.style.FullImageDialogTheme);
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.black);
+        
+        ImageView imageView = new ImageView(context);
+        imageView.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
+        imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        imageView.setBackgroundColor(Color.BLACK);
+        
+        // 加载并显示原始大图
+        Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
+        imageView.setImageBitmap(bitmap);
+        
+        // 点击关闭对话框
+        imageView.setOnClickListener(v -> dialog.dismiss());
+        
+        dialog.setContentView(imageView);
+        dialog.show();
     }
 } 

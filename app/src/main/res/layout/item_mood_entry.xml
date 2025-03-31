@@ -198,6 +198,19 @@
                     app:tint="#9E9E9E"
                     tools:ignore="TouchTargetSizeCheck,SpeakableTextPresentCheck"
                     tools:visibility="visible" />
+
+                <!-- 在contentText TextView下方修改ImageView -->
+                <ImageView
+                    android:id="@+id/contentImage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="@null"
+                    android:adjustViewBounds="true"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone"
+                    android:contentDescription="日记图片"/>
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

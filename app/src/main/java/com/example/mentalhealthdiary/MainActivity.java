@@ -1056,4 +1056,47 @@ public class MainActivity extends AppCompatActivity {
             });
         });
     }
+
+    // 在保存图片的方法中添加压缩逻辑
+    private String saveSelectedImage(Uri imageUri) {
+        try {
+            String fileName = "diary_img_" + System.currentTimeMillis() + ".jpg";
+            File outputDir = new File(getFilesDir(), "diary_images");
+            if (!outputDir.exists()) {
+                outputDir.mkdirs();
+            }
+            
+            File outputFile = new File(outputDir, fileName);
+            
+            // 从Uri获取原始图片
+            InputStream inputStream = getContentResolver().openInputStream(imageUri);
+            Bitmap originalBitmap = BitmapFactory.decodeStream(inputStream);
+            inputStream.close();
+            
+            // 计算合适的压缩尺寸 - 目标宽度约为屏幕宽度的一半
+            int targetWidth = getResources().getDisplayMetrics().widthPixels / 2;
+            int targetHeight = (int) (targetWidth * ((float) originalBitmap.getHeight() / originalBitmap.getWidth()));
+            
+            // 创建压缩后的图片
+            Bitmap resizedBitmap = Bitmap.createScaledBitmap(originalBitmap, targetWidth, targetHeight, true);
+            
+            // 保存压缩后的图片
+            FileOutputStream fos = new FileOutputStream(outputFile);
+            resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 85, fos); // 85%质量的JPEG
+            fos.close();
+            
+            // 回收Bitmap
+            if (originalBitmap != null && !originalBitmap.isRecycled()) {
+                originalBitmap.recycle();
+            }
+            if (resizedBitmap != null && !resizedBitmap.isRecycled()) {
+                resizedBitmap.recycle();
+            }
+            
+            return fileName;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }
