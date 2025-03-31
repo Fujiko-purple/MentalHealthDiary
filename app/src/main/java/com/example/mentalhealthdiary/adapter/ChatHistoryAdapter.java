@@ -90,7 +90,13 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
             return true;
         });
 
-        holder.itemView.setSelected(position == selectedPosition);
+        if (position == selectedPosition && !isSelectionMode) {
+            holder.itemView.setBackgroundResource(R.drawable.selected_item_background);
+        } else {
+            holder.itemView.setBackgroundResource(android.R.color.transparent);
+        }
+        
+        holder.itemView.setHapticFeedbackEnabled(true);
     }
 
     private void showPopupMenu(View view, ChatHistory history) {
