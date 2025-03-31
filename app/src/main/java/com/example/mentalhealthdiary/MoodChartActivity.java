@@ -348,7 +348,7 @@ public class MoodChartActivity extends AppCompatActivity {
         leftAxis.setGranularity(1f);
         leftAxis.setLabelCount(6, true);
         leftAxis.setTextSize(11f);
-        leftAxis.setXOffset(0f); // 将Y轴标签的水平偏移设为0
+        leftAxis.setXOffset(5f); // 将Y轴标签的水平偏移设为0
         
         // 添加emoji到Y轴标签
         leftAxis.setValueFormatter(new ValueFormatter() {
