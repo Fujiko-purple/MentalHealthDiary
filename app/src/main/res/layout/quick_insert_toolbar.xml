@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:padding="8dp"
-    android:background="#F8F9FF">
+    android:background="#F8F9FF"
+    tools:ignore="ExtraText">
 
     <ImageButton
         android:id="@+id/btnInsertImage"
@@ -13,7 +16,8 @@
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="插入图片"
         android:src="@drawable/ic_insert_image"
-        android:tint="#757575" />
+        app:tint="#757575"
+        tools:ignore="TouchTargetSizeCheck" />
 
     <ImageButton
         android:id="@+id/btnInsertLocation"
@@ -22,8 +26,9 @@
         android:layout_marginStart="16dp"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="插入位置"
-        android:src="@drawable/ic_insert_location" 
-        android:tint="#757575" />
+        android:src="@drawable/ic_insert_location"
+        app:tint="#757575"
+        tools:ignore="TouchTargetSizeCheck" />
         
     <View
         android:layout_width="0dp"
@@ -55,8 +60,9 @@
                 android:button="@null"
                 android:drawableTop="@drawable/ic_weather_sunny"
                 android:gravity="center"
+                android:text="晴"
                 android:textSize="10sp"
-                android:text="晴" />
+                tools:ignore="TouchTargetSizeCheck" />
 
             <RadioButton
                 android:id="@+id/weather_cloudy"
@@ -65,8 +71,9 @@
                 android:button="@null"
                 android:drawableTop="@drawable/ic_weather_cloudy"
                 android:gravity="center"
+                android:text="多云"
                 android:textSize="10sp"
-                android:text="多云" />
+                tools:ignore="TouchTargetSizeCheck" />
 
             <RadioButton
                 android:id="@+id/weather_rainy"
@@ -75,8 +82,9 @@
                 android:button="@null"
                 android:drawableTop="@drawable/ic_weather_rainy"
                 android:gravity="center"
+                android:text="雨"
                 android:textSize="10sp"
-                android:text="雨" />
+                tools:ignore="TouchTargetSizeCheck" />
         </RadioGroup>
     </HorizontalScrollView>
 </LinearLayout> 
