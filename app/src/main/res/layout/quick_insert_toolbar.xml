@@ -47,50 +47,58 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp">
 
-        <RadioGroup
-            android:id="@+id/weatherRadioGroup"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="vertical">
 
-            <RadioButton
-                android:id="@+id/weather_sunny"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@drawable/weather_button_selector"
-                android:button="@null"
-                android:drawableTop="@drawable/ic_weather_sunny"
-                android:gravity="center"
-                android:paddingBottom="4dp"
-                android:text="晴"
-                android:textSize="10sp"
-                tools:ignore="TouchTargetSizeCheck" />
+            <RadioGroup
+                android:id="@+id/weatherRadioGroup"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
 
-            <RadioButton
-                android:id="@+id/weather_cloudy"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@drawable/weather_button_selector"
-                android:button="@null"
-                android:drawableTop="@drawable/ic_weather_cloudy"
-                android:gravity="center"
-                android:paddingBottom="4dp"
-                android:text="多云"
-                android:textSize="10sp"
-                tools:ignore="TouchTargetSizeCheck" />
+                <RadioButton
+                    android:id="@+id/weather_sunny"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:button="@null"
+                    android:drawableTop="@drawable/ic_weather_sunny"
+                    android:gravity="center"
+                    android:text="晴"
+                    android:textSize="10sp"
+                    tools:ignore="TouchTargetSizeCheck" />
 
-            <RadioButton
-                android:id="@+id/weather_rainy"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@drawable/weather_button_selector"
-                android:button="@null"
-                android:drawableTop="@drawable/ic_weather_rainy"
-                android:gravity="center"
-                android:paddingBottom="4dp"
-                android:text="雨"
-                android:textSize="10sp"
-                tools:ignore="TouchTargetSizeCheck" />
-        </RadioGroup>
+                <RadioButton
+                    android:id="@+id/weather_cloudy"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:button="@null"
+                    android:drawableTop="@drawable/ic_weather_cloudy"
+                    android:gravity="center"
+                    android:text="多云"
+                    android:textSize="10sp"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <RadioButton
+                    android:id="@+id/weather_rainy"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:button="@null"
+                    android:drawableTop="@drawable/ic_weather_rainy"
+                    android:gravity="center"
+                    android:text="雨"
+                    android:textSize="10sp"
+                    tools:ignore="TouchTargetSizeCheck" />
+            </RadioGroup>
+
+            <!-- 添加一个指示条，初始时隐藏 -->
+            <View
+                android:id="@+id/weather_indicator"
+                android:layout_width="24dp"
+                android:layout_height="2dp"
+                android:background="#4285F4"
+                android:visibility="invisible" />
+        </LinearLayout>
     </HorizontalScrollView>
 </LinearLayout> 

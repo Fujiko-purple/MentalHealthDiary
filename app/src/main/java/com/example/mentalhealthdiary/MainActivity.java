@@ -29,8 +29,10 @@ import android.text.style.ImageSpan;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -38,6 +40,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -94,6 +97,7 @@ public class MainActivity extends AppCompatActivity {
     private RadioGroup weatherRadioGroup;
     private String selectedWeather = null;
     private LocationListener locationListener;
+    private View weatherIndicator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -221,17 +225,21 @@ public class MainActivity extends AppCompatActivity {
         Log.d("WeatherDebug", "天气RadioGroup ID: " + R.id.weatherRadioGroup);
         Log.d("WeatherDebug", "天气RadioGroup 是否为null: " + (weatherRadioGroup == null));
         
+        // 初始化天气指示器
+        weatherIndicator = findViewById(R.id.weather_indicator);
+        
+        // 设置天气选择监听器
         weatherRadioGroup.setOnCheckedChangeListener((group, checkedId) -> {
             if (checkedId == R.id.weather_sunny) {
                 selectedWeather = "晴";
-                Log.d("WeatherDebug", "选择了晴天");
             } else if (checkedId == R.id.weather_cloudy) {
                 selectedWeather = "多云";
-                Log.d("WeatherDebug", "选择了多云");
             } else if (checkedId == R.id.weather_rainy) {
                 selectedWeather = "雨";
-                Log.d("WeatherDebug", "选择了下雨");
             }
+            
+            // 动画移动指示器
+            animateWeatherIndicator(checkedId);
         });
         
         // 设置图片插入按钮
@@ -299,27 +307,33 @@ public class MainActivity extends AppCompatActivity {
             case 5: moodRadioGroup.check(R.id.mood_5); break;
         }
         
-        // 设置天气 - 添加调试日志
+        // 设置天气
         String weather = entry.getWeather();
-        Log.d("WeatherDebug", "读取到的天气: " + weather);
-        
         if (weather != null) {
             selectedWeather = weather;
             
-            // 根据天气值选择相应的RadioButton
+            int checkedId;
             if (weather.equals("晴")) {
-                weatherRadioGroup.check(R.id.weather_sunny);
+                checkedId = R.id.weather_sunny;
             } else if (weather.equals("多云")) {
-                weatherRadioGroup.check(R.id.weather_cloudy);
+                checkedId = R.id.weather_cloudy;
             } else if (weather.equals("雨")) {
-                weatherRadioGroup.check(R.id.weather_rainy);
+                checkedId = R.id.weather_rainy;
             } else {
-                // 如果没有匹配的天气，清除选择
+                checkedId = -1;
+            }
+
+            if (checkedId != -1) {
+                weatherRadioGroup.check(checkedId);
+                // 添加延迟以确保UI已更新
+                weatherRadioGroup.post(() -> animateWeatherIndicator(checkedId));
+            } else {
                 weatherRadioGroup.clearCheck();
+                weatherIndicator.setVisibility(View.INVISIBLE);
             }
         } else {
-            // 如果没有天气数据，清除选择
             weatherRadioGroup.clearCheck();
+            weatherIndicator.setVisibility(View.INVISIBLE);
         }
         
         // 设置日记内容
@@ -863,5 +877,31 @@ public class MainActivity extends AppCompatActivity {
         
         // 设置处理后的文本
         diaryContent.setText(builder);
+    }
+
+    // 添加指示器动画方法
+    private void animateWeatherIndicator(int checkedId) {
+        if (checkedId == -1) {
+            // 如果没有选中，隐藏指示器
+            weatherIndicator.setVisibility(View.INVISIBLE);
+            return;
+        }
+        
+        // 获取选中的RadioButton
+        RadioButton selected = findViewById(checkedId);
+        if (selected == null) return;
+        
+        // 确保指示器可见
+        weatherIndicator.setVisibility(View.VISIBLE);
+        
+        // 计算指示器应该移动到的位置
+        float targetX = selected.getX() + (selected.getWidth() - weatherIndicator.getWidth()) / 2;
+        
+        // 创建并启动动画
+        weatherIndicator.animate()
+            .x(targetX)
+            .setDuration(300)
+            .setInterpolator(new FastOutSlowInInterpolator())
+            .start();
     }
 }
