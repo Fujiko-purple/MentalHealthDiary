@@ -30,7 +30,7 @@
             android:textSize="14sp"
             android:textColor="#666666"
             android:gravity="center"
-            android:layout_marginBottom="16dp"/>
+            android:layout_marginBottom="24dp"/>
 
         <RadioGroup
             android:id="@+id/sortOptionsGroup"
@@ -41,54 +41,70 @@
             <RadioButton
                 android:id="@+id/sort_date_desc"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="wrap_content"
+                android:minHeight="60dp"
                 android:text="从最新故事开始阅读"
                 android:textSize="16sp"
                 android:textColor="#555555"
-                android:paddingStart="8dp"
-                android:paddingEnd="8dp"
-                android:buttonTint="#6EFFE2"
-                android:layout_marginBottom="2dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:button="@null"
+                android:layout_marginBottom="12dp"
                 android:checked="true"
-                android:background="@drawable/selectable_sort_background"/>
+                android:background="@drawable/sort_option_bg"
+                android:elevation="2dp"
+                android:drawableStart="@drawable/sort_date_desc_icon"
+                android:drawablePadding="12dp"/>
 
             <RadioButton
                 android:id="@+id/sort_date_asc"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="wrap_content"
+                android:minHeight="60dp"
                 android:text="从最早记忆开始回溯"
                 android:textSize="16sp"
                 android:textColor="#555555"
-                android:paddingStart="8dp"
-                android:paddingEnd="8dp"
-                android:buttonTint="#6EFFE2"
-                android:layout_marginBottom="2dp"
-                android:background="@drawable/selectable_sort_background"/>
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:button="@null"
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/sort_option_bg"
+                android:elevation="2dp"
+                android:drawableStart="@drawable/sort_date_asc_icon"
+                android:drawablePadding="12dp"/>
 
             <RadioButton
                 android:id="@+id/sort_mood_desc"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="wrap_content"
+                android:minHeight="60dp"
                 android:text="先看看美好的时光"
                 android:textSize="16sp"
                 android:textColor="#555555"
-                android:paddingStart="8dp"
-                android:paddingEnd="8dp"
-                android:buttonTint="#6EFFE2"
-                android:layout_marginBottom="2dp"
-                android:background="@drawable/selectable_sort_background"/>
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:button="@null"
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/sort_option_bg"
+                android:elevation="2dp"
+                android:drawableStart="@drawable/sort_mood_desc_icon"
+                android:drawablePadding="12dp"/>
 
             <RadioButton
                 android:id="@+id/sort_mood_asc"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="wrap_content"
+                android:minHeight="60dp"
                 android:text="从阴霾走向阳光"
                 android:textSize="16sp"
                 android:textColor="#555555"
-                android:paddingStart="8dp"
-                android:paddingEnd="8dp"
-                android:buttonTint="#6EFFE2"
-                android:background="@drawable/selectable_sort_background"/>
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:button="@null"
+                android:background="@drawable/sort_option_bg"
+                android:elevation="2dp"
+                android:drawableStart="@drawable/sort_mood_asc_icon"
+                android:drawablePadding="12dp"/>
         </RadioGroup>
     </LinearLayout>
 </androidx.cardview.widget.CardView> 
