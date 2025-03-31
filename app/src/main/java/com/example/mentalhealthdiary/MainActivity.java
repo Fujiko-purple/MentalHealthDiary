@@ -3,6 +3,7 @@ package com.example.mentalhealthdiary;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
@@ -31,6 +32,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioButton;
@@ -503,8 +505,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showSortDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        View view = getLayoutInflater().inflate(R.layout.dialog_sort_options, null);
+        Dialog dialog = new Dialog(this);
+        dialog.setContentView(R.layout.dialog_sort_options);
+
+        // 设置对话框宽度为屏幕宽度的75%
+        WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
+        lp.copyFrom(dialog.getWindow().getAttributes());
+        lp.width = (int) (getResources().getDisplayMetrics().widthPixels * 0.75);
+        dialog.getWindow().setAttributes(lp);
+        
+        View view = dialog.findViewById(R.id.sortOptionsGroup);
         RadioGroup sortOptionsGroup = view.findViewById(R.id.sortOptionsGroup);
         
         // 根据当前排序方式设置选中项
@@ -523,7 +533,8 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
         
-        AlertDialog dialog = builder.setView(view)
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setView(view)
                 .setCancelable(true)
                 .create();
                 
@@ -558,8 +569,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showFilterDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        View view = getLayoutInflater().inflate(R.layout.dialog_time_filter, null);
+        Dialog dialog = new Dialog(this);
+        dialog.setContentView(R.layout.dialog_time_filter);
+
+        // 设置对话框宽度为屏幕宽度的75%
+        WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
+        lp.copyFrom(dialog.getWindow().getAttributes());
+        lp.width = (int) (getResources().getDisplayMetrics().widthPixels * 0.75);
+        dialog.getWindow().setAttributes(lp);
+        
+        View view = dialog.findViewById(R.id.timeFilterGroup);
         RadioGroup timeFilterGroup = view.findViewById(R.id.timeFilterGroup);
         
         // 设置当前选中项
@@ -578,7 +597,8 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
         
-        AlertDialog dialog = builder.setView(view)
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setView(view)
                 .setCancelable(true)
                 .create();
                 
