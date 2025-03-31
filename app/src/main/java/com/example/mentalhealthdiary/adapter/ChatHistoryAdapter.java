@@ -45,6 +45,7 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
     private Set<Long> selectedItems = new HashSet<>();
     private int selectedPosition = -1;
     private boolean isSelectionMode = false;
+    private long currentChatId = -1;
 
     public interface OnHistoryClickListener {
         void onHistoryClick(ChatHistory history);
@@ -90,7 +91,9 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
             return true;
         });
 
-        if (position == selectedPosition && !isSelectionMode) {
+        if (history.getId() == currentChatId && !isSelectionMode) {
+            holder.itemView.setBackgroundResource(R.drawable.current_chat_background);
+        } else if (position == selectedPosition && !isSelectionMode) {
             holder.itemView.setBackgroundResource(R.drawable.selected_item_background);
         } else {
             holder.itemView.setBackgroundResource(android.R.color.transparent);
@@ -201,6 +204,11 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
 
     public void setSelectionMode(boolean selectionMode) {
         this.isSelectionMode = selectionMode;
+        notifyDataSetChanged();
+    }
+
+    public void setCurrentChatId(long id) {
+        this.currentChatId = id;
         notifyDataSetChanged();
     }
 

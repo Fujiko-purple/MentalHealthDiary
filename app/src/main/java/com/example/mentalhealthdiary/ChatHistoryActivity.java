@@ -185,6 +185,10 @@ public class ChatHistoryActivity extends AppCompatActivity implements ChatHistor
             }
             return false;
         });
+
+        // 获取当前聊天记录ID
+        long currentChatId = PreferenceManager.getLastChatId(this);
+        adapter.setCurrentChatId(currentChatId);
     }
 
     @Override
