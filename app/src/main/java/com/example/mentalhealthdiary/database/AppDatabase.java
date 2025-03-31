@@ -22,7 +22,7 @@ import com.example.mentalhealthdiary.model.MoodEntry;
         ChatMessage.class,
         BreathingSession.class
     },
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 @TypeConverters({DateConverter.class})
@@ -35,14 +35,17 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract ChatHistoryDao chatHistoryDao();
     public abstract ChatMessageDao chatMessageDao();
 
-
-
-
     private static final Migration MIGRATION_1_2 = new Migration(1, 2) {
         @Override
         public void migrate(SupportSQLiteDatabase database) {
-            // thinkingStartTime 是一个临时字段，不需要存储到数据库
-            // 所以这里不需要实际的数据库修改
+            database.execSQL("ALTER TABLE mood_entries ADD COLUMN weather TEXT");
+        }
+    };
+    
+    private static final Migration MIGRATION_2_3 = new Migration(2, 3) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE mood_entries ADD COLUMN weather TEXT");
         }
     };
 
@@ -53,7 +56,7 @@ public abstract class AppDatabase extends RoomDatabase {
                 AppDatabase.class,
                 "mental_health_db"
             )
-            .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
             .build();
         }
         return instance;

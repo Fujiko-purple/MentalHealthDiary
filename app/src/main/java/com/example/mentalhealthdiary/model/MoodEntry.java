@@ -13,11 +13,13 @@ public class MoodEntry {
     
     private int moodScore; // 1-5 表示心情等级
     private String diaryContent;
+    private String weather;
 
-    public MoodEntry(Date date, int moodScore, String diaryContent) {
+    public MoodEntry(Date date, int moodScore, String diaryContent, String weather) {
         this.date = date;
         this.moodScore = moodScore;
         this.diaryContent = diaryContent;
+        this.weather = weather;
     }
 
     // Getters and Setters
@@ -41,10 +43,15 @@ public class MoodEntry {
         return moodScore;
     }
 
-
-
     public String getDiaryContent() {
         return diaryContent;
     }
 
+    public String getWeather() {
+        return weather;
+    }
+
+    public void setWeather(String weather) {
+        this.weather = weather;
+    }
 } 

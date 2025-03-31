@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="8dp"
+    android:background="#F8F9FF">
+
+    <ImageButton
+        android:id="@+id/btnInsertImage"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="插入图片"
+        android:src="@drawable/ic_insert_image"
+        android:tint="#757575" />
+
+    <ImageButton
+        android:id="@+id/btnInsertLocation"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="16dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="插入位置"
+        android:src="@drawable/ic_insert_location" 
+        android:tint="#757575" />
+        
+    <View
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_weight="1" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:text="当前天气:" 
+        android:textSize="14sp" />
+
+    <HorizontalScrollView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp">
+
+        <RadioGroup
+            android:id="@+id/weatherRadioGroup"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/weather_sunny"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:button="@null"
+                android:drawableTop="@drawable/ic_weather_sunny"
+                android:gravity="center"
+                android:textSize="10sp"
+                android:text="晴" />
+
+            <RadioButton
+                android:id="@+id/weather_cloudy"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:button="@null"
+                android:drawableTop="@drawable/ic_weather_cloudy"
+                android:gravity="center"
+                android:textSize="10sp"
+                android:text="多云" />
+
+            <RadioButton
+                android:id="@+id/weather_rainy"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:button="@null"
+                android:drawableTop="@drawable/ic_weather_rainy"
+                android:gravity="center"
+                android:textSize="10sp"
+                android:text="雨" />
+        </RadioGroup>
+    </HorizontalScrollView>
+</LinearLayout> 

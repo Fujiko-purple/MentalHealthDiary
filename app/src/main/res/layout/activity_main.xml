@@ -164,6 +164,13 @@
                         android:fontFamily="serif"
                         android:layout_marginBottom="12dp"/>
 
+                    <!-- 引入快速插入工具栏 -->
+                    <include
+                        layout="@layout/quick_insert_toolbar"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"/>
+
                     <FrameLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
