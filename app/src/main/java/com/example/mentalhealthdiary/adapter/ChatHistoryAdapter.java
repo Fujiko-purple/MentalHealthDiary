@@ -1,12 +1,23 @@
 package com.example.mentalhealthdiary.adapter;
 
+import android.content.Context;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.text.SpannableString;
+import android.text.style.RelativeSizeSpan;
 import android.util.Log;
+import android.view.ContextThemeWrapper;
+import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -82,37 +93,54 @@ public class ChatHistoryAdapter extends RecyclerView.Adapter<ChatHistoryAdapter.
     }
 
     private void showPopupMenu(View view, ChatHistory history) {
-        PopupMenu popup = new PopupMenu(view.getContext(), view);
-        popup.inflate(R.menu.menu_chat_history_item);
+        // 创建自定义弹出窗口
+        View popupView = LayoutInflater.from(view.getContext()).inflate(R.layout.popup_menu_custom, null);
         
-        // 设置弹出菜单的样式
-        try {
-            Field field = popup.getClass().getDeclaredField("mPopup");
-            field.setAccessible(true);
-            Object menuPopupHelper = field.get(popup);
-            Class<?> classPopupHelper = Class.forName(menuPopupHelper.getClass().getName());
-            Method setForceShowIcon = classPopupHelper.getMethod("setForceShowIcon", boolean.class);
-            setForceShowIcon.invoke(menuPopupHelper, true);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        // 创建PopupWindow - 移到前面来定义
+        PopupWindow popupWindow = new PopupWindow(
+                popupView,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                true
+        );
         
-        popup.setOnMenuItemClickListener(item -> {
-            if (item.getItemId() == R.id.action_edit) {
-                if (listener != null) {
-                    listener.onHistoryEdit(history);
-                }
-                return true;
-            } else if (item.getItemId() == R.id.action_delete) {
-                if (listener != null) {
-                    listener.onHistoryDelete(history);
-                }
-                return true;
+        // 设置点击事件
+        View editItem = popupView.findViewById(R.id.action_edit_layout);
+        View deleteItem = popupView.findViewById(R.id.action_delete_layout);
+        
+        editItem.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onHistoryEdit(history);
             }
-            return false;
+            popupWindow.dismiss();
         });
         
-        popup.show();
+        deleteItem.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onHistoryDelete(history);
+            }
+            popupWindow.dismiss();
+        });
+        
+        // 设置背景和动画
+        popupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        popupWindow.setElevation(8f);
+        popupWindow.setAnimationStyle(R.style.PopupAnimation);
+        
+        // 测量视图
+        popupView.measure(
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        );
+        
+        // 计算显示位置
+        int[] location = new int[2];
+        view.getLocationOnScreen(location);
+        int x = location[0] + view.getWidth() - popupView.getMeasuredWidth();
+        int y = location[1];
+        
+        // 显示弹出窗口
+        popupWindow.showAtLocation(view, Gravity.NO_GRAVITY, x, y);
     }
 
     @Override
