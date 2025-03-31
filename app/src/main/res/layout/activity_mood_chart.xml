@@ -204,10 +204,26 @@
                 </LinearLayout>
 
                 <!-- 折线图 -->
-                <com.github.mikephil.charting.charts.LineChart
-                    android:id="@+id/moodTrendChart"
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="250dp"/>
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <com.github.mikephil.charting.charts.LineChart
+                        android:id="@+id/moodTrendChart"
+                        android:layout_width="match_parent"
+                        android:layout_height="250dp"/>
+
+                    <View
+                        android:id="@+id/scrollIndicator"
+                        android:layout_width="70dp"
+                        android:layout_height="4dp"
+                        android:background="#666666"
+                        android:layout_gravity="center_horizontal"
+                        android:alpha="0"
+                        android:layout_marginTop="4dp"
+                        android:elevation="4dp"/>
+                </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
     </LinearLayout>

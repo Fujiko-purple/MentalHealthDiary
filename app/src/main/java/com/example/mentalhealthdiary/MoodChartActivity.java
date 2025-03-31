@@ -3,6 +3,7 @@ package com.example.mentalhealthdiary;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -25,6 +26,8 @@ import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
 import com.github.mikephil.charting.formatter.ValueFormatter;
+import com.github.mikephil.charting.listener.ChartTouchListener;
+import com.github.mikephil.charting.listener.OnChartGestureListener;
 import com.google.android.material.tabs.TabLayout;
 
 import java.text.SimpleDateFormat;
@@ -57,6 +60,7 @@ public class MoodChartActivity extends AppCompatActivity {
     private static final int WEEK_VIEW = 0;
     private static final int MONTH_VIEW = 1;
     private int currentView = WEEK_VIEW;
+    private View scrollIndicator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +75,7 @@ public class MoodChartActivity extends AppCompatActivity {
         recordDaysText = findViewById(R.id.recordDaysText);
         database = AppDatabase.getInstance(this);
         moodDistributionChart = findViewById(R.id.moodDistributionChart);
+        scrollIndicator = findViewById(R.id.scrollIndicator);
 
         setupChart();
         loadMoodData();
@@ -385,6 +390,7 @@ public class MoodChartActivity extends AppCompatActivity {
         
         if (currentView == WEEK_VIEW) {
             // 周视图特定设置
+            scrollIndicator.setVisibility(View.GONE);
             moodTrendChart.setDragEnabled(false);
             moodTrendChart.setScaleEnabled(false);
             moodTrendChart.setTouchEnabled(false);
@@ -399,11 +405,74 @@ public class MoodChartActivity extends AppCompatActivity {
             xAxis.setLabelCount(7, false);
             moodTrendChart.setVisibleXRangeMaximum(7);
             moodTrendChart.setVisibleXRangeMinimum(7);
-            xAxis.setLabelRotationAngle(0);
+            
+            // 设置拖动监听器来显示滑动效果
+            moodTrendChart.setOnChartGestureListener(new OnChartGestureListener() {
+                @Override
+                public void onChartGestureStart(MotionEvent me, ChartTouchListener.ChartGesture lastPerformedGesture) {
+                    if (lastPerformedGesture == ChartTouchListener.ChartGesture.DRAG) {
+                        // 显示滑动条并设置动画
+                        scrollIndicator.setAlpha(0f); // 确保初始透明
+                        scrollIndicator.setVisibility(View.VISIBLE);
+                        scrollIndicator.animate()
+                            .alpha(0.8f) // 增加透明度，使其更明显
+                            .setDuration(100) // 更快的显示速度
+                            .start();
+                        updateScrollIndicatorPosition(); // 立即更新位置
+                    }
+                }
+
+                @Override
+                public void onChartGestureEnd(MotionEvent me, ChartTouchListener.ChartGesture lastPerformedGesture) {
+                    if (lastPerformedGesture == ChartTouchListener.ChartGesture.DRAG) {
+                        // 淡出滑动条
+                        scrollIndicator.animate()
+                            .alpha(0f)
+                            .setDuration(300) // 较慢的淡出速度
+                            .setStartDelay(200) // 减少延迟时间
+                            .start();
+                    }
+                }
+
+                @Override
+                public void onChartTranslate(MotionEvent me, float dX, float dY) {
+                    // 更新滑动条位置
+                    if (scrollIndicator.getVisibility() == View.VISIBLE) {
+                        updateScrollIndicatorPosition();
+                    }
+                }
+
+                // 必须实现的其他方法
+                @Override
+                public void onChartLongPressed(MotionEvent me) {}
+                @Override
+                public void onChartDoubleTapped(MotionEvent me) {}
+                @Override
+                public void onChartSingleTapped(MotionEvent me) {}
+                @Override
+                public void onChartFling(MotionEvent me1, MotionEvent me2, float velocityX, float velocityY) {}
+                @Override
+                public void onChartScale(MotionEvent me, float scaleX, float scaleY) {}
+            });
         }
         
         // 设置动画
         moodTrendChart.animateX(500);
+    }
+
+    private void updateScrollIndicatorPosition() {
+        if (moodTrendChart.getData() != null) {
+            float lowestVisibleX = moodTrendChart.getLowestVisibleX();
+            float totalXRange = moodTrendChart.getData().getXMax();
+            
+            // 计算滑动条的位置
+            float scrollPercent = lowestVisibleX / (totalXRange - 6);
+            float maxScroll = moodTrendChart.getWidth() - scrollIndicator.getWidth();
+            float translationX = maxScroll * scrollPercent;
+            
+            // 更新滑动条位置
+            scrollIndicator.setTranslationX(translationX - (moodTrendChart.getWidth() / 2 - scrollIndicator.getWidth() / 2));
+        }
     }
 
     private void loadMoodTrendData() {
