@@ -33,4 +33,16 @@ public interface MoodEntryDao {
 
     @Query("SELECT * FROM mood_entries WHERE date >= :startDate ORDER BY date DESC")
     LiveData<List<MoodEntry>> getMoodEntriesForLastDays(long startDate);
+
+    /**
+     * 获取指定日期范围内的心情记录
+     */
+    @Query("SELECT * FROM mood_entries WHERE date BETWEEN :startDate AND :endDate ORDER BY date DESC")
+    List<MoodEntry> getEntriesBetweenDates(Date startDate, Date endDate);
+
+    /**
+     * 获取所有心情记录列表（非LiveData版本）
+     */
+    @Query("SELECT * FROM mood_entries ORDER BY date DESC")
+    List<MoodEntry> getAllEntriesAsList();
 } 

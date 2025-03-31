@@ -11,6 +11,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -98,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
     private String selectedWeather = null;
     private LocationListener locationListener;
     private View weatherIndicator;
+    private TimeFilter currentTimeFilter = TimeFilter.ALL;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -509,28 +511,51 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showFilterDialog() {
-        String[] options = {"全部时间", "最近一周", "最近一月", "最近三月"};
-        new AlertDialog.Builder(this)
-            .setTitle("时间筛选")
-            .setItems(options, (dialog, which) -> {
-                Calendar cal = Calendar.getInstance();
-                switch (which) {
-                    case 0: adapter.resetTimeFilter(); break;
-                    case 1: 
-                        cal.add(Calendar.DAY_OF_YEAR, -7);
-                        adapter.filterByDate(cal.getTime());
-                        break;
-                    case 2:
-                        cal.add(Calendar.MONTH, -1);
-                        adapter.filterByDate(cal.getTime());
-                        break;
-                    case 3:
-                        cal.add(Calendar.MONTH, -3);
-                        adapter.filterByDate(cal.getTime());
-                        break;
-                }
-            })
-            .show();
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View view = getLayoutInflater().inflate(R.layout.dialog_time_filter, null);
+        RadioGroup timeFilterGroup = view.findViewById(R.id.timeFilterGroup);
+        
+        // 设置当前选中项
+        switch(currentTimeFilter) {
+            case WEEK:
+                timeFilterGroup.check(R.id.filter_week);
+                break;
+            case TWO_WEEKS:
+                timeFilterGroup.check(R.id.filter_two_weeks);
+                break;
+            case MONTH:
+                timeFilterGroup.check(R.id.filter_month);
+                break;
+            case ALL:
+                timeFilterGroup.check(R.id.filter_all);
+                break;
+        }
+        
+        AlertDialog dialog = builder.setView(view)
+                .setCancelable(true)
+                .create();
+                
+        // 设置对话框窗口属性
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+        
+        // 设置选项点击监听
+        timeFilterGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            if (checkedId == R.id.filter_week) {
+                currentTimeFilter = TimeFilter.WEEK;
+            } else if (checkedId == R.id.filter_two_weeks) {
+                currentTimeFilter = TimeFilter.TWO_WEEKS;
+            } else if (checkedId == R.id.filter_month) {
+                currentTimeFilter = TimeFilter.MONTH;
+            } else if (checkedId == R.id.filter_all) {
+                currentTimeFilter = TimeFilter.ALL;
+            }
+            loadMoodEntries();
+            dialog.dismiss();
+        });
+        
+        dialog.show();
     }
 
     private void showAIAssistantDialog() {
@@ -903,5 +928,65 @@ public class MainActivity extends AppCompatActivity {
             .setDuration(300)
             .setInterpolator(new FastOutSlowInInterpolator())
             .start();
+    }
+
+    /**
+     * 根据当前的时间筛选设置加载心情记录
+     */
+    private void loadMoodEntries() {
+        Calendar calendar = Calendar.getInstance();
+        Date endDate = calendar.getTime(); // 当前时间作为结束日期
+        Date startDate = null;
+
+        // 根据筛选器设置起始日期
+        switch (currentTimeFilter) {
+            case WEEK:
+                calendar.add(Calendar.DAY_OF_YEAR, -7);
+                startDate = calendar.getTime();
+                break;
+            case TWO_WEEKS:
+                calendar.add(Calendar.DAY_OF_YEAR, -14);
+                startDate = calendar.getTime();
+                break;
+            case MONTH:
+                calendar.add(Calendar.MONTH, -1);
+                startDate = calendar.getTime();
+                break;
+            case ALL:
+                // 不设置startDate，表示获取所有记录
+                break;
+        }
+
+        final Date finalStartDate = startDate;
+        
+        // 在UI上显示当前筛选状态
+        String filterDescription;
+        if (currentTimeFilter == TimeFilter.ALL) {
+            filterDescription = "📚 正在展示你的所有心情故事";
+        } else if (currentTimeFilter == TimeFilter.WEEK) {
+            filterDescription = "🕰️ 回到一周前的记忆";
+        } else if (currentTimeFilter == TimeFilter.TWO_WEEKS) {
+            filterDescription = "📅 展示两周内的情感轨迹";
+        } else {
+            filterDescription = "🌙 呈现一个月的心路历程";
+        }
+        Toast.makeText(MainActivity.this, filterDescription, Toast.LENGTH_SHORT).show();
+
+        // 从数据库加载记录
+        executorService.execute(() -> {
+            List<MoodEntry> filteredEntries;
+            if (finalStartDate != null) {
+                // 加载指定时间范围内的记录
+                filteredEntries = database.moodEntryDao().getEntriesBetweenDates(finalStartDate, endDate);
+            } else {
+                // 加载所有记录
+                filteredEntries = database.moodEntryDao().getAllEntriesAsList();
+            }
+
+            // 更新UI
+            runOnUiThread(() -> {
+                adapter.setEntries(filteredEntries);
+            });
+        });
     }
 }
