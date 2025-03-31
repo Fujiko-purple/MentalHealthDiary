@@ -1,13 +1,8 @@
 package com.example.mentalhealthdiary.adapter;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
-import android.text.Spannable;
-import android.text.SpannableStringBuilder;
-import android.text.style.ImageSpan;
-import android.util.Log;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,14 +16,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.mentalhealthdiary.R;
 import com.example.mentalhealthdiary.model.MoodEntry;
 
-import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.ViewHolder> {
     private List<MoodEntry> entries = new ArrayList<>();
@@ -43,6 +35,9 @@ public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.View
     private static final int MOOD_NEUTRAL = 3;
     private static final int MOOD_GOOD = 4;
     private static final int MOOD_HAPPY = 5;
+
+    // 跟踪记录的展开状态
+    private final List<Integer> expandedPositions = new ArrayList<>();
 
     public interface OnEntryClickListener {
         void onEntryClick(MoodEntry entry);
@@ -102,8 +97,37 @@ public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.View
         String content = entry.getDiaryContent();
         if (content != null && content.length() > 100) {
             holder.expandButton.setVisibility(View.VISIBLE);
+            
+            // 根据展开状态设置内容和按钮
+            boolean isExpanded = expandedPositions.contains(position);
+            if (isExpanded) {
+                // 展开状态 - 显示全部内容
+                holder.contentText.setMaxLines(Integer.MAX_VALUE);
+                holder.contentText.setEllipsize(null);
+                holder.expandButton.setRotation(180); // 翻转箭头指向上方
+            } else {
+                // 折叠状态 - 限制显示行数
+                holder.contentText.setMaxLines(3);
+                holder.contentText.setEllipsize(TextUtils.TruncateAt.END);
+                holder.expandButton.setRotation(0); // 箭头指向下方
+            }
+            
+            // 设置展开按钮点击事件
+            holder.expandButton.setOnClickListener(v -> {
+                // 切换展开状态
+                if (isExpanded) {
+                    expandedPositions.remove(Integer.valueOf(position));
+                } else {
+                    expandedPositions.add(position);
+                }
+                // 刷新当前条目
+                notifyItemChanged(position);
+            });
         } else {
             holder.expandButton.setVisibility(View.GONE);
+            // 短内容始终完整显示
+            holder.contentText.setMaxLines(Integer.MAX_VALUE);
+            holder.contentText.setEllipsize(null);
         }
         
         holder.editButton.setOnClickListener(v -> {
@@ -127,6 +151,7 @@ public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.View
     public void setEntries(List<MoodEntry> entries) {
         this.originalEntries = new ArrayList<>(entries);
         this.entries = new ArrayList<>(entries);
+        expandedPositions.clear(); // 重置所有展开状态
         notifyDataSetChanged();
     }
 
