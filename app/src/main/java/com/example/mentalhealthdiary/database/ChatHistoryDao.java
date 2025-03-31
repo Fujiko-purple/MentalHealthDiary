@@ -33,4 +33,13 @@ public interface ChatHistoryDao {
     
     @Query("DELETE FROM chat_history WHERE id IN (:ids)")
     void deleteByIds(List<Long> ids);
+    
+    @Query("SELECT * FROM chat_history WHERE title LIKE :query ORDER BY timestamp DESC")
+    LiveData<List<ChatHistory>> searchHistories(String query);
+    
+    @Query("SELECT * FROM chat_history WHERE messages IS NULL OR messages = ''")
+    List<ChatHistory> getEmptyChats();
+    
+    @Delete
+    void deleteAll(List<ChatHistory> chats);
 } 

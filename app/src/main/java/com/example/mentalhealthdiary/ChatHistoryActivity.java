@@ -1,39 +1,48 @@
 package com.example.mentalhealthdiary;
 
-import android.content.Intent;
-import android.os.Bundle;
-import android.view.MenuItem;
-import android.widget.EditText;
-import android.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.ItemTouchHelper;
-import androidx.annotation.NonNull;
-import android.view.View;
-import android.widget.Button;
-import android.widget.Toast;
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ValueAnimator;
 import android.app.Dialog;
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Gravity;
+import android.view.MenuItem;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.ItemTouchHelper;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.mentalhealthdiary.adapter.ChatHistoryAdapter;
 import com.example.mentalhealthdiary.database.AppDatabase;
 import com.example.mentalhealthdiary.model.ChatHistory;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.example.mentalhealthdiary.utils.PreferenceManager;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.ArrayList;
 
 public class ChatHistoryActivity extends AppCompatActivity implements ChatHistoryAdapter.OnHistoryClickListener {
     private RecyclerView recyclerView;
@@ -42,10 +51,27 @@ public class ChatHistoryActivity extends AppCompatActivity implements ChatHistor
     private ExecutorService executorService;
     private Button selectAllButton;
     private Button deleteButton;
+    private ImageView searchButton;
+    private EditText searchEditText;
+    private boolean[] isSearchExpanded = {false};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // 设置状态栏完全透明
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Window window = getWindow();
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+            window.setStatusBarColor(Color.TRANSPARENT);
+            
+            // 允许内容延伸到状态栏
+            View decorView = window.getDecorView();
+            int option = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
+            decorView.setSystemUiVisibility(option);
+        }
+        
         setContentView(R.layout.activity_chat_history);
 
         // 设置 Toolbar
@@ -53,7 +79,7 @@ public class ChatHistoryActivity extends AppCompatActivity implements ChatHistor
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setTitle("「足迹」");
+            getSupportActionBar().setTitle("");
         }
         
         database = AppDatabase.getInstance(this);
@@ -119,6 +145,46 @@ public class ChatHistoryActivity extends AppCompatActivity implements ChatHistor
         }).attachToRecyclerView(recyclerView);
 
         executorService = Executors.newSingleThreadExecutor();
+
+        searchButton = findViewById(R.id.searchButton);
+        searchEditText = findViewById(R.id.searchEditText);
+
+        searchButton.setOnClickListener(v -> {
+            if (!isSearchExpanded[0]) {
+                expandSearchView(searchEditText);
+                isSearchExpanded[0] = true;
+            } else {
+                if (!searchEditText.getText().toString().isEmpty()) {
+                    searchEditText.setText("");
+                    filterChatHistories("");
+                } else {
+                    collapseSearchView(searchEditText);
+                    isSearchExpanded[0] = false;
+                }
+            }
+        });
+
+        searchEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                filterChatHistories(s.toString());
+            }
+        });
+
+        searchEditText.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                return true;
+            }
+            return false;
+        });
     }
 
     @Override
@@ -361,5 +427,87 @@ public class ChatHistoryActivity extends AppCompatActivity implements ChatHistor
         
         // 恢复 RecyclerView 的状态
         adapter.notifyDataSetChanged();
+    }
+
+    private void expandSearchView(EditText searchEditText) {
+        searchEditText.setVisibility(View.VISIBLE);
+        
+        ValueAnimator animator = ValueAnimator.ofFloat(0, 1);
+        animator.addUpdateListener(animation -> {
+            float value = (float) animation.getAnimatedValue();
+            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) searchEditText.getLayoutParams();
+            params.weight = value;
+            params.width = 0;
+            searchEditText.setLayoutParams(params);
+            searchEditText.setAlpha(value);
+        });
+        
+        animator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                searchEditText.requestFocus();
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.showSoftInput(searchEditText, InputMethodManager.SHOW_IMPLICIT);
+            }
+        });
+        
+        animator.setDuration(300);
+        animator.start();
+    }
+
+    private void collapseSearchView(EditText searchEditText) {
+        ValueAnimator animator = ValueAnimator.ofFloat(1, 0);
+        animator.addUpdateListener(animation -> {
+            float value = (float) animation.getAnimatedValue();
+            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) searchEditText.getLayoutParams();
+            params.weight = value;
+            params.width = 0;
+            searchEditText.setLayoutParams(params);
+            searchEditText.setAlpha(value);
+        });
+        
+        animator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                searchEditText.setVisibility(View.GONE);
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(searchEditText.getWindowToken(), 0);
+            }
+        });
+        
+        animator.setDuration(300);
+        animator.start();
+    }
+
+    private void filterChatHistories(String query) {
+        if (query.isEmpty()) {
+            // 如果查询为空，显示所有历史记录
+            database.chatHistoryDao().getAllHistories().observe(this, histories -> {
+                if (histories != null) {
+                    adapter.setHistories(histories);
+                    updateEmptyView(histories.isEmpty());
+                }
+            });
+        } else {
+            // 否则，使用现有的 getAllHistories 方法，然后在内存中过滤
+            database.chatHistoryDao().getAllHistories().observe(this, histories -> {
+                if (histories != null) {
+                    // 在内存中过滤匹配的历史记录
+                    List<ChatHistory> filteredHistories = new ArrayList<>();
+                    for (ChatHistory history : histories) {
+                        if (history.getTitle().toLowerCase().contains(query.toLowerCase())) {
+                            filteredHistories.add(history);
+                        }
+                    }
+                    adapter.setHistories(filteredHistories);
+                    updateEmptyView(filteredHistories.isEmpty());
+                }
+            });
+        }
+    }
+
+    private void updateEmptyView(boolean isEmpty) {
+        findViewById(R.id.emptyView).setVisibility(isEmpty ? View.VISIBLE : View.GONE);
+        findViewById(R.id.chatHistoryRecyclerView).setVisibility(isEmpty ? View.GONE : View.VISIBLE);
     }
 } 
