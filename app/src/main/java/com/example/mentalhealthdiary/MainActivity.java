@@ -306,17 +306,6 @@ public class MainActivity extends AppCompatActivity {
         if (weather != null) {
             selectedWeather = weather;
             
-            // 打印每个RadioButton的ID
-            Log.d("WeatherDebug", "晴天ID: " + R.id.weather_sunny);
-            Log.d("WeatherDebug", "多云ID: " + R.id.weather_cloudy);
-            Log.d("WeatherDebug", "下雨ID: " + R.id.weather_rainy);
-            
-            // 检查当前选中的RadioButton
-            Log.d("WeatherDebug", "当前选中的ID: " + weatherRadioGroup.getCheckedRadioButtonId());
-            
-            // 清除之前的选择
-            weatherRadioGroup.clearCheck();
-            
             // 根据天气值选择相应的RadioButton
             if (weather.equals("晴")) {
                 weatherRadioGroup.check(R.id.weather_sunny);
@@ -324,10 +313,10 @@ public class MainActivity extends AppCompatActivity {
                 weatherRadioGroup.check(R.id.weather_cloudy);
             } else if (weather.equals("雨")) {
                 weatherRadioGroup.check(R.id.weather_rainy);
+            } else {
+                // 如果没有匹配的天气，清除选择
+                weatherRadioGroup.clearCheck();
             }
-            
-            // 再次检查选中状态
-            Log.d("WeatherDebug", "设置后的ID: " + weatherRadioGroup.getCheckedRadioButtonId());
         } else {
             // 如果没有天气数据，清除选择
             weatherRadioGroup.clearCheck();
