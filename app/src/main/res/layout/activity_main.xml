@@ -2,6 +2,7 @@
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/elegant_gradient_background">
@@ -269,19 +270,42 @@
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/filterButton"
-                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            style="@style/Widget.MaterialComponents.Button"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
+                            android:layout_height="42dp"
+                            android:layout_marginEnd="10dp"
+                            android:elevation="4dp"
+                            android:stateListAnimator="@animator/button_state_animator"
                             android:text="筛选"
-                            app:icon="@drawable/ic_filter"/>
+                            android:textColor="#FF8A65"
+                            android:textSize="14sp"
+                            app:backgroundTint="#FFFDF8"
+                            app:cornerRadius="21dp"
+                            app:icon="@drawable/ic_filter_styled"
+                            app:iconGravity="textStart"
+                            app:iconPadding="8dp"
+                            app:iconTint="#FF8A65"
+                            app:rippleColor="#33FFFFFF"
+                            tools:ignore="TouchTargetSizeCheck" />
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/sortButton"
-                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            style="@style/Widget.MaterialComponents.Button"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
+                            android:layout_height="42dp"
+                            android:elevation="4dp"
+                            android:stateListAnimator="@animator/button_state_animator"
                             android:text="排序"
-                            app:icon="@drawable/ic_sort"/>
+                            android:textColor="#4A90E2"
+                            android:textSize="14sp"
+                            app:backgroundTint="#F8FEFF"
+                            app:cornerRadius="21dp"
+                            app:icon="@drawable/ic_sort_styled"
+                            app:iconGravity="textStart"
+                            app:iconPadding="8dp"
+                            app:iconTint="#4A90E2"
+                            app:rippleColor="#33FFFFFF"
+                            tools:ignore="TouchTargetSizeCheck" />
                     </LinearLayout>
 
                     <!-- 心情筛选chips -->
