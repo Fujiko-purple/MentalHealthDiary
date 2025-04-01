@@ -2,6 +2,7 @@
 <androidx.core.widget.NestedScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background_light">
@@ -12,13 +13,14 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- 心情统计卡片 -->
+        <!-- 心情统计卡片 - 优化设计 -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            app:cardCornerRadius="8dp"
-            app:cardElevation="2dp">
+            app:cardCornerRadius="12dp"
+            app:cardElevation="2dp"
+            app:strokeWidth="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -26,83 +28,124 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="心情统计"
-                    android:textSize="16sp"
-                    android:textColor="@color/text_primary"
-                    android:layout_marginBottom="16dp"/>
-
-                <GridLayout
+                <!-- 标题栏 -->
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:columnCount="2"
-                    android:rowCount="3">
-
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="16dp">
+                    
+                    <View
+                        android:layout_width="4dp"
+                        android:layout_height="18dp"
+                        android:background="#4CAF50"
+                        android:layout_marginEnd="8dp"/>
+                        
                     <TextView
-                        android:layout_width="0dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
-                        android:layout_margin="8dp"
-                        android:text="平均心情"
-                        android:textColor="@color/text_secondary"/>
-
-                    <TextView
-                        android:id="@+id/averageText"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
-                        android:layout_margin="8dp"
-                        android:gravity="end"
+                        android:text="心情统计"
+                        android:textSize="16sp"
                         android:textColor="@color/text_primary"
-                        android:textSize="16sp"/>
+                        android:fontFamily="sans-serif-medium"/>
+                </LinearLayout>
 
-                    <TextView
+                <!-- 统计数据卡片 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:divider="@drawable/vertical_divider"
+                    android:showDividers="middle">
+
+                    <!-- 平均心情 -->
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
-                        android:layout_margin="8dp"
-                        android:text="最常见心情"
-                        android:textColor="@color/text_secondary"/>
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+                        
+                        <TextView
+                            android:id="@+id/averageText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="3.8"
+                            android:textSize="24sp"
+                            android:textColor="#03A9F4"
+                            android:fontFamily="sans-serif-medium"/>
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="平均心情"
+                            android:textSize="13sp"
+                            android:textColor="@color/text_secondary"
+                            android:layout_marginTop="4dp"/>
+                    </LinearLayout>
 
-                    <TextView
-                        android:id="@+id/mostFrequentMoodText"
+                    <!-- 最常见心情 -->
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
-                        android:layout_margin="8dp"
-                        android:gravity="end"
-                        android:textColor="@color/text_primary"
-                        android:textSize="16sp"/>
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+                        
+                        <TextView
+                            android:id="@+id/mostFrequentMoodText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="😊"
+                            android:textSize="28sp"
+                            android:layout_marginBottom="2dp"/>
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="最常见心情"
+                            android:textSize="13sp"
+                            android:textColor="@color/text_secondary"/>
+                    </LinearLayout>
 
-                    <TextView
+                    <!-- 记录天数 -->
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
-                        android:layout_margin="8dp"
-                        android:text="记录天数"
-                        android:textColor="@color/text_secondary"/>
-
-                    <TextView
-                        android:id="@+id/recordDaysText"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
-                        android:layout_margin="8dp"
-                        android:gravity="end"
-                        android:textColor="@color/text_primary"
-                        android:textSize="16sp"/>
-                </GridLayout>
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+                        
+                        <TextView
+                            android:id="@+id/recordDaysText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="28 天"
+                            android:textSize="24sp"
+                            android:textColor="#8BC34A"
+                            android:fontFamily="sans-serif-medium"/>
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="记录天数"
+                            android:textSize="13sp"
+                            android:textColor="@color/text_secondary"
+                            android:layout_marginTop="4dp"/>
+                    </LinearLayout>
+                </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- 心情分布图 -->
+        <!-- 心情分布图 - 优化设计 -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardCornerRadius="8dp"
-            app:cardElevation="2dp">
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="2dp"
+            app:strokeWidth="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -110,28 +153,44 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <!-- 标题栏 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="心情分布"
-                    android:textSize="16sp"
-                    android:textColor="@color/text_primary"
-                    android:layout_marginBottom="16dp"/>
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="16dp">
+                    
+                    <View
+                        android:layout_width="4dp"
+                        android:layout_height="18dp"
+                        android:background="#FF9800"
+                        android:layout_marginEnd="8dp"/>
+                        
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="心情分布"
+                        android:textSize="16sp"
+                        android:textColor="@color/text_primary"
+                        android:fontFamily="sans-serif-medium"/>
+                </LinearLayout>
 
                 <com.github.mikephil.charting.charts.PieChart
                     android:id="@+id/moodDistributionChart"
                     android:layout_width="match_parent"
-                    android:layout_height="300dp"/>
+                    android:layout_height="300dp"
+                    android:layout_marginTop="8dp"/>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- 在心情分布图卡片下方添加心情趋势折线图 -->
+        <!-- 心情趋势折线图 - 优化设计 -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            app:cardCornerRadius="8dp"
-            app:cardElevation="2dp">
+            app:cardCornerRadius="12dp"
+            app:cardElevation="2dp"
+            app:strokeWidth="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -139,22 +198,43 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <!-- 标题栏 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="心情趋势"
-                    android:textSize="16sp"
-                    android:textColor="@color/text_primary"
-                    android:layout_marginBottom="8dp"/>
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="16dp">
+                    
+                    <View
+                        android:layout_width="4dp"
+                        android:layout_height="18dp"
+                        android:background="#2196F3"
+                        android:layout_marginEnd="8dp"/>
+                        
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="心情趋势"
+                        android:textSize="16sp"
+                        android:textColor="@color/text_primary"
+                        android:fontFamily="sans-serif-medium"/>
+                </LinearLayout>
 
-                <!-- 时间范围选择 -->
+                <!-- 时间范围选择 - 美化标签页 -->
                 <com.google.android.material.tabs.TabLayout
                     android:id="@+id/timeRangeTabs"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:tabMode="fixed"
                     app:tabGravity="fill"
-                    android:layout_marginBottom="8dp">
+                    app:tabIndicatorColor="#2196F3"
+                    app:tabSelectedTextColor="#2196F3"
+                    app:tabTextColor="#757575"
+                    app:tabIndicatorHeight="3dp"
+                    app:tabIndicatorFullWidth="false"
+                    app:tabTextAppearance="@style/TabTextAppearance"
+                    android:layout_marginBottom="16dp">
 
                     <com.google.android.material.tabs.TabItem
                         android:layout_width="wrap_content"
@@ -167,23 +247,27 @@
                         android:text="最近一月" />
                 </com.google.android.material.tabs.TabLayout>
 
-                <!-- 月份选择器 (默认隐藏，只在月视图显示) -->
+                <!-- 月份选择器 - 优化设计 -->
                 <LinearLayout
                     android:id="@+id/monthSelectorLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:visibility="gone"
-                    android:layout_marginBottom="8dp">
+                    android:background="@drawable/month_selector_background"
+                    android:padding="8dp"
+                    android:layout_marginBottom="16dp"
+                    android:visibility="gone">
 
                     <ImageButton
                         android:id="@+id/prevMonthButton"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
                         android:src="@drawable/ic_arrow_left"
                         android:background="?attr/selectableItemBackgroundBorderless"
-                        android:contentDescription="上个月"/>
+                        android:tint="#2196F3"
+                        android:contentDescription="上个月"
+                        tools:ignore="UseAppTint" />
 
                     <TextView
                         android:id="@+id/currentMonthText"
@@ -191,39 +275,45 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:gravity="center"
-                        android:textSize="16sp"
-                        android:textColor="@color/text_primary"/>
+                        android:text="2023年10月"
+                        android:textSize="15sp"
+                        android:textColor="@color/text_primary"
+                        android:fontFamily="sans-serif-medium"/>
 
                     <ImageButton
                         android:id="@+id/nextMonthButton"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
                         android:src="@drawable/ic_arrow_right"
                         android:background="?attr/selectableItemBackgroundBorderless"
-                        android:contentDescription="下个月"/>
+                        android:tint="#2196F3"
+                        android:contentDescription="下个月"
+                        tools:ignore="UseAppTint" />
                 </LinearLayout>
 
-                <!-- 折线图 -->
-                <LinearLayout
+                <!-- 图表容器 - 添加圆角边框 -->
+                <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:background="@drawable/chart_background"
+                    android:padding="8dp">
 
                     <com.github.mikephil.charting.charts.LineChart
                         android:id="@+id/moodTrendChart"
                         android:layout_width="match_parent"
                         android:layout_height="250dp"/>
+                </FrameLayout>
 
-                    <View
-                        android:id="@+id/scrollIndicator"
-                        android:layout_width="70dp"
-                        android:layout_height="4dp"
-                        android:background="#666666"
-                        android:layout_gravity="center_horizontal"
-                        android:alpha="0"
-                        android:layout_marginTop="4dp"
-                        android:elevation="4dp"/>
-                </LinearLayout>
+                <!-- 滚动指示器 - 美化设计 -->
+                <View
+                    android:id="@+id/scrollIndicator"
+                    android:layout_width="70dp"
+                    android:layout_height="4dp"
+                    android:background="#2196F3"
+                    android:layout_gravity="center_horizontal"
+                    android:alpha="0.6"
+                    android:layout_marginTop="12dp"
+                    android:elevation="4dp"/>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
