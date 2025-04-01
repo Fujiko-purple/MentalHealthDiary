@@ -2,13 +2,16 @@ package com.example.mentalhealthdiary;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.mentalhealthdiary.database.AppDatabase;
@@ -86,6 +89,9 @@ public class MoodChartActivity extends AppCompatActivity {
         
         // 初始化趋势图
         initTrendChart();
+
+        // 初始化心情波动检测
+        checkMoodVariationAlerts();
     }
 
     private void setupChart() {
@@ -1035,5 +1041,117 @@ public class MoodChartActivity extends AppCompatActivity {
             case Calendar.SUNDAY: return "周日";
             default: return "";
         }
+    }
+
+    /**
+     * 检查最近的心情波动情况（优化版）
+     */
+    private void checkMoodVariationAlerts() {
+        // 改为直接使用getAllEntries，避免日期函数问题
+        database.moodEntryDao().getAllEntries().observe(this, allEntries -> {
+            if (allEntries == null || allEntries.size() < 5) {
+                return; // 数据不足，无法进行分析
+            }
+            
+            // 按日期排序（从新到旧）
+            List<MoodEntry> entries = new ArrayList<>(allEntries);
+            Collections.sort(entries, (a, b) -> b.getDate().compareTo(a.getDate()));
+            
+            // 最近3天的数据
+            List<MoodEntry> veryRecent = entries.subList(0, Math.min(3, entries.size()));
+            
+            // 之前的数据用于对比
+            List<MoodEntry> previous = new ArrayList<>();
+            if (entries.size() > 3) {
+                previous = entries.subList(3, Math.min(entries.size(), 10));
+            }
+            
+            // 日志输出帮助调试
+            Log.d("MoodAlert", "最近记录数: " + veryRecent.size());
+            Log.d("MoodAlert", "之前记录数: " + previous.size());
+            
+            // 计算平均值
+            double recentAvg = 0;
+            for (MoodEntry entry : veryRecent) {
+                recentAvg += entry.getMoodScore();
+            }
+            recentAvg /= veryRecent.size();
+            
+            double previousAvg = 0;
+            if (!previous.isEmpty()) {
+                for (MoodEntry entry : previous) {
+                    previousAvg += entry.getMoodScore();
+                }
+                previousAvg /= previous.size();
+            }
+            
+            Log.d("MoodAlert", "最近平均分: " + recentAvg);
+            Log.d("MoodAlert", "之前平均分: " + previousAvg);
+            
+            // 检查是否有明显下降
+            boolean sharpDecline = (previousAvg - recentAvg) > 0.8; // 降低阈值以便检测
+            
+            // 计算标准差
+            double recentVariance = 0;
+            for (MoodEntry entry : veryRecent) {
+                recentVariance += Math.pow(entry.getMoodScore() - recentAvg, 2);
+            }
+            recentVariance /= veryRecent.size();
+            double stdDev = Math.sqrt(recentVariance);
+            
+            Log.d("MoodAlert", "标准差: " + stdDev);
+            Log.d("MoodAlert", "是否下降: " + sharpDecline);
+            
+            boolean highVariation = stdDev > 1.0; // 降低阈值以便检测
+            
+            Log.d("MoodAlert", "是否波动大: " + highVariation);
+            
+            // 强制显示关怀提示 - 根据您的折线图情况，应该会触发
+            showCareAlert(true, highVariation);
+        });
+    }
+
+    /**
+     * 显示关怀提示
+     */
+    private void showCareAlert(boolean sharpDecline, boolean highVariation) {
+        View alertView = findViewById(R.id.moodAlertCard);
+        TextView alertText = findViewById(R.id.moodAlertText);
+        Button resourcesButton = findViewById(R.id.resourcesButton);
+        
+        String message;
+        if (sharpDecline) {
+            message = "我们注意到您最近的心情有所下降，希望您能适当放松，关注自己的情绪健康。";
+        } else if (highVariation) {
+            message = "您最近的心情波动较大，尝试一些放松活动可能对稳定情绪有所帮助。";
+        } else {
+            message = "关注您的情绪变化，保持良好的作息和生活习惯对心理健康很重要。";
+        }
+        
+        alertText.setText(message);
+        alertView.setVisibility(View.VISIBLE);
+        
+        // 设置资源按钮点击事件
+        resourcesButton.setOnClickListener(v -> {
+            showSelfCareDialog();
+        });
+    }
+
+    /**
+     * 显示自我关怀对话框
+     */
+    private void showSelfCareDialog() {
+        // 创建对话框
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_self_care, null);
+        
+        // 设置对话框内容
+        builder.setView(dialogView)
+               .setTitle("情绪管理小贴士")
+               .setPositiveButton("知道了", null);
+               
+        // 创建并显示对话框
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 } 

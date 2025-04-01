@@ -448,6 +448,68 @@
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
+
+            <!-- 情绪波动预警卡片 -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/moodAlertCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardBackgroundColor="#FEEAE6"
+                app:strokeColor="#F8BBD0"
+                app:strokeWidth="1dp"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+                        
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_heart"
+                            app:tint="#E57373"
+                            android:layout_marginEnd="12dp"/>
+                            
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="关怀提示"
+                            android:textSize="16sp"
+                            android:textColor="#D32F2F"
+                            android:textStyle="bold"/>
+                    </LinearLayout>
+                    
+                    <TextView
+                        android:id="@+id/moodAlertText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="我们注意到您最近的心情有所波动，希望您能多关注自己的情绪健康。"
+                        android:textColor="#424242"
+                        android:layout_marginTop="12dp"
+                        android:layout_marginBottom="12dp"
+                        android:textSize="14sp"/>
+                        
+                    <Button
+                        android:id="@+id/resourcesButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="查看缓解方法"
+                        android:textColor="@color/white"
+                        android:backgroundTint="#E57373"
+                        android:paddingHorizontal="12dp"
+                        android:layout_gravity="end"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
         
         <!-- 空状态布局（默认隐藏） -->

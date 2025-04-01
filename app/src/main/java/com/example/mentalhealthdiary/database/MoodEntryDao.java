@@ -45,4 +45,12 @@ public interface MoodEntryDao {
      */
     @Query("SELECT * FROM mood_entries ORDER BY date DESC")
     List<MoodEntry> getAllEntriesAsList();
+
+    /**
+     * 获取最近指定天数的心情记录
+     * @param days 要获取的天数
+     * @return 最近的心情记录列表
+     */
+    @Query("SELECT * FROM mood_entries WHERE date >= date('now', '-' || :days || ' days') ORDER BY date DESC")
+    LiveData<List<MoodEntry>> getRecentEntries(int days);
 } 
