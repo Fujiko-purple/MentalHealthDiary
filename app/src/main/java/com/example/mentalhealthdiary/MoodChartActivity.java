@@ -717,203 +717,308 @@ public class MoodChartActivity extends AppCompatActivity {
     }
 
     /**
-     * 生成心情洞察
+     * 优化版心情洞察引擎
+     */
+    private class MoodInsightEngine {
+        // 存储分析结果
+        private class InsightResult {
+            String weeklyInsight;
+            String trendInsight;
+            String suggestion;
+            boolean hasSuggestion;
+            int bestDay = -1;
+            int worstDay = -1;
+            boolean isTrendPositive;
+            float recentChange;
+        }
+        
+        // 缓存分析结果，避免重复计算
+        private InsightResult cachedResult;
+        private long lastAnalysisTime = 0;
+        private static final long INSIGHT_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24小时
+        
+        /**
+         * 主分析方法
+         */
+        public InsightResult analyzeInsights(List<MoodEntry> entries) {
+            // 检查缓存
+            if (System.currentTimeMillis() - lastAnalysisTime < INSIGHT_CACHE_DURATION 
+                    && cachedResult != null) {
+                return cachedResult;
+            }
+            
+            InsightResult result = new InsightResult();
+            
+            if (entries == null || entries.size() < 7) {
+                // 数据不足，返回空结果
+                return result;
+            }
+            
+            // 1. 按时间排序
+            Collections.sort(entries, (a, b) -> a.getDate().compareTo(b.getDate()));
+            
+            // 2. 进行不同维度的分析
+            analyzeDayOfWeekPattern(entries, result);
+            analyzeTrend(entries, result);
+            generateSuggestion(entries, result);
+            
+            // 缓存结果
+            cachedResult = result;
+            lastAnalysisTime = System.currentTimeMillis();
+            
+            return result;
+        }
+        
+        /**
+         * 分析每周心情模式
+         */
+        private void analyzeDayOfWeekPattern(List<MoodEntry> entries, InsightResult result) {
+            Map<Integer, List<Float>> dayOfWeekMoods = new HashMap<>();
+            Calendar calendar = Calendar.getInstance();
+            
+            // 分组数据
+            for (MoodEntry entry : entries) {
+                calendar.setTime(entry.getDate());
+                int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+                
+                if (!dayOfWeekMoods.containsKey(dayOfWeek)) {
+                    dayOfWeekMoods.put(dayOfWeek, new ArrayList<>());
+                }
+                
+                dayOfWeekMoods.get(dayOfWeek).add((float)entry.getMoodScore());
+            }
+            
+            // 计算每天平均值
+            Map<Integer, Float> avgDayOfWeekMood = new HashMap<>();
+            int bestDay = -1;
+            float bestDayMood = 0;
+            int worstDay = -1;
+            float worstDayMood = 6;
+            
+            for (Map.Entry<Integer, List<Float>> entry : dayOfWeekMoods.entrySet()) {
+                int day = entry.getKey();
+                List<Float> moods = entry.getValue();
+                
+                if (moods.size() < 2) {
+                    continue; // 需要至少2个数据点
+                }
+                
+                // 使用流式API计算平均值，更简洁
+                float avg = (float) moods.stream().mapToDouble(f -> f).average().orElse(0);
+                avgDayOfWeekMood.put(day, avg);
+                
+                if (avg > bestDayMood) {
+                    bestDayMood = avg;
+                    bestDay = day;
+                }
+                
+                if (avg < worstDayMood) {
+                    worstDayMood = avg;
+                    worstDay = day;
+                }
+            }
+            
+            // 存储结果
+            result.bestDay = bestDay;
+            result.worstDay = worstDay;
+            
+            // 生成洞察文本
+            if (bestDay != -1 && worstDay != -1 && bestDay != worstDay) {
+                result.weeklyInsight = String.format(
+                    "您的心情在%s通常更积极，%s是一周中心情相对较低的时候。",
+                    getDayOfWeekInChinese(bestDay),
+                    getDayOfWeekInChinese(worstDay)
+                );
+            } else if (bestDay != -1) {
+                result.weeklyInsight = String.format(
+                    "您的心情在%s通常更积极，建议多关注自己的情绪状态。",
+                    getDayOfWeekInChinese(bestDay)
+                );
+            } else {
+                result.weeklyInsight = "您的心情在一周内保持相对稳定，没有明显的高低趋势。";
+            }
+        }
+        
+        /**
+         * 分析心情趋势
+         */
+        private void analyzeTrend(List<MoodEntry> entries, InsightResult result) {
+            // 如果数据少于14条，只分析简单趋势
+            if (entries.size() < 14) {
+                boolean increasing = isIncreasingTrend(entries);
+                result.isTrendPositive = increasing;
+                
+                if (increasing) {
+                    result.trendInsight = "最近您的心情总体呈上升趋势，继续保持良好状态！";
+                } else {
+                    result.trendInsight = "最近您的心情有所波动，适当放松有助于缓解压力。";
+                }
+                return;
+            }
+            
+            // 分析更复杂的趋势
+            List<MoodEntry> recentEntries = entries.subList(entries.size() / 2, entries.size());
+            List<MoodEntry> previousEntries = entries.subList(0, entries.size() / 2);
+            
+            float recentAvg = calculateAverageMood(recentEntries);
+            float previousAvg = calculateAverageMood(previousEntries);
+            
+            float change = recentAvg - previousAvg;
+            boolean significant = Math.abs(change) >= 0.3; // 0.3分以上视为显著变化
+            
+            result.recentChange = change;
+            result.isTrendPositive = change > 0;
+            
+            // 生成洞察文本
+            if (!significant) {
+                result.trendInsight = "您的心情在近期保持相对稳定，情绪状态良好。";
+            } else if (change > 0) {
+                result.trendInsight = String.format(
+                    "近期心情整体呈上升趋势，比之前平均提高了%.1f分，继续保持！",
+                    change);
+            } else {
+                result.trendInsight = String.format(
+                    "近期心情有所波动，比之前平均下降了%.1f分。您可以多关注自己的情绪状态。",
+                    Math.abs(change));
+            }
+        }
+        
+        /**
+         * 生成个性化建议
+         */
+        private void generateSuggestion(List<MoodEntry> entries, InsightResult result) {
+            // 根据数据量决定是否提供建议
+            if (entries.size() < 14) {
+                result.hasSuggestion = false;
+                return;
+            }
+            
+            result.hasSuggestion = true;
+            
+            // 根据不同情况生成不同建议
+            if (result.worstDay != -1) {
+                // 针对特定日期的心情低谷提供建议
+                String worstDayName = getDayOfWeekInChinese(result.worstDay);
+                result.suggestion = String.format(
+                    "建议：根据您的心情记录，尝试在%s安排一些愉快的活动或提前做好心理准备，可能有助于改善这一天的情绪状态。",
+                    worstDayName);
+            } else if (!result.isTrendPositive && Math.abs(result.recentChange) >= 0.5) {
+                // 针对明显下降趋势提供建议
+                result.suggestion = "建议：您近期心情有所下降，可以尝试增加户外活动、与朋友交流或做些自己喜欢的事情来改善情绪。";
+            } else if (analyzeMoodVariability(entries)) {
+                // 针对情绪波动大的情况提供建议
+                result.suggestion = "建议：您的心情波动较大，可以尝试冥想、深呼吸等放松技巧，有助于稳定情绪。规律的作息也很重要。";
+            } else {
+                // 一般性建议
+                result.suggestion = "建议：保持良好的睡眠和运动习惯，多与亲友沟通，有助于维持积极的心情状态。";
+            }
+        }
+        
+        /**
+         * 分析心情波动程度 - 使用标准差
+         */
+        private boolean analyzeMoodVariability(List<MoodEntry> entries) {
+            if (entries.size() < 5) return false;
+            
+            // 使用Java 8 Stream API简化计算
+            double mean = entries.stream()
+                .mapToDouble(MoodEntry::getMoodScore)
+                .average()
+                .orElse(0);
+                
+            double variance = entries.stream()
+                .mapToDouble(e -> Math.pow(e.getMoodScore() - mean, 2))
+                .average()
+                .orElse(0);
+                
+            double stdDev = Math.sqrt(variance);
+            
+            return stdDev > 1.2; // 标准差大于1.2认为波动较大
+        }
+        
+        /**
+         * 判断是否是上升趋势 - 使用简单线性回归
+         */
+        private boolean isIncreasingTrend(List<MoodEntry> entries) {
+            if (entries.size() < 5) return true; // 数据太少，默认为上升
+            
+            // 简单线性回归 - 使用时间作为自变量
+            long firstTime = entries.get(0).getDate().getTime();
+            
+            double sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+            int n = entries.size();
+            
+            for (int i = 0; i < n; i++) {
+                // 时间归一化，以天为单位
+                double x = (entries.get(i).getDate().getTime() - firstTime) / (24.0 * 60 * 60 * 1000);
+                double y = entries.get(i).getMoodScore();
+                
+                sumX += x;
+                sumY += y;
+                sumXY += x * y;
+                sumX2 += x * x;
+            }
+            
+            // 计算斜率
+            double slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+            return slope > 0;
+        }
+
+        /**
+         * 计算平均心情分数
+         */
+        private float calculateAverageMood(List<MoodEntry> entries) {
+            if (entries == null || entries.isEmpty()) {
+                return 0;
+            }
+            
+            // 使用Java 8 Stream API计算平均值
+            return (float) entries.stream()
+                .mapToDouble(MoodEntry::getMoodScore)
+                .average()
+                .orElse(0);
+        }
+    }
+
+    // 实例化引擎
+    private MoodInsightEngine insightEngine = new MoodInsightEngine();
+
+    /**
+     * 生成心情洞察并更新UI
      */
     private void generateMoodInsights(List<MoodEntry> entries) {
         if (entries == null || entries.isEmpty()) {
             return;
         }
         
-        // 按照日期对心情记录进行排序
-        entries.sort((a, b) -> a.getDate().compareTo(b.getDate()));
+        // 获取分析结果
+        MoodInsightEngine.InsightResult insights = insightEngine.analyzeInsights(entries);
         
-        // 找出星期几的心情规律
-        Map<Integer, List<Float>> dayOfWeekMoods = new HashMap<>();
-        Calendar calendar = Calendar.getInstance();
+        // 更新UI
+        moodTrendInsight.setText(insights.weeklyInsight);
+        moodPatternInsight.setText(insights.trendInsight);
         
-        for (MoodEntry entry : entries) {
-            calendar.setTime(entry.getDate());
-            int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
-            
-            if (!dayOfWeekMoods.containsKey(dayOfWeek)) {
-                dayOfWeekMoods.put(dayOfWeek, new ArrayList<>());
-            }
-            
-            dayOfWeekMoods.get(dayOfWeek).add((float)entry.getMoodScore());
-        }
+        // 处理建议
+        View suggestionContainer = findViewById(R.id.suggestionContainer);
+        TextView suggestionText = findViewById(R.id.suggestionText);
         
-        // 计算每个星期几的平均心情
-        Map<Integer, Float> avgDayOfWeekMood = new HashMap<>();
-        int bestDay = -1;
-        float bestDayMood = 0;
-        int worstDay = -1;
-        float worstDayMood = 6;
-        
-        for (Map.Entry<Integer, List<Float>> entry : dayOfWeekMoods.entrySet()) {
-            int day = entry.getKey();
-            List<Float> moods = entry.getValue();
-            
-            if (moods.size() < 2) {
-                continue; // 需要至少2个数据点才有效
-            }
-            
-            float avg = 0;
-            for (Float mood : moods) {
-                avg += mood;
-            }
-            avg /= moods.size();
-            
-            avgDayOfWeekMood.put(day, avg);
-            
-            if (avg > bestDayMood) {
-                bestDayMood = avg;
-                bestDay = day;
-            }
-            
-            if (avg < worstDayMood) {
-                worstDayMood = avg;
-                worstDay = day;
-            }
-        }
-        
-        // 生成星期几心情洞察
-        generateDayOfWeekInsight(bestDay, worstDay);
-        
-        // 分析心情趋势 (上升/下降/稳定)
-        if (entries.size() >= 7) {
-            generateTrendInsight(entries);
-        }
-
-        // 优化心情洞察的建议功能
-        generateSuggestion(entries, worstDay);
-    }
-
-    /**
-     * 生成每周心情洞察
-     */
-    private void generateDayOfWeekInsight(int bestDay, int worstDay) {
-        if (bestDay == -1 || worstDay == -1) {
-            moodTrendInsight.setText("记录更多数据，我们将为您提供每周心情规律分析。");
-            return;
-        }
-        
-        String bestDayName = getDayOfWeekInChinese(bestDay);
-        String worstDayName = getDayOfWeekInChinese(worstDay);
-        
-        StringBuilder insight = new StringBuilder();
-        insight.append("您的心情在");
-        
-        if (bestDay == Calendar.SATURDAY || bestDay == Calendar.SUNDAY) {
-            insight.append("周末");
+        if (insights.hasSuggestion) {
+            suggestionText.setText(insights.suggestion);
+            suggestionContainer.setVisibility(View.VISIBLE);
         } else {
-            insight.append(bestDayName);
+            suggestionContainer.setVisibility(View.GONE);
         }
-        
-        insight.append("通常更积极");
-        
-        if (worstDay != -1) {
-            insight.append("，").append(worstDayName).append("是一周中心情较低落的时候");
-        }
-        
-        insight.append("。");
-        moodTrendInsight.setText(insight.toString());
     }
 
-    /**
-     * 生成心情趋势洞察
-     */
-    private void generateTrendInsight(List<MoodEntry> entries) {
-        // 获取最近30天和之前30天的数据
-        Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.DAY_OF_YEAR, -30);
-        Date thirtyDaysAgo = calendar.getTime();
+    private void setupInsightsVisibility(List<MoodEntry> entries) {
+        View insightsCard = findViewById(R.id.insightsCard);
         
-        calendar.add(Calendar.DAY_OF_YEAR, -30);
-        Date sixtyDaysAgo = calendar.getTime();
-        
-        List<MoodEntry> recentEntries = new ArrayList<>();
-        List<MoodEntry> previousEntries = new ArrayList<>();
-        
-        for (MoodEntry entry : entries) {
-            if (entry.getDate().after(thirtyDaysAgo)) {
-                recentEntries.add(entry);
-            } else if (entry.getDate().after(sixtyDaysAgo)) {
-                previousEntries.add(entry);
-            }
-        }
-        
-        if (recentEntries.isEmpty()) {
-            moodPatternInsight.setText("继续记录您的心情，我们将为您分析心情变化趋势。");
-            return;
-        }
-        
-        // 计算平均心情
-        float recentAvg = calculateAverageMood(recentEntries);
-        
-        // 如果有上一阶段数据，比较变化
-        if (!previousEntries.isEmpty()) {
-            float previousAvg = calculateAverageMood(previousEntries);
-            float change = recentAvg - previousAvg;
-            
-            if (Math.abs(change) < 0.2) {
-                moodPatternInsight.setText("近期您的心情整体保持稳定。");
-            } else if (change > 0) {
-                moodPatternInsight.setText(String.format(
-                    "近30天心情整体呈上升趋势，比前30天平均提高了%.1f分。",
-                    change));
-            } else {
-                moodPatternInsight.setText(String.format(
-                    "近30天心情有所波动，比前30天平均下降了%.1f分。您可以多关注自己的情绪状态。",
-                    Math.abs(change)));
-            }
+        // 如果数据少于7条，隐藏洞察卡片
+        if (entries == null || entries.size() < 7) {
+            insightsCard.setVisibility(View.GONE);
         } else {
-            // 只有最近的数据
-            boolean increasing = isIncreasingTrend(recentEntries);
-            
-            if (increasing) {
-                moodPatternInsight.setText("最近您的心情总体呈上升趋势，继续保持良好状态！");
-            } else {
-                moodPatternInsight.setText("最近您的心情有所波动，适当放松有助于缓解压力。");
-            }
+            insightsCard.setVisibility(View.VISIBLE);
         }
-    }
-
-    /**
-     * 计算平均心情值
-     */
-    private float calculateAverageMood(List<MoodEntry> entries) {
-        if (entries.isEmpty()) return 0;
-        
-        float sum = 0;
-        for (MoodEntry entry : entries) {
-            sum += entry.getMoodScore();
-        }
-        
-        return sum / entries.size();
-    }
-
-    /**
-     * 判断是否是上升趋势
-     */
-    private boolean isIncreasingTrend(List<MoodEntry> entries) {
-        if (entries.size() < 5) return true; // 数据太少，默认为上升
-        
-        // 简单线性回归
-        int n = entries.size();
-        float sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
-        
-        for (int i = 0; i < n; i++) {
-            float x = i;
-            float y = entries.get(i).getMoodScore();
-            
-            sumX += x;
-            sumY += y;
-            sumXY += x * y;
-            sumX2 += x * x;
-        }
-        
-        float slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-        return slope > 0;
     }
 
     /**
@@ -930,70 +1035,5 @@ public class MoodChartActivity extends AppCompatActivity {
             case Calendar.SUNDAY: return "周日";
             default: return "";
         }
-    }
-
-    private void setupInsightsVisibility(List<MoodEntry> entries) {
-        View insightsCard = findViewById(R.id.insightsCard);
-        
-        // 如果数据少于7条，隐藏洞察卡片
-        if (entries == null || entries.size() < 7) {
-            insightsCard.setVisibility(View.GONE);
-        } else {
-            insightsCard.setVisibility(View.VISIBLE);
-        }
-    }
-
-    // 优化心情洞察的建议功能
-    private void generateSuggestion(List<MoodEntry> entries, int worstDay) {
-        View suggestionContainer = findViewById(R.id.suggestionContainer);
-        TextView suggestionText = findViewById(R.id.suggestionText);
-        
-        // 如果数据不足，不显示建议
-        if (entries.size() < 14) {
-            suggestionContainer.setVisibility(View.GONE);
-            return;
-        }
-        
-        String suggestion = "";
-        
-        // 根据心情数据生成个性化建议
-        if (worstDay != -1) {
-            String worstDayName = getDayOfWeekInChinese(worstDay);
-            suggestion = String.format("建议：根据您的心情记录，尝试在%s安排一些愉快的活动，可能有助于提升情绪。", worstDayName);
-        } else {
-            // 分析心情波动
-            boolean highVariability = analyzeMoodVariability(entries);
-            if (highVariability) {
-                suggestion = "建议：您的心情波动较大，可以尝试冥想或深呼吸等放松技巧，有助于稳定情绪。";
-            } else {
-                suggestion = "建议：保持良好的睡眠和运动习惯，有助于维持积极的心情状态。";
-            }
-        }
-        
-        suggestionText.setText(suggestion);
-        suggestionContainer.setVisibility(View.VISIBLE);
-    }
-
-    // 分析心情波动程度
-    private boolean analyzeMoodVariability(List<MoodEntry> entries) {
-        if (entries.size() < 5) return false;
-        
-        // 计算标准差
-        float mean = 0;
-        for (MoodEntry entry : entries) {
-            mean += entry.getMoodScore();
-        }
-        mean /= entries.size();
-        
-        float variance = 0;
-        for (MoodEntry entry : entries) {
-            variance += Math.pow(entry.getMoodScore() - mean, 2);
-        }
-        variance /= entries.size();
-        
-        float stdDev = (float) Math.sqrt(variance);
-        
-        // 如果标准差大于1.2，认为波动较大
-        return stdDev > 1.2;
     }
 } 
