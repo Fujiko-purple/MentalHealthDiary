@@ -128,7 +128,7 @@
                         android:orientation="vertical"
                         android:layout_gravity="center_vertical">
 
-                        <!-- 日期和星期显示 - 带背景设计 -->
+                        <!-- 日期和星期显示 - 整合设计 -->
                         <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -162,15 +162,24 @@
                                     android:fontFamily="sans-serif-medium" />
                             </LinearLayout>
                             
+                            <!-- 连接线 -->
+                            <View
+                                android:layout_width="10dp"
+                                android:layout_height="2dp"
+                                android:background="#CDEBEF" />
+                            
+                            <!-- 星期几带背景 -->
                             <TextView
                                 android:id="@+id/weekdayDisplay"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="星期日"
+                                android:text="星期二"
                                 android:textSize="14sp"
-                                android:textColor="#757575"
-                                android:layout_marginStart="10dp"
-                                android:fontFamily="sans-serif-light" />
+                                android:textColor="#424242"
+                                android:fontFamily="sans-serif-light"
+                                android:paddingHorizontal="10dp"
+                                android:paddingVertical="6dp"
+                                android:background="@drawable/weekday_background" />
                         </LinearLayout>
                     </LinearLayout>
 
