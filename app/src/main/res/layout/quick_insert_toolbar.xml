@@ -1,107 +1,160 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView 
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:padding="8dp"
-    android:background="#F8F9FF"
-    tools:ignore="ExtraText">
+    app:cardElevation="2dp"
+    app:cardCornerRadius="12dp"
+    android:layout_marginVertical="4dp"
+    app:cardBackgroundColor="#F8F9FF">
 
-    <ImageButton
-        android:id="@+id/btnInsertImage"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="插入图片"
-        android:src="@drawable/ic_insert_image"
-        tools:ignore="TouchTargetSizeCheck" />
-
-    <ImageButton
-        android:id="@+id/btnInsertLocation"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_marginStart="16dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="插入位置"
-        android:src="@drawable/ic_insert_location"
-        tools:ignore="TouchTargetSizeCheck" />
-        
-    <View
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:layout_weight="1" />
-
-    <TextView
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:text="天色如何"
-        android:textSize="14sp"
-        android:textColor="#666666"
-        android:fontFamily="serif"
-        android:letterSpacing="0.1"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp" />
+        android:orientation="horizontal"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="10dp"
+        android:gravity="center_vertical">
 
-    <HorizontalScrollView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp">
-
+        <!-- 左侧插入工具组 -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
-            <RadioGroup
-                android:id="@+id/weatherRadioGroup"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnInsertImage"
+                style="@style/Widget.MaterialComponents.Button.TextButton.Icon"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:insetLeft="0dp"
+                android:insetTop="0dp"
+                android:insetRight="0dp"
+                android:insetBottom="0dp"
+                app:cornerRadius="21dp"
+                app:icon="@drawable/ic_insert_image"
+                app:iconGravity="textStart"
+                app:iconPadding="0dp"
+                app:iconSize="24dp"
+                app:iconTint="@null"
+                app:rippleColor="#33000000"
+                tools:ignore="SpeakableTextPresentCheck,TouchTargetSizeCheck" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnInsertLocation"
+                style="@style/Widget.MaterialComponents.Button.TextButton.Icon"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:layout_marginStart="8dp"
+                android:insetLeft="0dp"
+                android:insetTop="0dp"
+                android:insetRight="0dp"
+                android:insetBottom="0dp"
+                app:cornerRadius="21dp"
+                app:icon="@drawable/ic_insert_location"
+                app:iconGravity="textStart"
+                app:iconPadding="0dp"
+                app:iconSize="24dp"
+                app:iconTint="@null"
+                app:rippleColor="#33000000"
+                tools:ignore="SpeakableTextPresentCheck,TouchTargetSizeCheck" />
+        </LinearLayout>
+            
+        <!-- 分隔线 -->
+        <View
+            android:layout_width="1dp"
+            android:layout_height="24dp"
+            android:layout_marginHorizontal="12dp"
+            android:background="#22000000" />
+
+        <!-- 天气文本 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="天色如何"
+            android:textSize="14sp"
+            android:textColor="#555555"
+            android:fontFamily="serif"
+            android:letterSpacing="0.05"
+            android:padding="4dp" />
+
+        <!-- 天气选择区 -->
+        <HorizontalScrollView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:scrollbars="none">
+
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:orientation="vertical"
+                android:layout_marginStart="4dp">
 
-                <RadioButton
-                    android:id="@+id/weather_sunny"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:button="@null"
-                    android:drawableTop="@drawable/ic_weather_sunny"
-                    android:gravity="center"
-                    android:text="晴"
-                    android:textSize="10sp"
-                    tools:ignore="TouchTargetSizeCheck" />
+                <RadioGroup
+                    android:id="@+id/weatherRadioGroup"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
 
-                <RadioButton
-                    android:id="@+id/weather_cloudy"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:button="@null"
-                    android:drawableTop="@drawable/ic_weather_cloudy"
-                    android:gravity="center"
-                    android:text="多云"
-                    android:textSize="10sp"
-                    tools:ignore="TouchTargetSizeCheck" />
+                    <RadioButton
+                        android:id="@+id/weather_sunny"
+                        android:layout_width="42dp"
+                        android:layout_height="45dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:button="@null"
+                        android:drawableTop="@drawable/ic_weather_sunny"
+                        android:gravity="center"
+                        android:paddingTop="4dp"
+                        android:paddingBottom="4dp"
+                        android:text="晴"
+                        android:textColor="#666666"
+                        android:textSize="10sp"
+                        tools:ignore="TouchTargetSizeCheck" />
 
-                <RadioButton
-                    android:id="@+id/weather_rainy"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:button="@null"
-                    android:drawableTop="@drawable/ic_weather_rainy"
-                    android:gravity="center"
-                    android:text="雨"
-                    android:textSize="10sp"
-                    tools:ignore="TouchTargetSizeCheck" />
-            </RadioGroup>
+                    <RadioButton
+                        android:id="@+id/weather_cloudy"
+                        android:layout_width="42dp"
+                        android:layout_height="45dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:button="@null"
+                        android:drawableTop="@drawable/ic_weather_cloudy"
+                        android:gravity="center"
+                        android:paddingTop="4dp"
+                        android:paddingBottom="4dp"
+                        android:text="多云"
+                        android:textColor="#666666"
+                        android:textSize="10sp"
+                        tools:ignore="TouchTargetSizeCheck" />
 
-            <!-- 添加一个指示条，初始时隐藏 -->
-            <View
-                android:id="@+id/weather_indicator"
-                android:layout_width="24dp"
-                android:layout_height="2dp"
-                android:background="#4285F4"
-                android:visibility="invisible" />
-        </LinearLayout>
-    </HorizontalScrollView>
-</LinearLayout> 
+                    <RadioButton
+                        android:id="@+id/weather_rainy"
+                        android:layout_width="42dp"
+                        android:layout_height="45dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:button="@null"
+                        android:drawableTop="@drawable/ic_weather_rainy"
+                        android:gravity="center"
+                        android:paddingTop="4dp"
+                        android:paddingBottom="4dp"
+                        android:text="雨"
+                        android:textColor="#666666"
+                        android:textSize="10sp"
+                        tools:ignore="TouchTargetSizeCheck" />
+                </RadioGroup>
+
+                <!-- 添加一个指示条，初始时隐藏 -->
+                <View
+                    android:id="@+id/weather_indicator"
+                    android:layout_width="24dp"
+                    android:layout_height="2dp"
+                    android:layout_gravity="center_horizontal"
+                    android:background="#4285F4"
+                    android:visibility="invisible" />
+            </LinearLayout>
+        </HorizontalScrollView>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView> 
