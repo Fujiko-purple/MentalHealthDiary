@@ -158,6 +158,7 @@ public class MainActivity extends AppCompatActivity {
         saveButton = findViewById(R.id.saveButton);
         datePickerButton = findViewById(R.id.datePickerButton);
         TextView charCountText = findViewById(R.id.charCountText);
+        TextView moodDescriptionText = findViewById(R.id.moodDescriptionText);
         updateDateButtonText();
 
         // 添加文本变化监听器以更新字数统计
@@ -180,6 +181,49 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     charCountText.setTextColor(Color.parseColor("#99000000"));
                 }
+            }
+        });
+
+        // 监听心情选择变化
+        moodRadioGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            String description;
+            switch (checkedId) {
+                case R.id.mood_1:
+                    description = "心情低落...需要关爱";
+                    break;
+                case R.id.mood_2:
+                    description = "有点不开心，但会好起来的";
+                    break;
+                case R.id.mood_3:
+                    description = "平静且安稳的心情";
+                    break;
+                case R.id.mood_4:
+                    description = "感到快乐与满足";
+                    break;
+                case R.id.mood_5:
+                    description = "心情大好，充满活力!";
+                    break;
+                default:
+                    description = "选择一个心情...";
+                    break;
+            }
+            moodDescriptionText.setText(description);
+            
+            // 添加轻微缩放动画，让选中效果更明显
+            View selectedView = group.findViewById(checkedId);
+            if (selectedView != null) {
+                selectedView.animate()
+                    .scaleX(1.1f)
+                    .scaleY(1.1f)
+                    .setDuration(150)
+                    .withEndAction(() -> {
+                        selectedView.animate()
+                            .scaleX(1.0f)
+                            .scaleY(1.0f)
+                            .setDuration(100)
+                            .start();
+                    })
+                    .start();
             }
         });
 

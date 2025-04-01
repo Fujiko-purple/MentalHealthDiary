@@ -68,8 +68,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                app:cardCornerRadius="8dp"
-                app:cardElevation="2dp">
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:strokeWidth="0dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -77,65 +78,76 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <!-- 标题部分 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="此刻的心情如何？"
-                        android:textSize="16sp"
-                        android:textColor="@color/text_primary"
-                        android:layout_marginBottom="8dp"/>
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+                        
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_mood"
+                            android:layout_marginEnd="8dp"
+                            app:tint="#555555"/>
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="此刻的心情如何？"
+                            android:textSize="16sp"
+                            android:textColor="@color/text_primary"
+                            android:letterSpacing="0.02"
+                            android:fontFamily="sans-serif-medium"/>
+                    </LinearLayout>
 
+                    <!-- 心情选择部分 -->
                     <RadioGroup
                         android:id="@+id/moodRadioGroup"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:background="@drawable/mood_selector_background"
+                        android:padding="4dp">
 
                         <RadioButton
                             android:id="@+id/mood_1"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="😢"
-                            android:textSize="24sp"
-                            android:gravity="center"/>
+                            style="@style/MoodRadioButton"
+                            android:text="😢"/>
 
                         <RadioButton
                             android:id="@+id/mood_2"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="😕"
-                            android:textSize="24sp"
-                            android:gravity="center"/>
+                            style="@style/MoodRadioButton"
+                            android:text="😕"/>
 
                         <RadioButton
                             android:id="@+id/mood_3"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="😐"
-                            android:textSize="24sp"
-                            android:gravity="center"/>
+                            style="@style/MoodRadioButton"
+                            android:text="😐"/>
 
                         <RadioButton
                             android:id="@+id/mood_4"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="😊"
-                            android:textSize="24sp"
-                            android:gravity="center"/>
+                            style="@style/MoodRadioButton"
+                            android:text="😊"/>
 
                         <RadioButton
                             android:id="@+id/mood_5"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="😄"
-                            android:textSize="24sp"
-                            android:gravity="center"/>
+                            style="@style/MoodRadioButton"
+                            android:text="😄"/>
                     </RadioGroup>
+                    
+                    <!-- 心情描述文字 -->
+                    <TextView
+                        android:id="@+id/moodDescriptionText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="选择一个心情..."
+                        android:textSize="12sp"
+                        android:textColor="#666666"
+                        android:gravity="center"
+                        android:layout_marginTop="8dp"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

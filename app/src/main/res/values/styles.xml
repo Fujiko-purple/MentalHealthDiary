@@ -130,4 +130,16 @@
         <item name="android:stateListAnimator">@null</item>
         <item name="android:fontFamily">sans-serif-medium</item>
     </style>
+    <style name="MoodRadioButton">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:button">@null</item>
+        <item name="android:textSize">26sp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingVertical">10dp</item>
+        <item name="android:paddingHorizontal">4dp</item>
+        <item name="android:background">@drawable/mood_radio_background</item>
+        <item name="android:elevation">0dp</item>
+    </style>
 </resources> 
