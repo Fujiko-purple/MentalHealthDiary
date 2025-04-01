@@ -4,7 +4,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.RadioButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -13,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.mentalhealthdiary.R;
 import com.example.mentalhealthdiary.model.AIPersonality;
+import com.google.android.material.chip.Chip;
 
 import java.util.List;
 
@@ -72,7 +72,44 @@ public class AIPersonalityAdapter extends RecyclerView.Adapter<AIPersonalityAdap
         }
         
         // 设置选中状态
-        holder.selectRadio.setChecked(personality.getId().equals(selectedId));
+        boolean isSelected = personality.getId().equals(selectedId);
+
+        // 设置选中状态的视觉效果
+        holder.selectedIndicator.setVisibility(isSelected ? View.VISIBLE : View.GONE);
+        holder.avatarGlow.setVisibility(isSelected ? View.VISIBLE : View.GONE);
+
+        // 设置标签（可以根据性格类型设置不同标签）
+        String tag = "";
+        switch (personality.getId()) {
+            case "ganyu_cbt":
+                tag = "温柔疗愈";
+                break;
+            case "natsume_narrative_pro":
+                tag = "故事疗法";
+                break;
+            case "cat_girl":
+                tag = "可爱治愈";
+                break;
+            case "kafka_rebt":
+                tag = "危险魅力";
+                break;
+            case "tiga_divine":
+                tag = "光之疗愈";
+                break;
+            case "yangjian_tactician":
+                tag = "战术思维";
+                break;
+            case "dt_music":
+                tag = "音乐解析";
+                break;
+            case "patrick_naive":
+                tag = "反向逻辑";
+                break;
+            default:
+                tag = "专业咨询";
+                break;
+        }
+        holder.personalityTag.setText(tag);
         
         // 设置点击事件
         holder.itemView.setOnClickListener(v -> {
@@ -91,14 +128,18 @@ public class AIPersonalityAdapter extends RecyclerView.Adapter<AIPersonalityAdap
         ImageView avatarImage;
         TextView nameText;
         TextView descriptionText;
-        RadioButton selectRadio;
+        ImageView selectedIndicator;
+        View avatarGlow;
+        Chip personalityTag;
 
         ViewHolder(View itemView) {
             super(itemView);
             avatarImage = itemView.findViewById(R.id.avatarImage);
             nameText = itemView.findViewById(R.id.nameText);
             descriptionText = itemView.findViewById(R.id.descriptionText);
-            selectRadio = itemView.findViewById(R.id.selectRadio);
+            selectedIndicator = itemView.findViewById(R.id.selectedIndicator);
+            avatarGlow = itemView.findViewById(R.id.avatarGlow);
+            personalityTag = itemView.findViewById(R.id.personalityTag);
         }
     }
 } 

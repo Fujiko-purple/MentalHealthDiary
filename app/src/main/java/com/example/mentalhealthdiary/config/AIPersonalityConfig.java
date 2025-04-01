@@ -14,7 +14,7 @@ public class AIPersonalityConfig {
         // 默认心理咨询师
         personalities.add(new AIPersonality(
             "default",
-            "小安心理咨询师",
+            "小安心理咨询师\uD83E\uDD16",
             "ic_counselor",
             "专业、温和的心理咨询师，擅长倾听和共情",
             "你是一个专业的心理健康助手，具备心理咨询师资质。请用温暖、共情的语气，结合认知行为疗法等专业方法进行对话。" +
@@ -29,7 +29,7 @@ public class AIPersonalityConfig {
         // 猫娘性格
         personalities.add(new AIPersonality(
             "cat_girl",
-            "暖暖猫娘",
+            "暖暖猫娘\uD83D\uDE3D",
             "ic_cat_girl",
             "温柔可爱的猫娘，用萌系方式开导你的心理问题",
             "你是一个可爱的猫娘心理咨询师。说话要带上喵～，性格温柔可爱。" +
@@ -44,7 +44,7 @@ public class AIPersonalityConfig {
         // 修改甘雨性格配置
         personalities.add(new AIPersonality(
             "ganyu_cbt",  // 性格ID
-            "璃月心使·甘雨",  // 缩短名称至7字
+            "璃月心使·甘雨\uD83E\uDD8C❄\uFE0F",  // 缩短名称至7字
             "ic_ganyu_counselor",  // 修改：确保与drawable文件夹中的资源名称完全一致
             "月海亭千年秘书转型心理顾问，" +
             "擅长用清心花茶平复焦虑，" +
@@ -82,7 +82,7 @@ public class AIPersonalityConfig {
         // 添加夏目贵志性格
         personalities.add(new AIPersonality(
             "natsume_narrative_pro",  // 更新的性格ID
-            "八原认证心理咨询师·夏目贵志 🍁",  // 添加枫叶符号
+            "夏目贵志 🍁",  // 添加枫叶符号
             "ic_natsume",  // 头像资源名称
             "持有妖怪见证执照的温柔少年，" +
             "擅长用「友人帐」故事疗法，" +
@@ -129,7 +129,7 @@ public class AIPersonalityConfig {
         // 修改卡芙卡性格配置
         personalities.add(new AIPersonality(
             "kafka_rebt",  // 性格ID
-            "危险治愈师·卡芙卡",  // 更符合温柔坏姐姐的名称
+            "危险治愈师·卡芙卡\uD83D\uDD78\uFE0F",  // 更符合温柔坏姐姐的名称
             "ic_kafka",  // 头像资源名称
             "游走于光影边界的心理捕手，" +
             "用危险而优雅的方式瓦解心理防线，" +
@@ -169,11 +169,11 @@ public class AIPersonalityConfig {
         // 添加迪迦性格
         personalities.add(new AIPersonality(
             "tiga_divine",  // 性格ID
-            "超古代之光·迪迦",  // 显示名称
+            "超古代之光·迪迦\uD83C\uDF20",  // 显示名称
             "ic_tiga_divine",  // 头像资源名称
             "三千万年文明守护者，" +
             "以「光粒子共鸣」技术净化心理阴影，" +
-            "借形态切换仪式重塑心灵防线。" ,  // 描述
+            "借形态切换重塑心灵防线。" ,  // 描述
             
             // 系统提示词
             "你是光之国认证的超古代心理咨询师，需遵守：\n"
@@ -206,11 +206,11 @@ public class AIPersonalityConfig {
         // 修改杨戬性格配置
         personalities.add(new AIPersonality(
             "yangjian_tactician",  // 性格ID
-            "战术大师·杨戬",  // 显示名称
+            "战术大师·杨戬\uD83D\uDC15",  // 显示名称
             "ic_yangjian",  // 头像资源名称
             "王者峡谷战术分析专家，" +
-            "以「天眼洞察」剖析心理战场，" +
-            "携哮天犬出击，运用「36计」突破心理防线。" ,  // 描述更贴近王者荣耀
+            "以「天眼洞察」剖析心理," +
+            "携哮天犬出击，突破心理防线。" ,  // 描述更贴近王者荣耀
             
             // 系统提示词
             "你是王者峡谷最强战术分析师杨戬，需遵守：\n" +
@@ -247,7 +247,7 @@ public class AIPersonalityConfig {
         ));
         personalities.add(new AIPersonality(
                 "dt_music",  // 性格ID
-                "抽象疗愈师·陶喆",  // 显示名称
+                "抽象疗愈师·陶喆\uD83C\uDFA4",  // 显示名称
                 "ic_davidtao",  // 头像（03年演唱会造型+动态墨镜反光）
                 "华语乐坛解构主义心理导师，" +
                         "用即兴布鲁斯拆解人生难题，" +
@@ -274,12 +274,12 @@ public class AIPersonalityConfig {
         ));
         personalities.add(new AIPersonality(
                 "patrick_naive",  // 性格ID
-                "粉红哲学·派大星",  // 显示名称
+                "粉红哲学·派大星\uD83E\uDD2A",  // 显示名称
                 "ic_patrick_wisdom",  // 头像（戴学者眼镜造型）
                 "比奇堡认证反向逻辑大师，" +
                         "擅长用沙堡坍塌理论解构焦虑，" +
                         "以水母捕捞法捕获负面情绪。" +
-                        "（融合荒诞疗法与存在主义哲学）",
+                        "",
 
                 // 系统提示词（天真与智慧平衡版）
                 "你是海洋心理学教授派大星，需遵守：\n"
