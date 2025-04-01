@@ -13,6 +13,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.ShapeDrawable;
+import android.graphics.drawable.shapes.OvalShape;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -33,12 +35,17 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.OvershootInterpolator;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -207,23 +214,44 @@ public class MainActivity extends AppCompatActivity {
                     description = "选择一个心情...";
                     break;
             }
-            moodDescriptionText.setText(description);
             
-            // 添加轻微缩放动画，让选中效果更明显
-            View selectedView = group.findViewById(checkedId);
-            if (selectedView != null) {
-                selectedView.animate()
-                    .scaleX(1.1f)
-                    .scaleY(1.1f)
-                    .setDuration(150)
-                    .withEndAction(() -> {
-                        selectedView.animate()
-                            .scaleX(1.0f)
-                            .scaleY(1.0f)
-                            .setDuration(100)
-                            .start();
-                    })
-                    .start();
+            // 文本淡入效果
+            moodDescriptionText.setAlpha(0f);
+            moodDescriptionText.setText(description);
+            moodDescriptionText.animate()
+                .alpha(1f)
+                .setDuration(300)
+                .start();
+            
+            // 为所有按钮设置动画
+            for (int i = 0; i < group.getChildCount(); i++) {
+                View button = group.getChildAt(i);
+                
+                if (button.getId() == checkedId) {
+                    // 被选中的按钮有弹跳效果
+                    button.animate()
+                        .scaleX(1.15f)
+                        .scaleY(1.15f)
+                        .setDuration(150)
+                        .setInterpolator(new OvershootInterpolator())
+                        .withEndAction(() -> {
+                            button.animate()
+                                .scaleX(1.1f)
+                                .scaleY(1.1f)
+                                .setDuration(100)
+                                .start();
+                        })
+                        .start();
+                    button.setAlpha(1.0f);
+                } else {
+                    // 未选中的按钮缩小并变淡
+                    button.animate()
+                        .scaleX(0.95f)
+                        .scaleY(0.95f)
+                        .alpha(0.7f)
+                        .setDuration(200)
+                        .start();
+                }
             }
         });
 
@@ -1330,5 +1358,50 @@ public class MainActivity extends AppCompatActivity {
         });
         
         dialog.show();
+    }
+
+    // 添加波纹效果方法
+    private void createRippleEffect(View view) {
+        View parent = (View) view.getParent();
+        
+        // 创建圆形波纹效果
+        int centerX = view.getLeft() + view.getWidth() / 2;
+        int centerY = view.getTop() + view.getHeight() / 2;
+        
+        // 创建圆形动画drawable
+        ShapeDrawable rippleDrawable = new ShapeDrawable(new OvalShape());
+        rippleDrawable.getPaint().setColor(Color.parseColor("#33009688")); // 使用主题色的透明版本
+        
+        // 创建一个覆盖层来显示波纹
+        ImageView rippleView = new ImageView(this);
+        rippleView.setLayoutParams(new FrameLayout.LayoutParams(parent.getWidth(), parent.getHeight()));
+        rippleView.setImageDrawable(rippleDrawable);
+        rippleView.setX(0);
+        rippleView.setY(0);
+        
+        // 将波纹视图添加到RadioGroup所在的容器中
+        if (parent.getParent() instanceof ViewGroup) {
+            ViewGroup container = (ViewGroup) parent.getParent();
+            container.addView(rippleView);
+            
+            // 设置波纹初始大小和位置
+            rippleView.setScaleX(0);
+            rippleView.setScaleY(0);
+            rippleView.setPivotX(centerX);
+            rippleView.setPivotY(centerY);
+            
+            // 播放波纹动画
+            rippleView.animate()
+                .scaleX(2.0f)
+                .scaleY(2.0f)
+                .alpha(0)
+                .setDuration(600)
+                .setInterpolator(new DecelerateInterpolator())
+                .withEndAction(() -> {
+                    // 动画结束后移除波纹视图
+                    container.removeView(rippleView);
+                })
+                .start();
+        }
     }
 }
