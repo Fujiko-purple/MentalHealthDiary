@@ -32,13 +32,13 @@ import android.text.SpannableStringBuilder;
 import android.text.TextWatcher;
 import android.text.style.ImageSpan;
 import android.util.Log;
+import android.view.ContextThemeWrapper;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
-import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.DecelerateInterpolator;
@@ -413,31 +413,58 @@ public class MainActivity extends AppCompatActivity {
             calendar.setTime(selectedDate);
         }
         
-        // 先选择日期
+        // 使用自定义主题
         DatePickerDialog datePickerDialog = new DatePickerDialog(
-            this,
+            new ContextThemeWrapper(this, R.style.CustomDatePickerTheme),
             (view, year, month, dayOfMonth) -> {
                 // 设置选择的日期
                 calendar.set(year, month, dayOfMonth);
                 
-                // 然后显示时间选择器 - 使用 TimePickerDialog 而不是 DatePickerDialog
-                new TimePickerDialog(
-                    this,
+                // 时间选择器也应用相同主题
+                TimePickerDialog timePickerDialog = new TimePickerDialog(
+                    new ContextThemeWrapper(this, R.style.CustomDatePickerTheme),
                     (timeView, hourOfDay, minute) -> {
                         calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
                         calendar.set(Calendar.MINUTE, minute);
                         selectedDate = calendar.getTime();
                         updateDateDisplays();
+                        
+                        // 显示一个优雅的确认动画
+                        selectedDateDisplay.animate()
+                            .alpha(0.3f)
+                            .setDuration(150)
+                            .withEndAction(() -> {
+                                selectedDateDisplay.animate()
+                                    .alpha(1.0f)
+                                    .setDuration(300)
+                                    .start();
+                            })
+                            .start();
                     },
                     calendar.get(Calendar.HOUR_OF_DAY),
                     calendar.get(Calendar.MINUTE),
-                    true  // 是否使用24小时制
-                ).show();
+                    true
+                );
+                
+                // 设置时间选择器样式
+                Window timeWindow = timePickerDialog.getWindow();
+                if (timeWindow != null) {
+                    timeWindow.setBackgroundDrawableResource(R.drawable.dialog_rounded_background);
+                }
+                
+                timePickerDialog.show();
             },
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),
             calendar.get(Calendar.DAY_OF_MONTH)
         );
+        
+        // 设置日期选择器样式
+        Window window = datePickerDialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawableResource(R.drawable.dialog_rounded_background);
+        }
+        
         datePickerDialog.show();
     }
 
