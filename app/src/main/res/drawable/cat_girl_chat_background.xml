@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 底层渐变背景 - 优雅粉色渐变 -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#FFF0F5"
+                android:centerColor="#FFFAFD"
+                android:endColor="#FFF0FF"
+                android:angle="135"
+                android:type="linear"/>
+        </shape>
+    </item>
+    
+    <!-- 右上角粉色光晕渐变 -->
+    <item android:right="-50dp" android:top="-50dp">
+        <shape android:shape="oval">
+            <size android:width="200dp" android:height="200dp" />
+            <gradient
+                android:type="radial"
+                android:gradientRadius="100dp"
+                android:startColor="#25FFCBDB"
+                android:centerColor="#15FFCBDB"
+                android:endColor="#00FFFFFF" />
+        </shape>
+    </item>
+    
+    <!-- 左下角粉紫色光晕渐变 -->
+    <item android:left="-70dp" android:bottom="-70dp">
+        <shape android:shape="oval">
+            <size android:width="240dp" android:height="240dp" />
+            <gradient
+                android:type="radial"
+                android:gradientRadius="120dp"
+                android:startColor="#20FFBBEE"
+                android:centerColor="#10FFBBEE"
+                android:endColor="#00FFFFFF" />
+        </shape>
+    </item>
+    
+    <!-- 中右部粉橙渐变气泡 -->
+    <item android:right="40dp" android:top="200dp">
+        <shape android:shape="oval">
+            <size android:width="120dp" android:height="120dp" />
+            <gradient
+                android:type="radial"
+                android:gradientRadius="60dp"
+                android:startColor="#15FFC8D6"
+                android:centerColor="#10FFCAD8"
+                android:endColor="#00FFFFFF" />
+        </shape>
+    </item>
+    
+    <!-- 左上部粉蓝渐变气泡 -->
+    <item android:left="60dp" android:top="60dp">
+        <shape android:shape="oval">
+            <size android:width="80dp" android:height="80dp" />
+            <gradient
+                android:type="radial"
+                android:gradientRadius="40dp"
+                android:startColor="#18FFCAE8"
+                android:centerColor="#10FFCAE8"
+                android:endColor="#00FFFFFF" />
+        </shape>
+    </item>
+    
+    <!-- 右下角淡紫渐变气泡 -->
+    <item android:right="30dp" android:bottom="50dp">
+        <shape android:shape="oval">
+            <size android:width="90dp" android:height="90dp" />
+            <gradient
+                android:type="radial"
+                android:gradientRadius="45dp"
+                android:startColor="#15FFB0E0"
+                android:centerColor="#08FFB0E0"
+                android:endColor="#00FFFFFF" />
+        </shape>
+    </item>
+    
+    <!-- 半透明猫娘头像 - 中央大图 -->
+    <item>
+        <bitmap
+            android:src="@drawable/ic_cat_girl"
+            android:gravity="center"
+            android:tileMode="disabled"
+            android:alpha="0.17" />
+    </item>
+    
+    <!-- 左上角小装饰 -->
+    <item android:left="10dp" android:top="10dp">
+        <bitmap
+            android:src="@drawable/ic_cat_girl"
+            android:gravity="top|left"
+            android:width="60dp"
+            android:height="60dp"
+            android:alpha="0.12" />
+    </item>
+    
+    <!-- 右下角小装饰 -->
+    <item android:right="10dp" android:bottom="10dp">
+        <bitmap
+            android:src="@drawable/ic_cat_girl"
+            android:gravity="bottom|right"
+            android:width="60dp"
+            android:height="60dp"
+            android:alpha="0.12" />
+    </item>
+</layer-list> 

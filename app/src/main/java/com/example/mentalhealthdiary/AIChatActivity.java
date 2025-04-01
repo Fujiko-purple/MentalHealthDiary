@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -16,6 +17,7 @@ import android.os.Looper;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.EditText;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -284,6 +286,9 @@ public class AIChatActivity extends AppCompatActivity {
 
         quickMessageGroup = findViewById(R.id.quickMessageGroup);
         setupQuickMessages();
+
+        // 获取当前AI性格并设置相应背景
+        updateActivityBackgroundForPersonality();
     }
 
     private void loadCurrentPersonality() {
@@ -321,6 +326,9 @@ public class AIChatActivity extends AppCompatActivity {
             
             // 保存选择的性格ID
             PreferenceManager.saveCurrentPersonalityId(this, personality.getId());
+            
+            // 更新背景
+            updateActivityBackgroundForPersonality();
         }
     }
 
@@ -332,6 +340,9 @@ public class AIChatActivity extends AppCompatActivity {
             Log.d("AIChatActivity", "Personality changed to: " + 
                   (currentPersonality != null ? currentPersonality.getName() : "null"));
             startNewChat();
+            
+            // 更新背景
+            updateActivityBackgroundForPersonality();
         }
     }
 
@@ -1068,6 +1079,28 @@ public class AIChatActivity extends AppCompatActivity {
                 currentPersonality.getWelcomeMessage(),
                 currentPersonality.getModelName()
             );
+        }
+    }
+
+    private void updateActivityBackgroundForPersonality() {
+        String personalityId = currentPersonality != null ? currentPersonality.getId() : "default";
+        
+        // 获取根布局视图
+        View rootView = findViewById(R.id.chat_root_layout);
+        
+        if (rootView != null) {
+            Log.d("AIChatActivity", "找到根视图，设置背景");
+            
+            // 检查当前AI性格
+            if ("cat_girl".equals(personalityId)) {
+                // 为猫娘AI设置特殊背景
+                rootView.setBackgroundResource(R.drawable.cat_girl_chat_background);
+            } else {
+                // 其他AI使用默认背景
+                rootView.setBackgroundColor(getResources().getColor(android.R.color.white));
+            }
+        } else {
+            Log.e("AIChatActivity", "无法找到根视图");
         }
     }
 } 
