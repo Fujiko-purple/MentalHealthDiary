@@ -175,17 +175,18 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     // 猫娘专属气泡
                     messageHolder.messageText.setBackgroundResource(R.drawable.chat_bubble_cat_girl);
                     
-                    // 为猫娘消息添加猫娘文本风格
-                    String originalMessage = message.getMessage();
-                    
-                    // 如果不是思考中的消息，转换为猫娘风格
-                    if (!originalMessage.contains("思考中")) {
-                        String transformedMessage = transformToCatGirlStyle(originalMessage);
-                        messageHolder.messageText.setText(transformedMessage);
+                    // 检查是否是思考中的消息
+                    if (message.getMessage().contains("思考中")) {
+                        messageHolder.messageText.setText(message.getMessage());
                     } else {
-                        messageHolder.messageText.setText(originalMessage);
+                        // 直接显示原始消息，不再转换
+                        // 如果仍想保留转换功能作为备份，可以加个条件判断
+                        if (!message.getMessage().contains("喵～") && !message.getMessage().contains("呜喵～")) {
+                            messageHolder.messageText.setText(transformToCatGirlStyle(message.getMessage()));
+                        } else {
+                            messageHolder.messageText.setText(message.getMessage());
+                        }
                     }
-                    
                 } else {
                     // 默认AI气泡
                     messageHolder.messageText.setBackgroundResource(R.drawable.chat_bubble_received);
