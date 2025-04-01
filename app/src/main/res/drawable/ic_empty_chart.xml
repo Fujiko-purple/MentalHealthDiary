@@ -16,14 +16,13 @@
         android:strokeWidth="2"
         android:pathData="M30,30L30,90L90,90"/>
         
-    <!-- 情绪波动线 - 虚线 -->
+    <!-- 情绪波动线 - 改为实线 -->
     <path
         android:fillColor="#00000000"
         android:strokeColor="#BBBBBB"
         android:strokeWidth="2.5"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
-        android:strokeDashArray="3,3"
         android:pathData="M30,70C40,70 43,50 50,50C57,50 60,80 70,80C80,80 83,40 90,40"/>
         
     <!-- 情绪图标 - 开心 -->
