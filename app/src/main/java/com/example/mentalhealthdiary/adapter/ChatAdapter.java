@@ -1,6 +1,7 @@
 package com.example.mentalhealthdiary.adapter;
 
 import android.content.Context;
+import android.graphics.Typeface;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -36,6 +37,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private Context context;
     private OnMessageEditListener messageEditListener;
     private boolean waitingResponse = false;
+    private Typeface catGirlFont = null;
 
     // 添加接口定义
     public interface OnMessageEditListener {
@@ -192,6 +194,13 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 
                 // AI消息不需要长按编辑功能
                 messageHolder.messageText.setOnLongClickListener(null);
+            }
+
+            // 应用字体
+            if (catGirlFont != null && "cat_girl".equals(currentPersonality.getId())) {
+                messageHolder.messageText.setTypeface(catGirlFont);
+            } else {
+                messageHolder.messageText.setTypeface(Typeface.DEFAULT);
             }
         }
     }
@@ -461,5 +470,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
         
         return message;
+    }
+
+    // 设置猫娘字体的方法
+    public void setCatGirlFont(Typeface font) {
+        this.catGirlFont = font;
     }
 } 
