@@ -142,4 +142,31 @@
         <item name="android:background">@drawable/mood_radio_background</item>
         <item name="android:elevation">0dp</item>
     </style>
+    <style name="DateActionButton" parent="Widget.MaterialComponents.Button">
+        <item name="android:minWidth">0dp</item>
+        <item name="android:minHeight">0dp</item>
+        <item name="android:letterSpacing">0.02</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingBottom">8dp</item>
+        <item name="android:paddingStart">12dp</item>
+        <item name="android:paddingEnd">12dp</item>
+        <item name="android:stateListAnimator">@animator/button_press_animator</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="cornerRadius">18dp</item>
+        <item name="iconSize">16dp</item>
+    </style>
+    <style name="DateActionButton.Outlined" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="android:textColor">#009688</item>
+        <item name="rippleColor">#1A009688</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="elevation">0dp</item>
+    </style>
+    <style name="DateActionButton.Filled" parent="Widget.MaterialComponents.Button">
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="backgroundTint">#009688</item>
+        <item name="rippleColor">#52FFFFFF</item>
+        <item name="elevation">2dp</item>
+        <item name="android:shadowRadius">2</item>
+    </style>
 </resources> 

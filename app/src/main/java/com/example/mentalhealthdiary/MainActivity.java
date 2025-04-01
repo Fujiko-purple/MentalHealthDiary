@@ -127,6 +127,9 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView.LayoutManager listLayoutManager;
     private RecyclerView.LayoutManager gridLayoutManager;
     private MaterialButton cancelButton;
+    private TextView selectedDateDisplay;
+    private TextView weekdayDisplay;
+    private MaterialButton todayButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -166,7 +169,10 @@ public class MainActivity extends AppCompatActivity {
         datePickerButton = findViewById(R.id.datePickerButton);
         TextView charCountText = findViewById(R.id.charCountText);
         TextView moodDescriptionText = findViewById(R.id.moodDescriptionText);
-        updateDateButtonText();
+        selectedDateDisplay = findViewById(R.id.selectedDateDisplay);
+        weekdayDisplay = findViewById(R.id.weekdayDisplay);
+        todayButton = findViewById(R.id.todayButton);
+        updateDateDisplays();
 
         // 添加文本变化监听器以更新字数统计
         diaryContent.addTextChangedListener(new TextWatcher() {
@@ -284,6 +290,19 @@ public class MainActivity extends AppCompatActivity {
             // 随机更换写作提示
             int randomIndex = new Random().nextInt(writingPrompts.length);
             diaryContent.setHint(writingPrompts[randomIndex]);
+            
+            // 添加选择后的动画效果
+            selectedDateDisplay.setAlpha(0.5f);
+            selectedDateDisplay.animate()
+                .alpha(1.0f)
+                .setDuration(300)
+                .start();
+            
+            weekdayDisplay.setAlpha(0.5f);
+            weekdayDisplay.animate()
+                .alpha(1.0f)
+                .setDuration(300)
+                .start();
         });
 
         // 初始化筛选和排序功能
@@ -366,6 +385,26 @@ public class MainActivity extends AppCompatActivity {
         // 初始化取消按钮
         cancelButton = findViewById(R.id.cancelButton);
         cancelButton.setOnClickListener(v -> cancelEditing());
+
+        // 初始化日期按钮监听器
+        todayButton.setOnClickListener(v -> {
+            // 设置为今天
+            selectedDate = new Date();
+            updateDateDisplays();
+            
+            // 添加一个小动画，使体验更丝滑
+            selectedDateDisplay.setAlpha(0.5f);
+            selectedDateDisplay.animate()
+                .alpha(1.0f)
+                .setDuration(300)
+                .start();
+            
+            weekdayDisplay.setAlpha(0.5f);
+            weekdayDisplay.animate()
+                .alpha(1.0f)
+                .setDuration(300)
+                .start();
+        });
     }
 
     private void showDatePickerDialog() {
@@ -388,7 +427,7 @@ public class MainActivity extends AppCompatActivity {
                         calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
                         calendar.set(Calendar.MINUTE, minute);
                         selectedDate = calendar.getTime();
-                        updateDateButtonText();
+                        updateDateDisplays();
                     },
                     calendar.get(Calendar.HOUR_OF_DAY),
                     calendar.get(Calendar.MINUTE),
@@ -402,9 +441,19 @@ public class MainActivity extends AppCompatActivity {
         datePickerDialog.show();
     }
 
-    private void updateDateButtonText() {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy年MM月dd日 HH:mm", Locale.CHINESE);
-        datePickerButton.setText(dateFormat.format(selectedDate != null ? selectedDate : new Date()));
+    private void updateDateDisplays() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy年MM月dd日", Locale.CHINA);
+        SimpleDateFormat weekdayFormat = new SimpleDateFormat("EEEE", Locale.CHINA);
+        
+        if (selectedDate != null) {
+            selectedDateDisplay.setText(dateFormat.format(selectedDate));
+            weekdayDisplay.setText(weekdayFormat.format(selectedDate));
+        } else {
+            Date today = new Date();
+            selectedDate = today;
+            selectedDateDisplay.setText(dateFormat.format(today));
+            weekdayDisplay.setText(weekdayFormat.format(today));
+        }
     }
 
     private void showEditDialog(MoodEntry entry) {
@@ -412,7 +461,7 @@ public class MainActivity extends AppCompatActivity {
         
         // 设置日期
         selectedDate = entry.getDate();
-        updateDateButtonText();
+        updateDateDisplays();
         
         // 设置心情 - 使用正确的RadioButton ID
         int moodScore = entry.getMoodScore();
@@ -499,7 +548,7 @@ public class MainActivity extends AppCompatActivity {
         saveButton.setIcon(getDrawable(R.drawable.ic_save));
         currentEditingId = 0;
         selectedDate = null;  // 重置选择的日期
-        updateDateButtonText();
+        updateDateDisplays();
         
         // 隐藏取消按钮
         cancelButton.setVisibility(View.GONE);
@@ -558,7 +607,7 @@ public class MainActivity extends AppCompatActivity {
                 weatherRadioGroup.clearCheck();  // 确保清除天气选择
                 selectedWeather = null;  // 重置天气变量
                 selectedDate = null;
-                updateDateButtonText();
+                updateDateDisplays();
                 currentEditingId = 0;
                 saveButton.setText("记录");
                 saveButton.setIcon(getDrawable(R.drawable.ic_save));
@@ -1281,7 +1330,7 @@ public class MainActivity extends AppCompatActivity {
                 
                 // 重置日期
                 selectedDate = null;
-                updateDateButtonText();
+                updateDateDisplays();
                 
                 // 重置编辑状态
                 currentEditingId = 0;

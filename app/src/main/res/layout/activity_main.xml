@@ -47,19 +47,96 @@
                     android:orientation="horizontal"
                     android:padding="16dp">
 
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_calendar"
-                        android:layout_gravity="center_vertical"/>
+                    <!-- 日期信息显示区域 -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_gravity="center_vertical">
 
-                    <Button
-                        android:id="@+id/datePickerButton"
-                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        <!-- 日期显示 -->
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <ImageView
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:src="@drawable/ic_calendar"
+                                android:layout_marginEnd="8dp"
+                                app:tint="#555555" />
+
+                            <TextView
+                                android:id="@+id/selectedDateDisplay"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="2023年10月1日"
+                                android:textSize="16sp"
+                                android:textColor="#333333"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <!-- 星期几显示 -->
+                        <TextView
+                            android:id="@+id/weekdayDisplay"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="星期日"
+                            android:textSize="13sp"
+                            android:textColor="#666666"
+                            android:layout_marginStart="28dp"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                    <!-- 日期操作区域 -->
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:text="选择日期"/>
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <!-- 今天按钮 - 紧凑版 -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/todayButton"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="4dp"
+                            android:minWidth="0dp"
+                            android:minHeight="0dp"
+                            android:paddingStart="8dp"
+                            android:paddingTop="4dp"
+                            android:paddingEnd="8dp"
+                            android:paddingBottom="4dp"
+                            android:text="今天"
+                            android:textColor="#009688"
+                            android:textSize="13sp"
+                            app:rippleColor="#1A009688"
+                            tools:ignore="TouchTargetSizeCheck" />
+
+                        <!-- 日期选择按钮 - 紧凑版 -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/datePickerButton"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:minWidth="0dp"
+                            android:minHeight="0dp"
+                            android:paddingStart="10dp"
+                            android:paddingTop="6dp"
+                            android:paddingEnd="10dp"
+                            android:paddingBottom="6dp"
+                            android:text="选择日期"
+                            android:textColor="#009688"
+                            android:textSize="13sp"
+                            app:cornerRadius="16dp"
+                            app:rippleColor="#1A009688"
+                            app:strokeColor="#009688"
+                            tools:ignore="TouchTargetSizeCheck" />
+                    </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -86,12 +163,7 @@
                         android:gravity="center_vertical"
                         android:layout_marginBottom="12dp">
                         
-                        <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:src="@drawable/ic_mood"
-                            android:layout_marginEnd="8dp"
-                            app:tint="#555555"/>
+
                             
                         <TextView
                             android:layout_width="wrap_content"
