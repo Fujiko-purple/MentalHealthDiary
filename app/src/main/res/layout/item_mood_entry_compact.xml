@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="4dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="2dp"
+    app:strokeWidth="0dp"
+    android:clickable="true"
+    android:focusable="true"
+    app:rippleColor="#33000000"
+    app:cardBackgroundColor="#FFFFFF">
+    
+    <!-- 左侧情绪色彩指示条 -->
+    <View
+        android:id="@+id/moodColorIndicator"
+        android:layout_width="4dp"
+        android:layout_height="match_parent"
+        android:background="#BDBDBD"/>
+        
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="8dp">
+        
+        <!-- 顶部信息栏 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            
+            <!-- 心情表情 -->
+            <TextView
+                android:id="@+id/moodEmoji"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:textSize="16sp"
+                android:gravity="center"
+                tools:text="😊"/>
+                
+            <!-- 日期 -->
+            <TextView
+                android:id="@+id/dateText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="10sp"
+                android:textColor="#787878"
+                android:layout_marginStart="4dp"
+                tools:text="03/31 15:15"/>
+        </LinearLayout>
+        
+        <!-- 内容预览 -->
+        <TextView
+            android:id="@+id/contentText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textColor="#333333"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:layout_marginTop="4dp"
+            tools:text="今天的心情很好，阳光明媚..."/>
+            
+        <!-- 图片预览 -->
+        <ImageView
+            android:id="@+id/contentImage"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:scaleType="centerCrop"
+            android:visibility="gone"
+            android:layout_marginTop="4dp"
+            android:contentDescription="日记图片"/>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

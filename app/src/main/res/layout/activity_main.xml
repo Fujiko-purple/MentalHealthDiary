@@ -323,6 +323,8 @@
                     </LinearLayout>
 
                     <!-- 心情筛选chips -->
+
+                    <!-- 历史记录列表 -->
                     <com.google.android.material.chip.ChipGroup
                         android:id="@+id/moodFilterChips"
                         android:layout_width="match_parent"
@@ -336,45 +338,65 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:checked="true"
-                            android:text="全部"/>
+                            android:text="全部" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipHappy"
                             style="@style/Widget.MaterialComponents.Chip.Choice"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="😄 开心"/>
+                            android:text="😄 开心" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipGood"
                             style="@style/Widget.MaterialComponents.Chip.Choice"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="😊 不错"/>
+                            android:text="😊 不错" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipNeutral"
                             style="@style/Widget.MaterialComponents.Chip.Choice"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="😐 一般"/>
+                            android:text="😐 一般" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipSad"
                             style="@style/Widget.MaterialComponents.Chip.Choice"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="😕 低落"/>
+                            android:text="😕 低落" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipVeryBad"
                             style="@style/Widget.MaterialComponents.Chip.Choice"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="😢 难过"/>
+                            android:text="😢 难过" />
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/viewModeButton"
+                            style="@style/Widget.MaterialComponents.Button"
+                            android:layout_width="wrap_content"
+                            android:layout_height="42dp"
+                            android:layout_marginEnd="10dp"
+                            android:elevation="4dp"
+                            android:stateListAnimator="@animator/button_state_animator"
+                            android:text="相册"
+                            android:textColor="#9370DB"
+                            android:textSize="14sp"
+                            app:backgroundTint="#FAF5FF"
+                            app:cornerRadius="21dp"
+                            app:icon="@drawable/ic_grid_view"
+                            app:iconGravity="textStart"
+                            app:iconPadding="8dp"
+                            app:iconTint="#9370DB"
+                            app:rippleColor="#33FFFFFF"
+                            tools:ignore="TouchTargetSizeCheck" />
+
+
                     </com.google.android.material.chip.ChipGroup>
 
-                    <!-- 历史记录列表 -->
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/historyRecyclerView"
                         android:layout_width="match_parent"
