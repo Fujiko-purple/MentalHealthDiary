@@ -434,14 +434,32 @@ public class MainActivity extends AppCompatActivity {
         // 添加日志检查天气
         Log.d("WeatherDebug", "保存时的天气: " + selectedWeather);
         
+        // 创建要保存的记录对象
         MoodEntry entry = new MoodEntry(selectedDate, moodScore, content, selectedWeather);
         
         if (currentEditingId > 0) {
             entry.setId(currentEditingId);
+            
+            // 如果是更新操作，显示确认对话框
+            new AlertDialog.Builder(this)
+                .setTitle("确认更新")
+                .setMessage("确定要更新这条记录吗？")
+                .setPositiveButton("确定", (dialog, which) -> {
+                    // 执行更新操作
+                    saveMoodEntryToDatabase(entry);
+                })
+                .setNegativeButton("取消", null)
+                .create()
+                .show();
+        } else {
+            // 如果是新建操作，直接保存
+            saveMoodEntryToDatabase(entry);
         }
-        
+    }
+
+    private void saveMoodEntryToDatabase(MoodEntry entry) {
         executorService.execute(() -> {
-            if (currentEditingId > 0) {
+            if (entry.getId() > 0) {
                 database.moodEntryDao().update(entry);
             } else {
                 database.moodEntryDao().insert(entry);
@@ -464,7 +482,9 @@ public class MainActivity extends AppCompatActivity {
                 // 清除选中状态
                 clearCardSelection();
                 
-                Toast.makeText(MainActivity.this, "保存成功", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, 
+                        entry.getId() > 0 ? "更新成功" : "保存成功", 
+                        Toast.LENGTH_SHORT).show();
             });
         });
     }
@@ -1154,31 +1174,40 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // 添加取消编辑方法
+    // 修改cancelEditing方法，添加确认对话框
     private void cancelEditing() {
-        // 清除所有表单内容
-        diaryContent.setText("");
-        moodRadioGroup.clearCheck();
-        weatherRadioGroup.clearCheck();
-        
-        // 重置天气选择
-        selectedWeather = null;
-        weatherIndicator.setVisibility(View.INVISIBLE);
-        
-        // 重置日期
-        selectedDate = null;
-        updateDateButtonText();
-        
-        // 重置编辑状态
-        currentEditingId = 0;
-        saveButton.setText("记录");
-        
-        // 隐藏取消按钮
-        cancelButton.setVisibility(View.GONE);
-        
-        // 清除卡片选中状态
-        clearCardSelection();
-        
-        Toast.makeText(MainActivity.this, "已取消编辑", Toast.LENGTH_SHORT).show();
+        // 显示确认对话框
+        new AlertDialog.Builder(this)
+            .setTitle("确认取消")
+            .setMessage("确定要取消编辑吗？所有更改将不会保存。")
+            .setPositiveButton("确定", (dialog, which) -> {
+                // 清除所有表单内容
+                diaryContent.setText("");
+                moodRadioGroup.clearCheck();
+                weatherRadioGroup.clearCheck();
+                
+                // 重置天气选择
+                selectedWeather = null;
+                weatherIndicator.setVisibility(View.INVISIBLE);
+                
+                // 重置日期
+                selectedDate = null;
+                updateDateButtonText();
+                
+                // 重置编辑状态
+                currentEditingId = 0;
+                saveButton.setText("记录");
+                
+                // 隐藏取消按钮
+                cancelButton.setVisibility(View.GONE);
+                
+                // 清除卡片选中状态
+                clearCardSelection();
+                
+                Toast.makeText(MainActivity.this, "已取消编辑", Toast.LENGTH_SHORT).show();
+            })
+            .setNegativeButton("继续编辑", null)
+            .create()
+            .show();
     }
 }
