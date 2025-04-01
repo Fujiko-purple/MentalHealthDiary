@@ -659,7 +659,26 @@ public class AIChatActivity extends AppCompatActivity {
             finish();
             return true;
         } else if (item.getItemId() == R.id.action_new_chat) {
-            startNewChat();
+            // 检查当前对话是否为空（排除AI的欢迎消息）
+            boolean isEmptyChat = true;
+            for (ChatMessage message : messages) {
+                if (message.isUser()) {
+                    isEmptyChat = false;
+                    break;
+                }
+            }
+            
+            if (isEmptyChat) {
+                // 如果当前对话是空的，显示提示
+                android.widget.Toast.makeText(
+                    this, 
+                    "您已经在新对话中", 
+                    android.widget.Toast.LENGTH_SHORT
+                ).show();
+            } else {
+                // 如果当前对话不是空的，创建新对话
+                startNewChat();
+            }
             return true;
         }
         return super.onOptionsItemSelected(item);
