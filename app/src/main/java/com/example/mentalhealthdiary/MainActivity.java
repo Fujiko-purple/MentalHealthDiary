@@ -84,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_IMAGE_PICK = 101;
     private RadioGroup moodRadioGroup;
     private EditText diaryContent;
-    private Button saveButton;
+    private MaterialButton saveButton;
     private Button datePickerButton;
     private Date selectedDate;
     private AppDatabase database;
@@ -119,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean isGridMode = false;
     private RecyclerView.LayoutManager listLayoutManager;
     private RecyclerView.LayoutManager gridLayoutManager;
-    private Button cancelButton;
+    private MaterialButton cancelButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -384,8 +384,9 @@ public class MainActivity extends AppCompatActivity {
         // 设置日记内容
         loadDiaryContent(entry.getDiaryContent());
         
-        // 修改保存按钮文本
+        // 修改保存按钮文本和图标
         saveButton.setText("更新");
+        saveButton.setIcon(getDrawable(R.drawable.ic_update));
         
         // 显示取消按钮
         cancelButton.setVisibility(View.VISIBLE);
@@ -422,7 +423,8 @@ public class MainActivity extends AppCompatActivity {
         diaryContent.setText("");
         moodRadioGroup.clearCheck();
         weatherRadioGroup.clearCheck();
-        saveButton.setText("保存");
+        saveButton.setText("记录");
+        saveButton.setIcon(getDrawable(R.drawable.ic_save));
         currentEditingId = 0;
         selectedDate = null;  // 重置选择的日期
         updateDateButtonText();
@@ -487,6 +489,7 @@ public class MainActivity extends AppCompatActivity {
                 updateDateButtonText();
                 currentEditingId = 0;
                 saveButton.setText("记录");
+                saveButton.setIcon(getDrawable(R.drawable.ic_save));
                 
                 // 隐藏取消按钮
                 cancelButton.setVisibility(View.GONE);
@@ -1211,6 +1214,7 @@ public class MainActivity extends AppCompatActivity {
                 // 重置编辑状态
                 currentEditingId = 0;
                 saveButton.setText("记录");
+                saveButton.setIcon(getDrawable(R.drawable.ic_save));
                 
                 // 隐藏取消按钮
                 cancelButton.setVisibility(View.GONE);
