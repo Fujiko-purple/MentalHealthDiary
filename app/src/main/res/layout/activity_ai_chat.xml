@@ -2,6 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background_light">
@@ -15,17 +16,50 @@
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         app:layout_constraintTop_toTopOf="parent"/>
 
-    <TextView
-        android:id="@+id/aiIntroText"
+    <!-- 优化AI介绍文本样式 -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/aiIntroCardView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="8dp"
-        android:text="🤖 您的专属心理健康助手\n具备国家二级心理咨询师资质 | 严格保密 | 7×24小时在线"
-        android:textColor="@color/teal_700"
-        android:textSize="12sp"
-        android:gravity="center"
-        android:background="@color/background_light"
-        app:layout_constraintTop_toBottomOf="@id/toolbar"/>
+        android:layout_marginHorizontal="8dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="4dp"
+        app:cardCornerRadius="8dp"
+        app:cardElevation="1dp"
+        app:cardBackgroundColor="@color/background_light"
+        app:layout_constraintTop_toBottomOf="@id/toolbar">
+        
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="8dp">
+            
+            <TextView
+                android:id="@+id/aiIntroText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="🤖 您的专属心理健康助手"
+                android:textColor="@color/teal_700"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.02"
+                tools:ignore="TextContrastCheck" />
+                
+            <TextView
+                android:id="@+id/aiIntroSubtext"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="具备国家二级心理咨询师资质 | 严格保密 | 7×24小时在线"
+                android:textColor="@color/teal_700"
+                android:alpha="0.9"
+                android:textSize="12sp"
+                android:layout_marginTop="2dp"
+                tools:ignore="TextContrastCheck" />
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
 
     <!-- 聊天记录列表 -->
     <androidx.recyclerview.widget.RecyclerView
@@ -34,7 +68,7 @@
         android:layout_height="0dp"
         android:padding="8dp"
         android:clipToPadding="false"
-        app:layout_constraintTop_toBottomOf="@id/aiIntroText"
+        app:layout_constraintTop_toBottomOf="@id/aiIntroCardView"
         app:layout_constraintBottom_toTopOf="@id/inputContainer"/>
 
     <!-- 修改 ChipGroup 的位置和约束 -->
