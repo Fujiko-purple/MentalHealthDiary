@@ -405,6 +405,74 @@ public class MainActivity extends AppCompatActivity {
                 .setDuration(300)
                 .start();
         });
+
+        // 初始化引导语
+        initMoodPrompt();
+    }
+
+    private void initMoodPrompt() {
+        TextView poetryQuote = findViewById(R.id.poetryQuote);
+        TextView moodPrompt = findViewById(R.id.moodPrompt);
+        
+        // 根据时间随机选择一句诗词
+        String[] morningPoems = {
+            "水晶帘动微风起，满架蔷薇一院香",
+            "竹外桃花三两枝，春江水暖鸭先知",
+            "清晨入古寺，初日照高林"
+        };
+        
+        String[] afternoonPoems = {
+            "半亩方塘一鉴开，天光云影共徘徊",
+            "接天莲叶无穷碧，映日荷花别样红",
+            "落霞与孤鹜齐飞，秋水共长天一色"
+        };
+        
+        String[] eveningPoems = {
+            "月出惊山鸟，时鸣春涧中",
+            "谁家玉笛暗飞声，散入春风满洛城",
+            "夜阑卧听风吹雨，铁马冰河入梦来"
+        };
+        
+        Calendar calendar = Calendar.getInstance();
+        int hourOfDay = calendar.get(Calendar.HOUR_OF_DAY);
+        
+        String[] poems;
+        String timeGreeting;
+        
+        if (hourOfDay >= 5 && hourOfDay < 12) {
+            poems = morningPoems;
+            timeGreeting = "早安，今日心情如何？";
+        } else if (hourOfDay >= 12 && hourOfDay < 18) {
+            poems = afternoonPoems;
+            timeGreeting = "午后，心情怎样？";
+        } else {
+            poems = eveningPoems;
+            timeGreeting = "晚安，今日感受如何？";
+        }
+        
+        // 随机选择诗句
+        Random random = new Random();
+        String selectedPoem = poems[random.nextInt(poems.length)];
+        
+        // 设置文本并添加淡入动画
+        poetryQuote.setText(selectedPoem);
+        moodPrompt.setText(timeGreeting);
+        
+        // 应用淡入动画
+        poetryQuote.setAlpha(0f);
+        moodPrompt.setAlpha(0f);
+        
+        poetryQuote.animate()
+            .alpha(1f)
+            .setDuration(800)
+            .setStartDelay(300)
+            .start();
+        
+        moodPrompt.animate()
+            .alpha(1f)
+            .setDuration(800)
+            .setStartDelay(600)
+            .start();
     }
 
     private void showDatePickerDialog() {

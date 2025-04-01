@@ -17,18 +17,86 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- 心情引导语 -->
-            <TextView
+            <!-- 心情引导语 - 优化后的卡片设计 -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="「半亩方塘一鉴开，天光云影共徘徊」\n今日心情，如何？"
-                android:textSize="16sp"
-                android:textColor="#555555"
-                android:fontFamily="serif"
-                android:gravity="center"
-                android:letterSpacing="0.05"
-                android:lineSpacingMultiplier="1.2"
-                android:layout_marginBottom="20dp"/>
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="1dp"
+                app:strokeWidth="0dp"
+                app:cardBackgroundColor="#F8F8F8">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="16dp"
+                    android:paddingVertical="12dp">
+                    
+                    <!-- 左侧诗词部分 -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="3"
+                        android:orientation="vertical">
+                        
+                        <!-- 引号和诗句一行显示 -->
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+                            
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="&quot;"
+                                android:textSize="18sp"
+                                android:textColor="#BBBBBB"
+                                android:fontFamily="serif"/>
+                            
+                            <TextView
+                                android:id="@+id/poetryQuote"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="清晨入古寺，初日照高林"
+                                android:textSize="15sp"
+                                android:textColor="#333333"
+                                android:fontFamily="serif"
+                                android:letterSpacing="0.03"/>
+                            
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="&quot;"
+                                android:textSize="18sp"
+                                android:textColor="#BBBBBB"
+                                android:fontFamily="serif"/>
+                        </LinearLayout>
+                    </LinearLayout>
+                    
+                    <!-- 垂直分隔线 -->
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="24dp"
+                        android:background="#E0E0E0"
+                        android:layout_marginHorizontal="12dp"/>
+                    
+                    <!-- 右侧问候语部分 -->
+                    <TextView
+                        android:id="@+id/moodPrompt"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="2"
+                        android:text="早安，今日心情如何？"
+                        android:textSize="14sp"
+                        android:textColor="#666666"
+                        android:fontFamily="sans-serif-light"
+                        android:gravity="center"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
             <!-- 日期选择 -->
             <com.google.android.material.card.MaterialCardView
@@ -45,7 +113,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="16dp">
+                    android:gravity="center_vertical">
 
                     <!-- 日期信息显示区域 -->
                     <LinearLayout
