@@ -32,9 +32,11 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
@@ -440,17 +442,15 @@ public class MainActivity extends AppCompatActivity {
         if (currentEditingId > 0) {
             entry.setId(currentEditingId);
             
-            // 如果是更新操作，显示确认对话框
-            new AlertDialog.Builder(this)
-                .setTitle("确认更新")
-                .setMessage("确定要更新这条记录吗？")
-                .setPositiveButton("确定", (dialog, which) -> {
-                    // 执行更新操作
-                    saveMoodEntryToDatabase(entry);
-                })
-                .setNegativeButton("取消", null)
-                .create()
-                .show();
+            // 显示确认对话框
+            showCustomConfirmDialog(
+                "确认更新",
+                "确定要更新这条记录吗？",
+                "确定",
+                "取消",
+                false, // 这是普通确认对话框，不是警告
+                () -> saveMoodEntryToDatabase(entry)
+            );
         } else {
             // 如果是新建操作，直接保存
             saveMoodEntryToDatabase(entry);
@@ -1174,13 +1174,15 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // 修改cancelEditing方法，添加确认对话框
+    // 修改cancelEditing方法
     private void cancelEditing() {
-        // 显示确认对话框
-        new AlertDialog.Builder(this)
-            .setTitle("确认取消")
-            .setMessage("确定要取消编辑吗？所有更改将不会保存。")
-            .setPositiveButton("确定", (dialog, which) -> {
+        showCustomConfirmDialog(
+            "确认取消",
+            "确定要取消编辑吗？所有更改将不会保存。",
+            "确定",
+            "继续编辑",
+            true, // 这是警告对话框
+            () -> {
                 // 清除所有表单内容
                 diaryContent.setText("");
                 moodRadioGroup.clearCheck();
@@ -1205,9 +1207,68 @@ public class MainActivity extends AppCompatActivity {
                 clearCardSelection();
                 
                 Toast.makeText(MainActivity.this, "已取消编辑", Toast.LENGTH_SHORT).show();
-            })
-            .setNegativeButton("继续编辑", null)
-            .create()
-            .show();
+            }
+        );
+    }
+
+    /**
+     * 显示自定义确认对话框
+     * @param title 标题
+     * @param message 内容
+     * @param positiveText 确认按钮文本
+     * @param negativeText 取消按钮文本
+     * @param isWarning 是否为警告对话框（影响图标和颜色）
+     * @param positiveAction 确认按钮点击事件
+     */
+    private void showCustomConfirmDialog(String title, String message, 
+                                       String positiveText, String negativeText,
+                                       boolean isWarning,
+                                       Runnable positiveAction) {
+        // 创建对话框
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_confirmation);
+        
+        // 设置对话框窗口属性
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            window.setWindowAnimations(R.style.CustomDialogAnimation);
+        }
+        
+        // 设置控件
+        ImageView iconView = dialog.findViewById(R.id.dialogIcon);
+        TextView titleView = dialog.findViewById(R.id.dialogTitle);
+        TextView messageView = dialog.findViewById(R.id.dialogMessage);
+        MaterialButton negativeButton = dialog.findViewById(R.id.negativeButton);
+        MaterialButton positiveButton = dialog.findViewById(R.id.positiveButton);
+        
+        // 根据对话框类型设置样式
+        if (isWarning) {
+            iconView.setImageResource(R.drawable.ic_warning);
+            iconView.setColorFilter(Color.parseColor("#FF9800")); // 警告图标为橙色
+            positiveButton.setBackgroundColor(Color.parseColor("#FF5722")); // 警告按钮为红色
+        } else {
+            iconView.setImageResource(R.drawable.ic_info); // 需要创建info图标
+            iconView.setColorFilter(Color.parseColor("#2196F3")); // 信息图标为蓝色
+            positiveButton.setBackgroundColor(Color.parseColor("#4CAF50")); // 确认按钮为绿色
+        }
+        
+        // 设置文本
+        titleView.setText(title);
+        messageView.setText(message);
+        positiveButton.setText(positiveText);
+        negativeButton.setText(negativeText);
+        
+        // 设置按钮事件
+        negativeButton.setOnClickListener(v -> dialog.dismiss());
+        positiveButton.setOnClickListener(v -> {
+            if (positiveAction != null) {
+                positiveAction.run();
+            }
+            dialog.dismiss();
+        });
+        
+        dialog.show();
     }
 }
