@@ -447,6 +447,9 @@ public class MainActivity extends AppCompatActivity {
                 currentEditingId = 0;
                 saveButton.setText("记录");
                 
+                // 清除选中状态
+                clearCardSelection();
+                
                 Toast.makeText(MainActivity.this, "保存成功", Toast.LENGTH_SHORT).show();
             });
         });
@@ -1128,5 +1131,12 @@ public class MainActivity extends AppCompatActivity {
         // 更新按钮外观
         viewModeButton.setIcon(getDrawable(isGridMode ? R.drawable.ic_list_view : R.drawable.ic_grid_view));
         viewModeButton.setText(isGridMode ? "列表" : "相册");
+    }
+
+    // 在需要清除选中状态的地方调用此方法
+    private void clearCardSelection() {
+        if (adapter != null) {
+            adapter.clearSelection();
+        }
     }
 }

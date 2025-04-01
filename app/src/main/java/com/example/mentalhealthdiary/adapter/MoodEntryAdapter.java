@@ -56,6 +56,9 @@ public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.View
     // 添加一个模式标志
     private boolean gridMode = false;
 
+    // 添加一个变量跟踪选中的位置
+    private int selectedPosition = RecyclerView.NO_POSITION;
+
     public interface OnEntryClickListener {
         void onEntryClick(MoodEntry entry);
     }
@@ -245,8 +248,28 @@ public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.View
             holder.contentText.setEllipsize(TextUtils.TruncateAt.END);
         }
         
-        // 设置整个卡片的点击监听器
+        // 设置选中状态
+        View selectionBackground = holder.itemView.findViewById(R.id.selectionBackground);
+        if (selectionBackground != null) {
+            selectionBackground.setSelected(position == selectedPosition);
+        }
+        
+        // 点击整个卡片时的处理
         holder.itemView.setOnClickListener(v -> {
+            int previousSelected = selectedPosition;
+            selectedPosition = holder.getAdapterPosition();
+            
+            // 刷新之前选中的项
+            if (previousSelected != RecyclerView.NO_POSITION) {
+                notifyItemChanged(previousSelected);
+            }
+            
+            // 刷新当前选中的项
+            if (selectedPosition != RecyclerView.NO_POSITION) {
+                notifyItemChanged(selectedPosition);
+            }
+            
+            // 调用原有的点击处理
             if (listener != null) {
                 listener.onEntryClick(entry);
             }
@@ -466,5 +489,22 @@ public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.View
         
         dialog.setContentView(imageView);
         dialog.show();
+    }
+
+    // 添加一个方法来清除选中状态
+    public void clearSelection() {
+        int previousSelected = selectedPosition;
+        selectedPosition = RecyclerView.NO_POSITION;
+        if (previousSelected != RecyclerView.NO_POSITION) {
+            notifyItemChanged(previousSelected);
+        }
+    }
+
+    // 添加获取选中项的方法
+    public MoodEntry getSelectedEntry() {
+        if (selectedPosition != RecyclerView.NO_POSITION && selectedPosition < entries.size()) {
+            return entries.get(selectedPosition);
+        }
+        return null;
     }
 } 

@@ -13,7 +13,14 @@
     android:clickable="true"
     android:focusable="true"
     app:rippleColor="#33000000"
-    app:cardBackgroundColor="#FFFFFF">
+    app:cardBackgroundColor="@android:color/transparent">
+
+    <!-- 添加一个可选中背景的View -->
+    <View
+        android:id="@+id/selectionBackground"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/mood_card_background_selector"/>
 
     <!-- 左侧情绪色彩指示条 -->
     <View
