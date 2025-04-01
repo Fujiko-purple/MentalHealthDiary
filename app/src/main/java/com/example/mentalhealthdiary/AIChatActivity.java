@@ -1085,8 +1085,10 @@ public class AIChatActivity extends AppCompatActivity {
     private void updateActivityBackgroundForPersonality() {
         String personalityId = currentPersonality != null ? currentPersonality.getId() : "default";
         
-        // 获取根布局视图
+        // 获取根布局视图和控件
         View rootView = findViewById(R.id.chat_root_layout);
+        EditText messageInput = findViewById(R.id.messageInput);
+        MaterialButton sendButton = findViewById(R.id.sendButton);
         
         if (rootView != null) {
             Log.d("AIChatActivity", "找到根视图，设置背景");
@@ -1095,9 +1097,29 @@ public class AIChatActivity extends AppCompatActivity {
             if ("cat_girl".equals(personalityId)) {
                 // 为猫娘AI设置特殊背景
                 rootView.setBackgroundResource(R.drawable.cat_girl_chat_background);
+                
+                // 设置猫娘风格的输入框
+                messageInput.setBackgroundResource(R.drawable.chat_input_cat_girl_background);
+                messageInput.setHintTextColor(Color.parseColor("#FFA0C0"));
+                
+                // 设置猫娘风格的发送按钮 - 正确设置MaterialButton
+                sendButton.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#FF6B9E")));
+                sendButton.setStrokeWidth(0); // 移除边框
+                sendButton.setCornerRadius(60); // 设置圆角
+                sendButton.setTextColor(Color.WHITE);
+                sendButton.setText("喵~");
+                
             } else {
                 // 其他AI使用默认背景
                 rootView.setBackgroundColor(getResources().getColor(android.R.color.white));
+                
+                // 恢复默认输入框
+                messageInput.setBackgroundResource(R.drawable.chat_input_background);
+                messageInput.setHintTextColor(getResources().getColor(android.R.color.darker_gray));
+                
+                // 恢复默认发送按钮
+                sendButton.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorPrimary)));
+                sendButton.setText("发送");
             }
         } else {
             Log.e("AIChatActivity", "无法找到根视图");
