@@ -37,6 +37,8 @@ import com.example.mentalhealthdiary.model.ChatMessage;
 import com.example.mentalhealthdiary.model.MoodEntry;
 import com.example.mentalhealthdiary.service.ChatRequest;
 import com.example.mentalhealthdiary.service.ChatService;
+import com.example.mentalhealthdiary.style.AIPersonalityStyle;
+import com.example.mentalhealthdiary.style.AIStyleFactory;
 import com.example.mentalhealthdiary.utils.PreferenceManager;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.Chip;
@@ -1088,69 +1090,52 @@ public class AIChatActivity extends AppCompatActivity {
     private void updateActivityBackgroundForPersonality() {
         String personalityId = currentPersonality != null ? currentPersonality.getId() : "default";
         
+        // 获取AI风格
+        AIPersonalityStyle style = AIStyleFactory.getStyle(personalityId);
+        
         // 获取根布局视图和控件
         View rootView = findViewById(R.id.chat_root_layout);
         EditText messageInput = findViewById(R.id.messageInput);
         MaterialButton sendButton = findViewById(R.id.sendButton);
         
         if (rootView != null) {
-            Log.d("AIChatActivity", "找到根视图，设置背景");
-            
-            // 检查当前AI性格
-            if ("cat_girl".equals(personalityId)) {
-                // 为猫娘AI设置特殊背景
-                rootView.setBackgroundResource(R.drawable.cat_girl_chat_background);
-                
-                // 设置猫娘风格的输入框
-                messageInput.setBackgroundResource(R.drawable.chat_input_cat_girl_background);
-                messageInput.setHintTextColor(Color.parseColor("#FFA0C0"));
-                messageInput.setHint("喵～有什么想告诉暖暖的～");
-                
-                // 设置猫娘风格的发送按钮
-                sendButton.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#FF6B9E")));
-                sendButton.setStrokeWidth(0); // 移除边框
-                sendButton.setCornerRadius(60); // 设置圆角
-                sendButton.setTextColor(Color.WHITE);
-                sendButton.setText("喵~");
-                
-                // 应用猫娘专属字体
-                Typeface catGirlFont = null;
-                try {
-                    catGirlFont = Typeface.createFromAsset(getAssets(), "fonts/comic_neue.ttf");
-                    messageInput.setTypeface(catGirlFont);
-                    sendButton.setTypeface(catGirlFont);
-                    
-                    // 通知适配器更新所有消息的字体
-                    if (adapter != null) {
-                        adapter.setCatGirlFont(catGirlFont);
-                        adapter.notifyDataSetChanged();
-                    }
-                } catch (Exception e) {
-                    Log.e("AIChatActivity", "无法加载猫娘字体: " + e.getMessage());
-                }
-                
-            } else {
-                // 其他AI使用默认背景和样式
+            // 应用背景样式
+            if (style.getBackgroundDrawable() == android.R.color.white) {
                 rootView.setBackgroundColor(getResources().getColor(android.R.color.white));
-                
-                // 恢复默认输入框
-                messageInput.setBackgroundResource(R.drawable.chat_input_background);
-                messageInput.setHintTextColor(getResources().getColor(android.R.color.darker_gray));
-                messageInput.setHint("输入消息...");
-                
-                // 恢复默认发送按钮
-                sendButton.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorPrimary)));
-                sendButton.setText("发送");
-                
-                // 恢复默认字体
-                messageInput.setTypeface(Typeface.DEFAULT);
-                sendButton.setTypeface(Typeface.DEFAULT);
-                
-                // 通知适配器恢复默认字体
-                if (adapter != null) {
-                    adapter.setCatGirlFont(null);
-                    adapter.notifyDataSetChanged();
-                }
+            } else {
+                rootView.setBackgroundResource(style.getBackgroundDrawable());
+            }
+            
+            // 应用输入框样式
+            messageInput.setBackgroundResource(style.getInputBackgroundDrawable());
+            messageInput.setHintTextColor(style.getHintTextColor());
+            messageInput.setHint(style.getInputHint());
+            
+            // 应用发送按钮样式
+            sendButton.setBackgroundTintList(style.getPrimaryColor());
+            sendButton.setTextColor(Color.WHITE);
+            sendButton.setText(style.getSendButtonText());
+            
+            // 猫娘特殊处理
+            if ("cat_girl".equals(personalityId)) {
+                sendButton.setStrokeWidth(0);
+                sendButton.setCornerRadius(60);
+            } else {
+                // 恢复默认按钮样式
+                sendButton.setStrokeWidth(1);
+                sendButton.setCornerRadius(4);
+            }
+            
+            // 应用字体
+            Typeface typeface = style.getTypeface(this);
+            messageInput.setTypeface(typeface);
+            sendButton.setTypeface(typeface);
+            
+            // 更新聊天适配器
+            if (adapter != null) {
+                // 暂时还是使用原来的setCatGirlFont接口
+                adapter.setCatGirlFont("cat_girl".equals(personalityId) ? typeface : null);
+                adapter.notifyDataSetChanged();
             }
         }
     }

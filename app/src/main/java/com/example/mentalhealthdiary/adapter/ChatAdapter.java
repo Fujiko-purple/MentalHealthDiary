@@ -21,6 +21,8 @@ import com.bumptech.glide.Glide;
 import com.example.mentalhealthdiary.R;
 import com.example.mentalhealthdiary.config.AIPersonalityConfig;
 import com.example.mentalhealthdiary.model.AIPersonality;
+import com.example.mentalhealthdiary.style.AIPersonalityStyle;
+import com.example.mentalhealthdiary.style.AIStyleFactory;
 import com.example.mentalhealthdiary.model.ChatMessage;
 
 import java.util.List;
@@ -170,38 +172,29 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     messageHolder.messageText.setVisibility(View.VISIBLE);
                 }
             } else {
-                // 根据AI性格选择不同的气泡背景
-                if ("cat_girl".equals(message.getPersonalityId())) {
-                    // 猫娘专属气泡
-                    messageHolder.messageText.setBackgroundResource(R.drawable.chat_bubble_cat_girl);
-                    
-                    // 检查是否是思考中的消息
-                    if (message.getMessage().contains("思考中")) {
-                        messageHolder.messageText.setText(message.getMessage());
-                    } else {
-                        // 直接显示原始消息，不再转换
-                        // 如果仍想保留转换功能作为备份，可以加个条件判断
-                        if (!message.getMessage().contains("喵～") && !message.getMessage().contains("呜喵～")) {
-                            messageHolder.messageText.setText(transformToCatGirlStyle(message.getMessage()));
-                        } else {
-                            messageHolder.messageText.setText(message.getMessage());
-                        }
-                    }
-                } else {
-                    // 默认AI气泡
-                    messageHolder.messageText.setBackgroundResource(R.drawable.chat_bubble_received);
+                // 为AI消息应用风格
+                AIPersonalityStyle style = getStyleForMessage(message);
+                messageHolder.messageText.setBackgroundResource(style.getChatBubbleDrawable(false));
+                
+                // 检查是否是思考中的消息
+                if (message.getMessage().contains("思考中")) {
                     messageHolder.messageText.setText(message.getMessage());
+                } else {
+                    // 处理消息文本
+                    String displayText = message.getMessage();
+                    // 只在需要转换的情况下应用文本转换
+                    if (!displayText.contains("喵～") && !displayText.contains("呜喵～")) {
+                        displayText = style.transformText(displayText);
+                    }
+                    messageHolder.messageText.setText(displayText);
                 }
                 
-                // AI消息不需要长按编辑功能
-                messageHolder.messageText.setOnLongClickListener(null);
-            }
-
-            // 应用字体
-            if (catGirlFont != null && "cat_girl".equals(currentPersonality.getId())) {
-                messageHolder.messageText.setTypeface(catGirlFont);
-            } else {
-                messageHolder.messageText.setTypeface(Typeface.DEFAULT);
+                // 应用字体
+                if (catGirlFont != null && "cat_girl".equals(message.getPersonalityId())) {
+                    messageHolder.messageText.setTypeface(catGirlFont);
+                } else {
+                    messageHolder.messageText.setTypeface(Typeface.DEFAULT);
+                }
             }
         }
     }
@@ -476,5 +469,16 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     // 设置猫娘字体的方法
     public void setCatGirlFont(Typeface font) {
         this.catGirlFont = font;
+    }
+
+    /**
+     * 根据消息的性格ID获取对应的风格
+     */
+    private AIPersonalityStyle getStyleForMessage(ChatMessage message) {
+        String personalityId = message.getPersonalityId();
+        if (personalityId == null || personalityId.isEmpty()) {
+            personalityId = currentPersonality != null ? currentPersonality.getId() : "default";
+        }
+        return AIStyleFactory.getStyle(personalityId);
     }
 } 
