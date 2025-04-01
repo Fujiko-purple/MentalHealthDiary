@@ -1,17 +1,21 @@
 package com.example.mentalhealthdiary;
 
+import android.app.Dialog;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.mentalhealthdiary.database.AppDatabase;
@@ -1142,16 +1146,49 @@ public class MoodChartActivity extends AppCompatActivity {
      */
     private void showSelfCareDialog() {
         // 创建对话框
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_self_care, null);
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_self_care);
         
-        // 设置对话框内容
-        builder.setView(dialogView)
-               .setTitle("情绪管理小贴士")
-               .setPositiveButton("知道了", null);
-               
-        // 创建并显示对话框
-        AlertDialog dialog = builder.create();
+        // 设置对话框宽度为屏幕宽度的85%
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams();
+            layoutParams.copyFrom(window.getAttributes());
+            layoutParams.width = (int) (getResources().getDisplayMetrics().widthPixels * 0.85);
+            layoutParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
+            layoutParams.gravity = Gravity.CENTER;
+            window.setAttributes(layoutParams);
+        }
+        
+        // 添加按钮点击事件
+        Button okButton = new Button(this);
+        okButton.setText("知道了");
+        okButton.setOnClickListener(v -> dialog.dismiss());
+        
+        // 显示对话框
         dialog.show();
+        
+        // 找到最后一个LinearLayout作为容器来添加按钮
+        LinearLayout contentLayout = dialog.findViewById(R.id.dialogContent);
+        if (contentLayout != null) {
+            Button closeButton = new Button(this);
+            closeButton.setText("知道了");
+            closeButton.setBackgroundColor(Color.parseColor("#E57373"));
+            closeButton.setTextColor(Color.WHITE);
+            
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            params.gravity = Gravity.END;
+            params.rightMargin = 16;
+            params.bottomMargin = 16;
+            
+            closeButton.setLayoutParams(params);
+            closeButton.setOnClickListener(v -> dialog.dismiss());
+            
+            contentLayout.addView(closeButton);
+        }
     }
 } 
