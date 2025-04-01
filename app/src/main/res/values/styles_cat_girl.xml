@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 猫娘风格颜色 -->
+    <color name="catgirl_primary">#FF6B9E</color>
+    <color name="catgirl_secondary">#FFA0C0</color>
+    <color name="catgirl_text_color">#FF4D79</color>
+    
+    <!-- 猫娘风格尺寸 -->
+    <dimen name="catgirl_button_radius">60dp</dimen>
+    <dimen name="catgirl_button_stroke_width">0dp</dimen>
+    
+    <!-- 猫娘风格文本 -->
+    <string name="catgirl_input_hint">喵～有什么想告诉暖暖的～</string>
+    <string name="catgirl_send_button">喵~</string>
+    
+    <!-- 猫娘风格资源ID (把drawable资源ID保存为字符串) -->
+    <string name="catgirl_bubble_bg">chat_bubble_cat_girl</string>
+    <string name="catgirl_input_bg">chat_input_cat_girl_background</string>
+    <string name="catgirl_chat_bg">cat_girl_chat_background</string>
+    <string name="catgirl_font">fonts/comic_neue.ttf</string>
+</resources> 

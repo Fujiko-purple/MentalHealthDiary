@@ -12,35 +12,61 @@ import com.example.mentalhealthdiary.R;
  * 猫娘AI界面风格
  */
 public class CatGirlStyle implements AIPersonalityStyle {
+    private Context context;
+    
+    // 增加构造函数缓存context以获取资源
+    public CatGirlStyle(Context context) {
+        this.context = context;
+    }
+    
     @Override
     public int getChatBubbleDrawable(boolean isUser) {
-        return isUser ? R.drawable.chat_bubble_sent : R.drawable.chat_bubble_cat_girl;
+        if (isUser) {
+            return R.drawable.chat_bubble_sent;
+        } else {
+            return context.getResources().getIdentifier(
+                context.getString(R.string.catgirl_bubble_bg), 
+                "drawable", 
+                context.getPackageName()
+            );
+        }
     }
     
     @Override
     public int getInputBackgroundDrawable() {
-        return R.drawable.chat_input_cat_girl_background;
+        return context.getResources().getIdentifier(
+            context.getString(R.string.catgirl_input_bg), 
+            "drawable", 
+            context.getPackageName()
+        );
     }
     
     @Override
     public int getBackgroundDrawable() {
-        return R.drawable.cat_girl_chat_background;
+        return context.getResources().getIdentifier(
+            context.getString(R.string.catgirl_chat_bg), 
+            "drawable", 
+            context.getPackageName()
+        );
     }
     
     @Override
     public ColorStateList getPrimaryColor() {
-        return ColorStateList.valueOf(Color.parseColor("#FF6B9E")); // 猫娘粉色
+        return ColorStateList.valueOf(context.getResources().getColor(R.color.catgirl_primary));
     }
     
     @Override
     public int getHintTextColor() {
-        return Color.parseColor("#FFA0C0"); // 浅粉色
+        return context.getResources().getColor(R.color.catgirl_secondary);
     }
     
     @Override
     public Typeface getTypeface(Context context) {
         try {
-            return Typeface.createFromAsset(context.getAssets(), "fonts/comic_neue.ttf");
+            return Typeface.createFromAsset(
+                context.getAssets(), 
+                context.getString(R.string.catgirl_font)
+            );
         } catch (Exception e) {
             Log.e("CatGirlStyle", "无法加载猫娘字体", e);
             return Typeface.DEFAULT;
@@ -49,12 +75,12 @@ public class CatGirlStyle implements AIPersonalityStyle {
     
     @Override
     public String getInputHint() {
-        return "喵～有什么想告诉暖暖的～";
+        return context.getString(R.string.catgirl_input_hint);
     }
     
     @Override
     public String getSendButtonText() {
-        return "喵~";
+        return context.getString(R.string.catgirl_send_button);
     }
     
     @Override
@@ -108,5 +134,15 @@ public class CatGirlStyle implements AIPersonalityStyle {
         }
         
         return originalText;
+    }
+    
+    @Override
+    public int getButtonCornerRadius() {
+        return (int) context.getResources().getDimension(R.dimen.catgirl_button_radius);
+    }
+    
+    @Override
+    public int getButtonStrokeWidth() {
+        return (int) context.getResources().getDimension(R.dimen.catgirl_button_stroke_width);
     }
 } 

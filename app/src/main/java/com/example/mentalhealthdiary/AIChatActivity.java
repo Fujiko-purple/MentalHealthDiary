@@ -1091,7 +1091,7 @@ public class AIChatActivity extends AppCompatActivity {
         String personalityId = currentPersonality != null ? currentPersonality.getId() : "default";
         
         // 获取AI风格
-        AIPersonalityStyle style = AIStyleFactory.getStyle(personalityId);
+        AIPersonalityStyle style = AIStyleFactory.getStyle(personalityId, this);
         
         // 获取根布局视图和控件
         View rootView = findViewById(R.id.chat_root_layout);
@@ -1115,16 +1115,8 @@ public class AIChatActivity extends AppCompatActivity {
             sendButton.setBackgroundTintList(style.getPrimaryColor());
             sendButton.setTextColor(Color.WHITE);
             sendButton.setText(style.getSendButtonText());
-            
-            // 猫娘特殊处理
-            if ("cat_girl".equals(personalityId)) {
-                sendButton.setStrokeWidth(0);
-                sendButton.setCornerRadius(60);
-            } else {
-                // 恢复默认按钮样式
-                sendButton.setStrokeWidth(1);
-                sendButton.setCornerRadius(4);
-            }
+            sendButton.setStrokeWidth(style.getButtonStrokeWidth());
+            sendButton.setCornerRadius(style.getButtonCornerRadius());
             
             // 应用字体
             Typeface typeface = style.getTypeface(this);

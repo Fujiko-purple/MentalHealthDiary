@@ -38,4 +38,8 @@ public interface AIPersonalityStyle {
     
     // 文本转换方法(可选)
     String transformText(String originalText);
+    
+    // 添加按钮样式控制方法
+    int getButtonCornerRadius();
+    int getButtonStrokeWidth();
 } 

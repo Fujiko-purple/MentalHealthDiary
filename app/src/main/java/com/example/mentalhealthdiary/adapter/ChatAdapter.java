@@ -433,6 +433,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (personalityId == null || personalityId.isEmpty()) {
             personalityId = currentPersonality != null ? currentPersonality.getId() : "default";
         }
-        return AIStyleFactory.getStyle(personalityId);
+        return AIStyleFactory.getStyle(personalityId, context);
     }
 } 

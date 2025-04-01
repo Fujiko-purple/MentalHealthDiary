@@ -11,6 +11,12 @@ import com.example.mentalhealthdiary.R;
  * 默认AI界面风格
  */
 public class DefaultAIStyle implements AIPersonalityStyle {
+    private Context context;
+    
+    public DefaultAIStyle(Context context) {
+        this.context = context;
+    }
+    
     @Override
     public int getChatBubbleDrawable(boolean isUser) {
         return isUser ? R.drawable.chat_bubble_sent : R.drawable.chat_bubble_received;
@@ -28,7 +34,7 @@ public class DefaultAIStyle implements AIPersonalityStyle {
     
     @Override
     public ColorStateList getPrimaryColor() {
-        return ColorStateList.valueOf(Color.parseColor("#2196F3")); // 默认蓝色
+        return ColorStateList.valueOf(context.getResources().getColor(R.color.colorPrimary));
     }
     
     @Override
@@ -43,16 +49,26 @@ public class DefaultAIStyle implements AIPersonalityStyle {
     
     @Override
     public String getInputHint() {
-        return "输入消息...";
+        return context.getString(R.string.input_message_hint);
     }
     
     @Override
     public String getSendButtonText() {
-        return "发送";
+        return context.getString(R.string.send);
     }
     
     @Override
     public String transformText(String originalText) {
         return originalText; // 默认不转换
+    }
+    
+    @Override
+    public int getButtonCornerRadius() {
+        return 4; // 默认圆角
+    }
+    
+    @Override
+    public int getButtonStrokeWidth() {
+        return 1; // 默认边框宽度
     }
 } 
