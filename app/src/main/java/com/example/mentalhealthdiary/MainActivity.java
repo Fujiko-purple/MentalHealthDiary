@@ -21,6 +21,7 @@ import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Looper;
 import android.provider.MediaStore;
 import android.text.Editable;
@@ -34,6 +35,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -241,8 +244,17 @@ public class MainActivity extends AppCompatActivity {
 
         // 添加 AI 助手按钮
         aiButton = findViewById(R.id.aiButton);
+        Animation pulseAnimation = AnimationUtils.loadAnimation(this, R.anim.ai_pulse);
+        aiButton.startAnimation(pulseAnimation);
+        
         aiButton.setOnClickListener(v -> {
+            // 点击时停止动画并显示对话框
+            aiButton.clearAnimation();
             showAIAssistantDialog();
+            
+            // 对话框关闭后恢复动画
+            new Handler().postDelayed(() -> 
+                aiButton.startAnimation(pulseAnimation), 500);
         });
 
         // 确保使用正确的ID初始化weatherRadioGroup

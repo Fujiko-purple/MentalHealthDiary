@@ -216,12 +216,16 @@
                 <!-- AI 助手按钮放在最左边 -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/aiButton"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    style="@style/AIAssistantButtonStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="AI 助手"
-                    app:icon="@drawable/ic_ai_assistant"
-                    app:iconGravity="start"/>
+                    android:text="智能AI助手"
+                    android:drawablePadding="8dp"
+                    app:icon="@drawable/ic_ai_assistant_enhanced"
+                    app:iconGravity="textStart"
+                    app:iconSize="20dp"
+                    app:iconTint="#FFFFFF"
+                    app:cornerRadius="20dp"/>
 
                 <View
                     android:layout_width="0dp"
