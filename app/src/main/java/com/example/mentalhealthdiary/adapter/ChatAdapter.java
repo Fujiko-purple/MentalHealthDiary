@@ -90,10 +90,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         ChatMessage message = messages.get(position);
         
-        if (holder instanceof LoadingViewHolder) {
-            ((LoadingViewHolder) holder).bind(message);
-        } else {
+        if (holder instanceof MessageViewHolder) {
             MessageViewHolder messageHolder = (MessageViewHolder) holder;
+            
             messageHolder.bindMessage(message, currentPersonality);
             
             if (message.isUser()) {
@@ -182,10 +181,12 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 } else {
                     // 处理消息文本
                     String displayText = message.getMessage();
-                    // 只在需要转换的情况下应用文本转换
+                    
+                    // 使用风格系统的transformText方法
                     if (!displayText.contains("喵～") && !displayText.contains("呜喵～")) {
                         displayText = style.transformText(displayText);
                     }
+                    
                     messageHolder.messageText.setText(displayText);
                 }
                 
@@ -195,7 +196,12 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 } else {
                     messageHolder.messageText.setTypeface(Typeface.DEFAULT);
                 }
+                
+                // AI消息不需要长按编辑功能
+                messageHolder.messageText.setOnLongClickListener(null);
             }
+        } else if (holder instanceof LoadingViewHolder) {
+            ((LoadingViewHolder) holder).bind(message);
         }
     }
 
@@ -412,58 +418,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             }
         }
         return false;
-    }
-
-    // 添加转换文本为猫娘风格的方法
-    private String transformToCatGirlStyle(String message) {
-        if (message == null || message.isEmpty()) {
-            return message;
-        }
-        
-        // 已经有猫娘风格的不再处理
-        if (message.startsWith("喵～") || message.endsWith("喵～") || 
-            message.contains("呜喵") || message.contains("nya")) {
-            return message;
-        }
-        
-        // 随机使用的猫娘语气词
-        String[] catSounds = {
-            "喵～", "喵喵～", "喵呜～", "nya～", "呜喵～"
-        };
-        
-        // 随机选择一个猫叫声
-        String catSound = catSounds[(int)(Math.random() * catSounds.length)];
-        
-        // 替换常见词语为猫娘风格
-        message = message.replaceAll("(?i)我认为", "人家认为");
-        message = message.replaceAll("(?i)我觉得", "猫猫觉得");
-        message = message.replaceAll("(?i)我想", "人家想");
-        
-        // 处理句子结尾
-        if (message.endsWith("。") || message.endsWith(".")) {
-            message = message.substring(0, message.length()-1) + "～ " + catSound;
-        } else if (message.endsWith("!") || message.endsWith("！")) {
-            message = message.substring(0, message.length()-1) + "！" + catSound;
-        } else if (!message.endsWith("～")) {
-            // 如果不是以上情况，且不已经以波浪号结尾，添加猫叫和波浪号
-            message = message + " " + catSound;
-        }
-        
-        // 段落处理 - 每个段落结尾添加猫叫
-        String[] paragraphs = message.split("\n\n");
-        if (paragraphs.length > 1) {
-            for (int i = 0; i < paragraphs.length - 1; i++) {
-                // 不是以猫叫结束的段落添加猫叫
-                if (!paragraphs[i].endsWith("喵～") && !paragraphs[i].endsWith("nya～") &&
-                    !paragraphs[i].contains("呜喵～")) {
-                    String randomCatSound = catSounds[(int)(Math.random() * catSounds.length)];
-                    paragraphs[i] = paragraphs[i] + " " + randomCatSound;
-                }
-            }
-            message = String.join("\n\n", paragraphs);
-        }
-        
-        return message;
     }
 
     // 设置猫娘字体的方法
