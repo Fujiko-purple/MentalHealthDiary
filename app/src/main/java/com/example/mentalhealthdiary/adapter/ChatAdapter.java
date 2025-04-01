@@ -3,30 +3,24 @@ package com.example.mentalhealthdiary.adapter;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-import android.view.inputmethod.InputMethodManager;
-import android.view.inputmethod.EditorInfo;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.mentalhealthdiary.R;
+import com.example.mentalhealthdiary.config.AIPersonalityConfig;
 import com.example.mentalhealthdiary.model.AIPersonality;
 import com.example.mentalhealthdiary.model.ChatMessage;
-import com.example.mentalhealthdiary.config.AIPersonalityConfig;
 
 import java.util.List;
 
@@ -174,7 +168,28 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     messageHolder.messageText.setVisibility(View.VISIBLE);
                 }
             } else {
-                messageHolder.messageText.setBackgroundResource(R.drawable.chat_bubble_received);
+                // 根据AI性格选择不同的气泡背景
+                if ("cat_girl".equals(message.getPersonalityId())) {
+                    // 猫娘专属气泡
+                    messageHolder.messageText.setBackgroundResource(R.drawable.chat_bubble_cat_girl);
+                    
+                    // 为猫娘消息添加猫娘文本风格
+                    String originalMessage = message.getMessage();
+                    
+                    // 如果不是思考中的消息，转换为猫娘风格
+                    if (!originalMessage.contains("思考中")) {
+                        String transformedMessage = transformToCatGirlStyle(originalMessage);
+                        messageHolder.messageText.setText(transformedMessage);
+                    } else {
+                        messageHolder.messageText.setText(originalMessage);
+                    }
+                    
+                } else {
+                    // 默认AI气泡
+                    messageHolder.messageText.setBackgroundResource(R.drawable.chat_bubble_received);
+                    messageHolder.messageText.setText(message.getMessage());
+                }
+                
                 // AI消息不需要长按编辑功能
                 messageHolder.messageText.setOnLongClickListener(null);
             }
@@ -394,5 +409,57 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             }
         }
         return false;
+    }
+
+    // 添加转换文本为猫娘风格的方法
+    private String transformToCatGirlStyle(String message) {
+        if (message == null || message.isEmpty()) {
+            return message;
+        }
+        
+        // 已经有猫娘风格的不再处理
+        if (message.startsWith("喵～") || message.endsWith("喵～") || 
+            message.contains("呜喵") || message.contains("nya")) {
+            return message;
+        }
+        
+        // 随机使用的猫娘语气词
+        String[] catSounds = {
+            "喵～", "喵喵～", "喵呜～", "nya～", "呜喵～"
+        };
+        
+        // 随机选择一个猫叫声
+        String catSound = catSounds[(int)(Math.random() * catSounds.length)];
+        
+        // 替换常见词语为猫娘风格
+        message = message.replaceAll("(?i)我认为", "人家认为");
+        message = message.replaceAll("(?i)我觉得", "猫猫觉得");
+        message = message.replaceAll("(?i)我想", "人家想");
+        
+        // 处理句子结尾
+        if (message.endsWith("。") || message.endsWith(".")) {
+            message = message.substring(0, message.length()-1) + "～ " + catSound;
+        } else if (message.endsWith("!") || message.endsWith("！")) {
+            message = message.substring(0, message.length()-1) + "！" + catSound;
+        } else if (!message.endsWith("～")) {
+            // 如果不是以上情况，且不已经以波浪号结尾，添加猫叫和波浪号
+            message = message + " " + catSound;
+        }
+        
+        // 段落处理 - 每个段落结尾添加猫叫
+        String[] paragraphs = message.split("\n\n");
+        if (paragraphs.length > 1) {
+            for (int i = 0; i < paragraphs.length - 1; i++) {
+                // 不是以猫叫结束的段落添加猫叫
+                if (!paragraphs[i].endsWith("喵～") && !paragraphs[i].endsWith("nya～") &&
+                    !paragraphs[i].contains("呜喵～")) {
+                    String randomCatSound = catSounds[(int)(Math.random() * catSounds.length)];
+                    paragraphs[i] = paragraphs[i] + " " + randomCatSound;
+                }
+            }
+            message = String.join("\n\n", paragraphs);
+        }
+        
+        return message;
     }
 } 
