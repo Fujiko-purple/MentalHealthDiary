@@ -49,6 +49,13 @@ public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.View
     // 跟踪记录的展开状态
     private final List<Integer> expandedPositions = new ArrayList<>();
 
+    // 在类开头添加新的常量
+    private static final int VIEW_TYPE_NORMAL = 0;
+    private static final int VIEW_TYPE_COMPACT = 1;
+
+    // 添加一个模式标志
+    private boolean gridMode = false;
+
     public interface OnEntryClickListener {
         void onEntryClick(MoodEntry entry);
     }
@@ -65,11 +72,30 @@ public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.View
         this.deleteListener = listener;
     }
 
+    // 添加设置模式的方法
+    public void setGridMode(boolean gridMode) {
+        this.gridMode = gridMode;
+        notifyDataSetChanged();
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        // 根据当前模式返回不同的视图类型
+        return gridMode ? VIEW_TYPE_COMPACT : VIEW_TYPE_NORMAL;
+    }
+
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext())
+        // 根据视图类型加载不同的布局
+        View view;
+        if (viewType == VIEW_TYPE_COMPACT) {
+            view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_mood_entry_compact, parent, false);
+        } else {
+            view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_mood_entry, parent, false);
+        }
         return new ViewHolder(view);
     }
 
@@ -77,21 +103,27 @@ public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.View
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         MoodEntry entry = entries.get(position);
         
-        // 设置日期
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日 HH:mm", Locale.getDefault());
+        // 设置基本数据（两种模式下都存在的元素）
+        SimpleDateFormat sdf;
+        if (gridMode) {
+            // 紧凑模式下使用简化日期格式
+            sdf = new SimpleDateFormat("MM/dd HH:mm", Locale.getDefault());
+        } else {
+            sdf = new SimpleDateFormat("yyyy年MM月dd日 HH:mm", Locale.getDefault());
+        }
         holder.dateText.setText(sdf.format(entry.getDate()));
         
-        // 设置心情表情
+        // 设置表情和颜色（两种模式都有）
         holder.moodEmoji.setText(getMoodEmoji(entry.getMoodScore()));
-        
-        // 设置心情颜色指示
         holder.moodColorIndicator.setBackgroundColor(getMoodColor(entry.getMoodScore()));
         
-        // 设置心情气泡背景色
-        GradientDrawable bubbleBackground = (GradientDrawable) holder.moodBubbleBackground.getBackground();
-        bubbleBackground.setColor(getMoodBubbleColor(entry.getMoodScore()));
+        // 设置心情气泡背景色（仅在普通模式存在）
+        if (holder.moodBubbleBackground != null) {
+            GradientDrawable bubbleBackground = (GradientDrawable) holder.moodBubbleBackground.getBackground();
+            bubbleBackground.setColor(getMoodBubbleColor(entry.getMoodScore()));
+        }
         
-        // 处理图片并清理内容文本
+        // 处理内容文本
         String content = entry.getDiaryContent();
         if (content != null) {
             // 查找图片标记
@@ -159,60 +191,64 @@ public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.View
             holder.contentImage.setVisibility(View.GONE);
         }
         
-        // 设置天气
-        if (entry.getWeather() != null && !entry.getWeather().isEmpty()) {
-            holder.weatherEmoji.setText(getWeatherEmoji(entry.getWeather()));
-            holder.weatherText.setText(entry.getWeather());
-            holder.weatherContainer.setVisibility(View.VISIBLE);
-        } else {
-            holder.weatherContainer.setVisibility(View.GONE);
-        }
-        
-        // 检查内容是否需要展开按钮
-        if (content != null && content.length() > 100) {
-            holder.expandButton.setVisibility(View.VISIBLE);
-            
-            // 根据展开状态设置内容和按钮
-            boolean isExpanded = expandedPositions.contains(position);
-            if (isExpanded) {
-                // 展开状态 - 显示全部内容
-                holder.contentText.setMaxLines(Integer.MAX_VALUE);
-                holder.contentText.setEllipsize(null);
-                holder.expandButton.setRotation(180); // 翻转箭头指向上方
-            } else {
-                // 折叠状态 - 限制显示行数
-                holder.contentText.setMaxLines(3);
-                holder.contentText.setEllipsize(TextUtils.TruncateAt.END);
-                holder.expandButton.setRotation(0); // 箭头指向下方
+        // 紧凑模式下不进行以下操作
+        if (!gridMode) {
+            // 仅在非紧凑模式下处理展开按钮
+            if (holder.expandButton != null) {
+                boolean isExpanded = expandedPositions.contains(position);
+                int contentLength = content != null ? content.length() : 0;
+                
+                if (contentLength > 100) {
+                    holder.expandButton.setVisibility(View.VISIBLE);
+                    holder.expandButton.setRotation(isExpanded ? 180 : 0);
+                    
+                    // 根据展开状态设置内容
+                    if (isExpanded) {
+                        holder.contentText.setMaxLines(Integer.MAX_VALUE);
+                        holder.contentText.setEllipsize(null);
+                    } else {
+                        holder.contentText.setMaxLines(3);
+                        holder.contentText.setEllipsize(TextUtils.TruncateAt.END);
+                    }
+                    
+                    holder.expandButton.setOnClickListener(v -> {
+                        // 切换展开状态
+                        if (isExpanded) {
+                            expandedPositions.remove(Integer.valueOf(position));
+                        } else {
+                            expandedPositions.add(position);
+                        }
+                        notifyItemChanged(position);
+                    });
+                } else {
+                    holder.expandButton.setVisibility(View.GONE);
+                    holder.contentText.setMaxLines(Integer.MAX_VALUE);
+                    holder.contentText.setEllipsize(null);
+                }
             }
             
-            // 设置展开按钮点击事件
-            holder.expandButton.setOnClickListener(v -> {
-                // 切换展开状态
-                if (isExpanded) {
-                    expandedPositions.remove(Integer.valueOf(position));
+            // 仅在非紧凑模式下处理天气
+            if (holder.weatherContainer != null && holder.weatherText != null && holder.weatherEmoji != null) {
+                String weather = entry.getWeather();
+                
+                if (!TextUtils.isEmpty(weather)) {
+                    holder.weatherContainer.setVisibility(View.VISIBLE);
+                    holder.weatherText.setText(weather);
+                    holder.weatherEmoji.setText(getWeatherEmoji(weather));
                 } else {
-                    expandedPositions.add(position);
+                    holder.weatherContainer.setVisibility(View.GONE);
                 }
-                // 刷新当前条目
-                notifyItemChanged(position);
-            });
+            }
         } else {
-            holder.expandButton.setVisibility(View.GONE);
-            // 短内容始终完整显示
-            holder.contentText.setMaxLines(Integer.MAX_VALUE);
-            holder.contentText.setEllipsize(null);
+            // 紧凑模式下设置最大行数限制
+            holder.contentText.setMaxLines(2);
+            holder.contentText.setEllipsize(TextUtils.TruncateAt.END);
         }
         
-        holder.editButton.setOnClickListener(v -> {
+        // 设置整个卡片的点击监听器
+        holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onEntryClick(entry);
-            }
-        });
-
-        holder.deleteButton.setOnClickListener(v -> {
-            if (deleteListener != null) {
-                deleteListener.onEntryDelete(entry);
             }
         });
     }
@@ -330,7 +366,7 @@ public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.View
             case MOOD_GOOD:
                 return "😊";
             case MOOD_NEUTRAL:
-                return "😐";
+                return "\uD83D\uDE10";
             case MOOD_SAD:
                 return "😔";
             case MOOD_AWFUL:
@@ -354,33 +390,58 @@ public class MoodEntryAdapter extends RecyclerView.Adapter<MoodEntryAdapter.View
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-        private final TextView dateText;
-        private final TextView contentText;
-        private final TextView moodEmoji;
-        private final ImageButton editButton;
-        private final ImageButton deleteButton;
-        private final TextView weatherText;
-        private final View moodColorIndicator;
-        private final View moodBubbleBackground;
-        private final TextView weatherEmoji;
-        private final LinearLayout weatherContainer;
-        private final ImageButton expandButton;
-        private final ImageView contentImage;
-
+        // 所有视图模式下都存在的元素
+        public final TextView dateText;
+        public final TextView contentText; 
+        public final TextView moodEmoji;
+        public final View moodColorIndicator;
+        public final ImageView contentImage;
+        
+        // 可能只在普通视图中存在的元素
+        public final ImageButton editButton;
+        public final ImageButton deleteButton;
+        public final View moodBubbleBackground;
+        public final LinearLayout weatherContainer;
+        public final TextView weatherText;
+        public final TextView weatherEmoji;
+        public final ImageButton expandButton;
+        
         public ViewHolder(View view) {
             super(view);
+            // 所有视图都必须有的基本元素
             dateText = view.findViewById(R.id.dateText);
             contentText = view.findViewById(R.id.contentText);
             moodEmoji = view.findViewById(R.id.moodEmoji);
+            moodColorIndicator = view.findViewById(R.id.moodColorIndicator);
+            contentImage = view.findViewById(R.id.contentImage);
+            
+            // 可能在紧凑视图中不存在的元素
             editButton = view.findViewById(R.id.editButton);
             deleteButton = view.findViewById(R.id.deleteButton);
-            weatherText = view.findViewById(R.id.weatherText);
-            moodColorIndicator = view.findViewById(R.id.moodColorIndicator);
             moodBubbleBackground = view.findViewById(R.id.moodBubbleBackground);
-            weatherEmoji = view.findViewById(R.id.weatherEmoji);
             weatherContainer = view.findViewById(R.id.weatherContainer);
+            weatherText = view.findViewById(R.id.weatherText);
+            weatherEmoji = view.findViewById(R.id.weatherEmoji);
             expandButton = view.findViewById(R.id.expandButton);
-            contentImage = view.findViewById(R.id.contentImage);
+            
+            // 设置点击事件（只为存在的按钮）
+            if (editButton != null) {
+                editButton.setOnClickListener(v -> {
+                    int position = getAdapterPosition();
+                    if (position != RecyclerView.NO_POSITION && listener != null) {
+                        listener.onEntryClick(entries.get(position));
+                    }
+                });
+            }
+            
+            if (deleteButton != null) {
+                deleteButton.setOnClickListener(v -> {
+                    int position = getAdapterPosition();
+                    if (position != RecyclerView.NO_POSITION && deleteListener != null) {
+                        deleteListener.onEntryDelete(entries.get(position));
+                    }
+                });
+            }
         }
     }
 

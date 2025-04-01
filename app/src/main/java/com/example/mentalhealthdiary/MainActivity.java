@@ -44,6 +44,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -109,6 +110,10 @@ public class MainActivity extends AppCompatActivity {
         MOOD_ASC      // 心情从坏到好
     }
     private SortOrder currentSortOrder = SortOrder.DATE_DESC; // 默认排序方式
+    private MaterialButton viewModeButton;
+    private boolean isGridMode = false;
+    private RecyclerView.LayoutManager listLayoutManager;
+    private RecyclerView.LayoutManager gridLayoutManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -174,7 +179,13 @@ public class MainActivity extends AppCompatActivity {
 
         // 设置RecyclerView
         RecyclerView historyRecyclerView = findViewById(R.id.historyRecyclerView);
-        historyRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        listLayoutManager = new LinearLayoutManager(this);
+        gridLayoutManager = new GridLayoutManager(this, 2); // 每行两个卡片
+        
+        // 默认使用列表布局
+        historyRecyclerView.setLayoutManager(listLayoutManager);
+        
+        // 设置适配器
         adapter = new MoodEntryAdapter();
         adapter.setOnEntryClickListener(this::showEditDialog);
         adapter.setOnEntryDeleteListener(this::showDeleteDialog);
@@ -260,6 +271,10 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btnInsertLocation).setOnClickListener(v -> {
             getCurrentLocation();
         });
+
+        // 初始化布局切换按钮
+        viewModeButton = findViewById(R.id.viewModeButton);
+        viewModeButton.setOnClickListener(v -> toggleViewMode(historyRecyclerView));
     }
 
     private void showDatePickerDialog() {
@@ -1098,5 +1113,20 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
             return null;
         }
+    }
+
+    // 添加切换布局模式的方法
+    private void toggleViewMode(RecyclerView recyclerView) {
+        isGridMode = !isGridMode;
+        
+        // 更新RecyclerView的布局管理器
+        recyclerView.setLayoutManager(isGridMode ? gridLayoutManager : listLayoutManager);
+        
+        // 更新适配器显示模式
+        adapter.setGridMode(isGridMode);
+        
+        // 更新按钮外观
+        viewModeButton.setIcon(getDrawable(isGridMode ? R.drawable.ic_list_view : R.drawable.ic_grid_view));
+        viewModeButton.setText(isGridMode ? "列表" : "相册");
     }
 }
