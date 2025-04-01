@@ -39,6 +39,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.DecelerateInterpolator;
@@ -454,24 +455,57 @@ public class MainActivity extends AppCompatActivity {
         Random random = new Random();
         String selectedPoem = poems[random.nextInt(poems.length)];
         
-        // 设置文本并添加淡入动画
+        // 设置文本
         poetryQuote.setText(selectedPoem);
         moodPrompt.setText(timeGreeting);
         
-        // 应用淡入动画
+        // 重置和设置初始状态
         poetryQuote.setAlpha(0f);
-        moodPrompt.setAlpha(0f);
+        poetryQuote.setTranslationY(12f);
+        poetryQuote.setScaleX(0.92f);
+        poetryQuote.setScaleY(0.92f);
         
+        moodPrompt.setAlpha(0f);
+        moodPrompt.setTranslationY(12f);
+        moodPrompt.setScaleX(0.92f);
+        moodPrompt.setScaleY(0.92f);
+        
+        // 优化后的动画 - 使用DecelerateInterpolator使动画开始快结束慢
         poetryQuote.animate()
             .alpha(1f)
+            .translationY(0f)
+            .scaleX(1f)
+            .scaleY(1f)
             .setDuration(800)
+            .setInterpolator(new DecelerateInterpolator(1.2f))
             .setStartDelay(300)
             .start();
         
         moodPrompt.animate()
             .alpha(1f)
+            .translationY(0f)
+            .scaleX(1f)
+            .scaleY(1f)
             .setDuration(800)
+            .setInterpolator(new DecelerateInterpolator(1.2f))
             .setStartDelay(600)
+            .withEndAction(() -> {
+                // 在最后添加一个微小的轻浮动画，增加活力感
+                new Handler().postDelayed(() -> {
+                    moodPrompt.animate()
+                        .translationY(-3f)
+                        .setDuration(400)
+                        .setInterpolator(new AccelerateDecelerateInterpolator())
+                        .withEndAction(() -> {
+                            moodPrompt.animate()
+                                .translationY(0f)
+                                .setDuration(400)
+                                .setInterpolator(new AccelerateDecelerateInterpolator())
+                                .start();
+                        })
+                        .start();
+                }, 200);
+            })
             .start();
     }
 
