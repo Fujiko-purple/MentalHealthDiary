@@ -1,0 +1,71 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+    
+    <!-- 背景圆形 -->
+    <path
+        android:fillColor="#F5F5F5"
+        android:pathData="M60,60m-54,0a54,54 0,1 1,108 0a54,54 0,1 1,-108 0"/>
+    
+    <!-- 图表框架 -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#CCCCCC"
+        android:strokeWidth="2"
+        android:pathData="M30,30L30,90L90,90"/>
+        
+    <!-- 情绪波动线 - 虚线 -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#BBBBBB"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeDashArray="3,3"
+        android:pathData="M30,70C40,70 43,50 50,50C57,50 60,80 70,80C80,80 83,40 90,40"/>
+        
+    <!-- 情绪图标 - 开心 -->
+    <path
+        android:fillColor="#E0E0E0"
+        android:pathData="M38,42m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"/>
+    <path
+        android:fillColor="#BBBBBB"
+        android:pathData="M35,41L36,42.5L37,41"/>
+    <path
+        android:fillColor="#BBBBBB"
+        android:pathData="M39,41L40,42.5L41,41"/>
+    <path
+        android:fillColor="#BBBBBB"
+        android:pathData="M35,45C36.5,46.5 39.5,46.5 41,45"/>
+        
+    <!-- 情绪图标 - 平静 -->
+    <path
+        android:fillColor="#E0E0E0"
+        android:pathData="M60,60m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"/>
+    <path
+        android:fillColor="#BBBBBB"
+        android:pathData="M57,59L58,60.5L59,59"/>
+    <path
+        android:fillColor="#BBBBBB"
+        android:pathData="M61,59L62,60.5L63,59"/>
+    <path
+        android:fillColor="#BBBBBB"
+        android:pathData="M58,63L62,63"/>
+        
+    <!-- 情绪图标 - 低落 -->
+    <path
+        android:fillColor="#E0E0E0"
+        android:pathData="M82,70m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"/>
+    <path
+        android:fillColor="#BBBBBB"
+        android:pathData="M79,69L80,70.5L81,69"/>
+    <path
+        android:fillColor="#BBBBBB"
+        android:pathData="M83,69L84,70.5L85,69"/>
+    <path
+        android:fillColor="#BBBBBB"
+        android:pathData="M79,74C80.5,72.5 83.5,72.5 85,74"/>
+
+</vector> 

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/emptyStateContainer"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="24dp">
+    
+    <ImageView
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:src="@drawable/ic_empty_chart"
+        android:alpha="0.7"
+        android:layout_marginTop="32dp"/>
+        
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="暂无心情记录"
+        android:textSize="18sp"
+        android:textColor="@color/text_primary"
+        android:fontFamily="sans-serif-medium"
+        android:layout_marginTop="16dp"/>
+        
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="记录您的第一个心情，开始追踪情绪变化"
+        android:textSize="14sp"
+        android:textColor="@color/text_secondary"
+        android:gravity="center"
+        android:layout_marginTop="8dp"/>
+        
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/addMoodButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="记录心情"
+        android:textColor="#FFFFFF"
+        android:backgroundTint="#2196F3"
+        android:paddingHorizontal="24dp"
+        android:layout_marginTop="24dp"/>
+</LinearLayout> 

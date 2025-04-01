@@ -122,52 +122,72 @@ public class MoodChartActivity extends AppCompatActivity {
 
         database.moodEntryDao().getAllEntries().observe(this, entries -> {
             if (entries == null || entries.isEmpty()) {
-                moodDistributionChart.setNoDataText("暂无数据");
-                averageMoodText.setText("暂无数据");
-                mostFrequentMoodText.setText("暂无数据");
-                recordDaysText.setText("0 天");
+                // 显示空状态视图
+                View emptyState = findViewById(R.id.emptyStateContainer);
+                View contentView = findViewById(R.id.contentContainer);
+                
+                emptyState.setVisibility(View.VISIBLE);
+                contentView.setVisibility(View.GONE);
+                
+                // 添加按钮点击事件
+                findViewById(R.id.addMoodButton).setOnClickListener(v -> {
+                    // 返回到主页面，准备添加心情
+                    finish();
+                });
+                
                 return;
+            } else {
+                // 隐藏空状态，显示内容
+                View emptyState = findViewById(R.id.emptyStateContainer);
+                View contentView = findViewById(R.id.contentContainer);
+                
+                if (emptyState != null) {
+                    emptyState.setVisibility(View.GONE);
+                }
+                if (contentView != null) {
+                    contentView.setVisibility(View.VISIBLE);
+                }
+                
+                // 计算统计数据
+                float totalMood = 0;
+                int count = 0;
+
+                // 计算每日平均心情和统计数据
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                
+                for (MoodEntry entry : entries) {
+                    totalMood += entry.getMoodScore();
+                    count++;
+                }
+
+                // 计算平均心情
+                float averageMood = totalMood / count;
+                averageMoodText.setText(String.format("%.1f", averageMood));
+
+                // 更新饼图
+                updatePieChart(entries);
+
+                // 更新缓存
+                cachedDailyMoods.clear();
+                lastUpdateTime = System.currentTimeMillis();
+
+                // 计算最常见心情
+                Map<Integer, Long> moodCounts = entries.stream()
+                    .collect(Collectors.groupingBy(
+                        MoodEntry::getMoodScore,
+                        Collectors.counting()
+                    ));
+                int mostFrequentMood = Collections.max(moodCounts.entrySet(),
+                    Map.Entry.comparingByValue()).getKey();
+                mostFrequentMoodText.setText(getMoodEmoji(mostFrequentMood));
+
+                // 计算记录天数
+                long days = entries.stream()
+                    .map(entry -> dateFormat.format(entry.getDate()))
+                    .distinct()
+                    .count();
+                recordDaysText.setText(String.format("%d 天", days));
             }
-
-            // 计算统计数据
-            float totalMood = 0;
-            int count = 0;
-
-            // 计算每日平均心情和统计数据
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-            
-            for (MoodEntry entry : entries) {
-                totalMood += entry.getMoodScore();
-                count++;
-            }
-
-            // 计算平均心情
-            float averageMood = totalMood / count;
-            averageMoodText.setText(String.format("%.1f", averageMood));
-
-            // 更新饼图
-            updatePieChart(entries);
-
-            // 更新缓存
-            cachedDailyMoods.clear();
-            lastUpdateTime = System.currentTimeMillis();
-
-            // 计算最常见心情
-            Map<Integer, Long> moodCounts = entries.stream()
-                .collect(Collectors.groupingBy(
-                    MoodEntry::getMoodScore,
-                    Collectors.counting()
-                ));
-            int mostFrequentMood = Collections.max(moodCounts.entrySet(),
-                Map.Entry.comparingByValue()).getKey();
-            mostFrequentMoodText.setText(getMoodEmoji(mostFrequentMood));
-
-            // 计算记录天数
-            long days = entries.stream()
-                .map(entry -> dateFormat.format(entry.getDate()))
-                .distinct()
-                .count();
-            recordDaysText.setText(String.format("%d 天", days));
         });
     }
 
