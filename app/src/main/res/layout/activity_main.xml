@@ -383,14 +383,14 @@
                             android:elevation="4dp"
                             android:stateListAnimator="@animator/button_state_animator"
                             android:text="相册"
-                            android:textColor="#9370DB"
+                            android:textColor="#00BCD4"
                             android:textSize="14sp"
                             app:backgroundTint="#FAF5FF"
                             app:cornerRadius="21dp"
                             app:icon="@drawable/ic_grid_view"
                             app:iconGravity="textStart"
                             app:iconPadding="8dp"
-                            app:iconTint="#9370DB"
+                            app:iconTint="#00BCD4"
                             app:rippleColor="#33FFFFFF"
                             tools:ignore="TouchTargetSizeCheck" />
 
