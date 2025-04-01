@@ -114,6 +114,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean isGridMode = false;
     private RecyclerView.LayoutManager listLayoutManager;
     private RecyclerView.LayoutManager gridLayoutManager;
+    private Button cancelButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -275,6 +276,10 @@ public class MainActivity extends AppCompatActivity {
         // 初始化布局切换按钮
         viewModeButton = findViewById(R.id.viewModeButton);
         viewModeButton.setOnClickListener(v -> toggleViewMode(historyRecyclerView));
+
+        // 初始化取消按钮
+        cancelButton = findViewById(R.id.cancelButton);
+        cancelButton.setOnClickListener(v -> cancelEditing());
     }
 
     private void showDatePickerDialog() {
@@ -367,6 +372,9 @@ public class MainActivity extends AppCompatActivity {
         
         // 修改保存按钮文本
         saveButton.setText("更新");
+        
+        // 显示取消按钮
+        cancelButton.setVisibility(View.VISIBLE);
     }
 
     private void updateEntry() {
@@ -404,6 +412,9 @@ public class MainActivity extends AppCompatActivity {
         currentEditingId = 0;
         selectedDate = null;  // 重置选择的日期
         updateDateButtonText();
+        
+        // 隐藏取消按钮
+        cancelButton.setVisibility(View.GONE);
     }
 
     private void saveMoodEntry() {
@@ -446,6 +457,9 @@ public class MainActivity extends AppCompatActivity {
                 updateDateButtonText();
                 currentEditingId = 0;
                 saveButton.setText("记录");
+                
+                // 隐藏取消按钮
+                cancelButton.setVisibility(View.GONE);
                 
                 // 清除选中状态
                 clearCardSelection();
@@ -1138,5 +1152,33 @@ public class MainActivity extends AppCompatActivity {
         if (adapter != null) {
             adapter.clearSelection();
         }
+    }
+
+    // 添加取消编辑方法
+    private void cancelEditing() {
+        // 清除所有表单内容
+        diaryContent.setText("");
+        moodRadioGroup.clearCheck();
+        weatherRadioGroup.clearCheck();
+        
+        // 重置天气选择
+        selectedWeather = null;
+        weatherIndicator.setVisibility(View.INVISIBLE);
+        
+        // 重置日期
+        selectedDate = null;
+        updateDateButtonText();
+        
+        // 重置编辑状态
+        currentEditingId = 0;
+        saveButton.setText("记录");
+        
+        // 隐藏取消按钮
+        cancelButton.setVisibility(View.GONE);
+        
+        // 清除卡片选中状态
+        clearCardSelection();
+        
+        Toast.makeText(MainActivity.this, "已取消编辑", Toast.LENGTH_SHORT).show();
     }
 }
