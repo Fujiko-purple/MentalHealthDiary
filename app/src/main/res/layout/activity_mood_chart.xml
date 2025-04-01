@@ -322,6 +322,132 @@
                         android:elevation="4dp"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
+
+            <!-- 心情洞察卡片 - 优化版 -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/insightsCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:strokeWidth="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <!-- 标题栏 - 更舒适的颜色 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="16dp">
+                        
+                        <View
+                            android:layout_width="4dp"
+                            android:layout_height="18dp"
+                            android:background="#5B9BD5"
+                            android:layout_marginEnd="8dp"/>
+                            
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="心情洞察"
+                            android:textSize="16sp"
+                            android:textColor="#3C3C3C"
+                            android:fontFamily="sans-serif-medium"/>
+                            
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_insights"
+                            android:alpha="0.8"
+                            app:tint="#5B9BD5" />
+                    </LinearLayout>
+
+                    <!-- 洞察内容 - 每周规律 - 更柔和的背景色 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="16dp"
+                        android:background="@drawable/insight_weekly_background"
+                        android:padding="16dp">
+                        
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_weekly"
+                            android:layout_marginEnd="12dp"
+                            android:layout_gravity="center_vertical"
+                            app:tint="#5B9BD5" />
+                        
+                        <TextView
+                            android:id="@+id/moodTrendInsight"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="您的心情在周末通常更积极，周三是一周中心情最低落的时候。"
+                            android:textSize="14sp"
+                            android:textColor="#3C3C3C"/>
+                    </LinearLayout>
+                        
+                    <!-- 洞察内容 - 整体趋势 - 更柔和的背景色 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:background="@drawable/insight_trend_background"
+                        android:padding="16dp">
+                        
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_trend"
+                            android:layout_marginEnd="12dp"
+                            android:layout_gravity="center_vertical"
+                            app:tint="#70AD47" />
+
+                        <TextView
+                            android:id="@+id/moodPatternInsight"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="本月您的心情整体呈上升趋势，比上个月平均提高了0.5分。"
+                            android:textSize="14sp"
+                            android:textColor="#3C3C3C"/>
+                    </LinearLayout>
+                    
+                    <!-- 补充建议 - 更柔和的分隔线和文字颜色 -->
+                    <LinearLayout
+                        android:id="@+id/suggestionContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginTop="12dp"
+                        android:visibility="gone">
+                        
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="#EEEEEE"
+                            android:layout_marginVertical="8dp"/>
+                            
+                        <TextView
+                            android:id="@+id/suggestionText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="建议：根据您的心情记录，尝试在周三安排一些愉快的活动，可能有助于提升情绪。"
+                            android:textSize="13sp"
+                            android:textColor="#707070"
+                            android:textStyle="italic"
+                            android:paddingHorizontal="4dp"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
         
         <!-- 空状态布局（默认隐藏） -->
