@@ -11,7 +11,7 @@
     
     <!-- 甘雨风格文本 -->
     <string name="ganyu_input_hint">需要我的协助吗？</string>
-    <string name="ganyu_send_button">发送</string>
+    <string name="ganyu_send_button">❄</string>
     
     <!-- 甘雨风格资源ID -->
     <string name="ganyu_bubble_bg">chat_bubble_ganyu</string>

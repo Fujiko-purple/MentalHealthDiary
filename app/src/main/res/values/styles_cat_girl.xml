@@ -11,7 +11,7 @@
     
     <!-- 猫娘风格文本 -->
     <string name="catgirl_input_hint">喵～有什么想告诉暖暖的～</string>
-    <string name="catgirl_send_button">喵~</string>
+    <string name="catgirl_send_button">🐾喵~</string>
     
     <!-- 猫娘风格资源ID (把drawable资源ID保存为字符串) -->
     <string name="catgirl_bubble_bg">chat_bubble_cat_girl</string>
