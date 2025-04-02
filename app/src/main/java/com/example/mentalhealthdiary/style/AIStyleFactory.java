@@ -1,6 +1,7 @@
 package com.example.mentalhealthdiary.style;
 
 import android.content.Context;
+import android.util.Log;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,6 +15,9 @@ public class AIStyleFactory {
      * 获取指定AI人格的界面风格
      */
     public static AIPersonalityStyle getStyle(String personalityId, Context context) {
+        // 添加日志输出
+        Log.d("AIStyleFactory", "Getting style for ID: " + personalityId);
+        
         String cacheKey = personalityId + "_" + context.hashCode();
         
         // 先检查缓存
@@ -26,6 +30,9 @@ public class AIStyleFactory {
         switch (personalityId) {
             case "cat_girl":
                 style = new CatGirlStyle(context);
+                break;
+            case "ganyu_cbt":  // 添加甘雨风格
+                style = new GanyuStyle(context);
                 break;
             // 在这里添加其他AI风格...
             default:

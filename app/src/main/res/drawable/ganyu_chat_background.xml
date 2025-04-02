@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 底层渐变背景 - 优雅蓝色渐变 -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#E3F2FD"
+                android:centerColor="#F5FBFF"
+                android:endColor="#E0F7FA"
+                android:angle="135"
+                android:type="linear"/>
+        </shape>
+    </item>
+    
+    <!-- 右上角蓝色光晕渐变 -->
+    <item android:right="-50dp" android:top="-50dp">
+        <shape android:shape="oval">
+            <size android:width="200dp" android:height="200dp" />
+            <gradient
+                android:type="radial"
+                android:gradientRadius="100dp"
+                android:startColor="#255BC0EB"
+                android:centerColor="#155BC0EB"
+                android:endColor="#00FFFFFF" />
+        </shape>
+    </item>
+    
+    <!-- 雪花图案装饰 -->
+    <item>
+        <bitmap
+            android:src="@drawable/ic_ganyu_counselor"
+            android:gravity="center"
+            android:tileMode="disabled"
+            android:alpha="0.1" />
+    </item>
+</layer-list> 

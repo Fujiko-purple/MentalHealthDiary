@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 甘雨风格颜色 -->
+    <color name="ganyu_primary">#5BC0EB</color>
+    <color name="ganyu_secondary">#B5E2FA</color>
+    <color name="ganyu_text_color">#3D7EA6</color>
+    
+    <!-- 甘雨风格尺寸 -->
+    <dimen name="ganyu_button_radius">8dp</dimen>
+    <dimen name="ganyu_button_stroke_width">1dp</dimen>
+    
+    <!-- 甘雨风格文本 -->
+    <string name="ganyu_input_hint">需要我的协助吗？</string>
+    <string name="ganyu_send_button">发送</string>
+    
+    <!-- 甘雨风格资源ID -->
+    <string name="ganyu_bubble_bg">chat_bubble_ganyu</string>
+    <string name="ganyu_input_bg">chat_input_ganyu_background</string>
+    <string name="ganyu_chat_bg">ganyu_chat_background</string>
+    <string name="ganyu_font">fonts/ganyu_font.ttf</string>
+</resources> 
