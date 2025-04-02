@@ -19,6 +19,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -29,6 +30,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.mentalhealthdiary.adapter.ChatAdapter;
+import com.example.mentalhealthdiary.animation.AIAnimationManager;
 import com.example.mentalhealthdiary.config.AIPersonalityConfig;
 import com.example.mentalhealthdiary.config.ApiConfig;
 import com.example.mentalhealthdiary.database.AppDatabase;
@@ -198,6 +200,8 @@ public class AIChatActivity extends AppCompatActivity {
         "分析我最近的心情"
     );
 
+    private AIAnimationManager animationManager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -296,6 +300,15 @@ public class AIChatActivity extends AppCompatActivity {
 
         // 获取当前AI性格并设置相应背景
         updateActivityBackgroundForPersonality();
+
+        // 初始化动画管理器
+        ViewGroup rootLayout = findViewById(R.id.chat_root_layout);
+        animationManager = new AIAnimationManager(this, rootLayout);
+        
+        // 读取动画设置偏好
+        SharedPreferences prefs = getSharedPreferences("app_settings", MODE_PRIVATE);
+        boolean animationsEnabled = prefs.getBoolean("enable_animations", true);
+        animationManager.setAnimationEnabled(animationsEnabled);
     }
 
     private void loadCurrentPersonality() {
@@ -640,6 +653,10 @@ public class AIChatActivity extends AppCompatActivity {
         }
         
         stopThinkingTimeUpdate();
+        
+        if (animationManager != null) {
+            animationManager.stopAnimations();
+        }
     }
 
     private void saveMessage(String content, boolean isUser, String personalityId) {
@@ -873,6 +890,11 @@ public class AIChatActivity extends AppCompatActivity {
                 }
                 adapter.notifyDataSetChanged();
             }
+
+            // 设置动画风格
+            animationManager.setAIStyle(style);
+            
+            Log.d("AIChatActivity", "风格和动画应用成功: " + personality.getName());
         } catch (Exception e) {
             Log.e("AIChatActivity", "应用风格时出错: " + e.getMessage(), e);
         }

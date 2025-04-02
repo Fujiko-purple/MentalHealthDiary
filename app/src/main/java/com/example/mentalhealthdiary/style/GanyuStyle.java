@@ -5,6 +5,7 @@ import android.content.res.ColorStateList;
 import android.graphics.Typeface;
 
 import com.example.mentalhealthdiary.R;
+import com.example.mentalhealthdiary.animation.AnimationPositionStrategy;
 
 /**
  * 甘雨AI界面风格
@@ -186,5 +187,22 @@ public class GanyuStyle implements AIPersonalityStyle {
     @Override
     public int getButtonStrokeWidth() {
         return (int) context.getResources().getDimension(R.dimen.ganyu_button_stroke_width);
+    }
+
+    @Override
+    public int[] getAnimationResources() {
+        // 临时返回空数组，等资源准备好后再更新
+        return new int[0];
+    }
+
+    @Override
+    public float getAnimationFrequency() {
+        // 每分钟显示2次
+        return 2.0f;
+    }
+
+    @Override
+    public AnimationPositionStrategy getAnimationPositionStrategy() {
+        return AnimationPositionStrategy.TOP; // 雪花从顶部落下
     }
 } 

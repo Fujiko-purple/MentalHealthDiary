@@ -5,6 +5,7 @@ import android.content.res.ColorStateList;
 import android.graphics.Typeface;
 
 import com.example.mentalhealthdiary.R;
+import com.example.mentalhealthdiary.animation.AnimationPositionStrategy;
 
 /**
  * 猫娘AI界面风格
@@ -138,5 +139,22 @@ public class CatGirlStyle implements AIPersonalityStyle {
     @Override
     public int getButtonStrokeWidth() {
         return (int) context.getResources().getDimension(R.dimen.catgirl_button_stroke_width);
+    }
+
+    @Override
+    public int[] getAnimationResources() {
+        // 临时返回空数组，等资源准备好后再更新
+        return new int[0];
+    }
+
+    @Override
+    public float getAnimationFrequency() {
+        // 每分钟显示3次
+        return 3.0f;
+    }
+
+    @Override
+    public AnimationPositionStrategy getAnimationPositionStrategy() {
+        return AnimationPositionStrategy.RANDOM;
     }
 } 

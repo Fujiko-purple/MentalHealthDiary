@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 
 import com.example.mentalhealthdiary.R;
+import com.example.mentalhealthdiary.animation.AnimationPositionStrategy;
 
 /**
  * 默认AI界面风格
@@ -70,5 +71,20 @@ public class DefaultAIStyle implements AIPersonalityStyle {
     @Override
     public int getButtonStrokeWidth() {
         return 1; // 默认边框宽度
+    }
+    
+    @Override
+    public int[] getAnimationResources() {
+        return new int[0]; // 无动画
+    }
+    
+    @Override
+    public float getAnimationFrequency() {
+        return 0; // 不播放动画
+    }
+    
+    @Override
+    public AnimationPositionStrategy getAnimationPositionStrategy() {
+        return AnimationPositionStrategy.CENTER;
     }
 } 
