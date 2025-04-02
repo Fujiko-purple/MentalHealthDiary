@@ -3,7 +3,6 @@ package com.example.mentalhealthdiary.style;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Typeface;
-import android.util.Log;
 
 import com.example.mentalhealthdiary.R;
 
@@ -60,15 +59,12 @@ public class GanyuStyle implements AIPersonalityStyle {
     
     @Override
     public Typeface getTypeface(Context context) {
-        try {
-            return Typeface.createFromAsset(
-                context.getAssets(), 
-                context.getString(R.string.ganyu_font)
-            );
-        } catch (Exception e) {
-            Log.e("GanyuStyle", "无法加载甘雨字体", e);
-            return Typeface.DEFAULT;
-        }
+        Typeface 甘雨 = FontHelper.loadTypeface(
+                context,
+                context.getString(R.string.ganyu_font),
+                "甘雨"
+        );
+        return 甘雨;
     }
     
     @Override

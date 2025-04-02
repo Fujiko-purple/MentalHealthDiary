@@ -2,9 +2,7 @@ package com.example.mentalhealthdiary.style;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
-import android.graphics.Color;
 import android.graphics.Typeface;
-import android.util.Log;
 
 import com.example.mentalhealthdiary.R;
 
@@ -62,15 +60,11 @@ public class CatGirlStyle implements AIPersonalityStyle {
     
     @Override
     public Typeface getTypeface(Context context) {
-        try {
-            return Typeface.createFromAsset(
-                context.getAssets(), 
-                context.getString(R.string.catgirl_font)
-            );
-        } catch (Exception e) {
-            Log.e("CatGirlStyle", "无法加载猫娘字体", e);
-            return Typeface.DEFAULT;
-        }
+        return FontHelper.loadTypeface(
+            context,
+            context.getString(R.string.catgirl_font),
+            "猫娘"
+        );
     }
     
     @Override
