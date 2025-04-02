@@ -20,6 +20,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -839,6 +840,39 @@ public class AIChatActivity extends AppCompatActivity {
             }
             
             Log.d("AIChatActivity", "风格应用成功: " + personality.getName());
+
+            // 应用字体 - 确保字体应用到所有文本组件
+            Typeface typeface = style.getTypeface(this);
+            
+            // 应用到输入框
+            messageInput = findViewById(R.id.messageInput);
+            if (messageInput != null) {
+                messageInput.setTypeface(typeface);
+                messageInput.setHintTextColor(style.getHintTextColor());
+                messageInput.setHint(style.getInputHint());
+            }
+            
+            // 应用到发送按钮
+            if (sendButton != null) {
+                sendButton.setTypeface(typeface);
+                sendButton.setText(style.getSendButtonText());
+            }
+            
+            // 应用到顶部介绍文本
+            TextView aiIntroText = findViewById(R.id.aiIntroText);
+            TextView aiIntroSubtext = findViewById(R.id.aiIntroSubtext);
+            if (aiIntroText != null) aiIntroText.setTypeface(typeface);
+            if (aiIntroSubtext != null) aiIntroSubtext.setTypeface(typeface);
+            
+            // 设置适配器的字体
+            if (adapter != null) {
+                if ("cat_girl".equals(personality.getId())) {
+                    adapter.setCatGirlFont(typeface);
+                } else {
+                    adapter.setCatGirlFont(null); // 非猫娘模式不使用特殊字体
+                }
+                adapter.notifyDataSetChanged();
+            }
         } catch (Exception e) {
             Log.e("AIChatActivity", "应用风格时出错: " + e.getMessage(), e);
         }
