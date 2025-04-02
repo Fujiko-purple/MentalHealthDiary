@@ -189,13 +189,6 @@ public class AIChatActivity extends AppCompatActivity {
 
     private boolean isWaitingResponse = false;
     private ChipGroup quickMessageGroup;
-    private List<String> quickMessages = Arrays.asList(
-        "我今天心情很好",
-        "我今天心情一般",
-        "我今天心情不太好",
-        "我想找人聊聊",
-        "分析我最近的心情"
-    );
 
     private AIAnimationManager animationManager;
 
@@ -314,34 +307,7 @@ public class AIChatActivity extends AppCompatActivity {
             Log.d("AIChatActivity", "为动画管理器设置风格: " + currentPersonality.getId());
         }
 
-        // 添加一个测试按钮，暂时放在右下角
-        android.widget.Button testButton = new android.widget.Button(this);
-        testButton.setText("测试猫爪");
-        testButton.setOnClickListener(v -> {
-            if (animationManager != null) {
-                Log.d("AIChatActivity", "手动触发猫爪动画");
-                try {
-                    // 通过反射直接调用私有方法playPawprintSequence
-                    java.lang.reflect.Method method = AIAnimationManager.class.getDeclaredMethod("playPawprintSequence");
-                    method.setAccessible(true);
-                    method.invoke(animationManager);
-                } catch (Exception e) {
-                    Log.e("AIChatActivity", "无法调用猫爪动画: " + e.getMessage());
-                }
-            }
-        });
-        
-        // 设置按钮位置
-        android.widget.FrameLayout.LayoutParams params = new android.widget.FrameLayout.LayoutParams(
-            android.widget.FrameLayout.LayoutParams.WRAP_CONTENT,
-            android.widget.FrameLayout.LayoutParams.WRAP_CONTENT
-        );
-        params.gravity = android.view.Gravity.BOTTOM | android.view.Gravity.END;
-        params.bottomMargin = 50;
-        params.rightMargin = 50;
-        
-        // 将测试按钮添加到布局中
-        rootLayout.addView(testButton, params);
+
 
         // 确保根布局可以绘制超出边界的子视图（对于动画很重要）
         if (rootLayout instanceof ViewGroup) {
@@ -1167,7 +1133,6 @@ public class AIChatActivity extends AppCompatActivity {
 
             // 收集最近的日记内容
             List<String> keyPhrases = new ArrayList<>();
-            int diaryCount = 0;
 
             for (MoodEntry entry : entries) {
                 if (entry.getDate().getTime() >= sevenDaysAgo) {
@@ -1309,13 +1274,5 @@ public class AIChatActivity extends AppCompatActivity {
         }
     }
 
-    public void setPersonality(AIPersonality personality) {
-        // 您原有的代码...
-        
-        // 添加保存ID和应用风格的代码
-        if (personality != null) {
-            saveCurrentPersonalityId(personality.getId());
-            applyPersonalityStyle(personality); // 确保应用风格
-        }
-    }
+
 } 

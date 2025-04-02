@@ -9,7 +9,7 @@ import android.graphics.RectF;
 import android.view.View;
 
 /**
- * 优化版猫爪视图 - 更加可爱精细的猫爪形状
+ * 优化版猫爪视图 - 更加透明，防止遮挡
  */
 public class CatPawView extends View {
     private Paint mainPaint; // 主色调画笔
@@ -39,24 +39,24 @@ public class CatPawView extends View {
         int lighterColor = lightenColor(pawColor, 0.3f);
         int darkerColor = darkenColor(pawColor, 0.2f);
         
-        // 设置主色调画笔
+        // 设置主色调画笔 - 增加透明度
         mainPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mainPaint.setColor(pawColor);
         mainPaint.setStyle(Paint.Style.FILL);
         mainPaint.setAlpha(alpha);
         
-        // 设置高光画笔
+        // 设置高光画笔 - 保持较高透明度
         highlightPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         highlightPaint.setColor(lighterColor);
         highlightPaint.setStyle(Paint.Style.FILL);
-        highlightPaint.setAlpha(alpha);
+        highlightPaint.setAlpha(Math.min(alpha + 20, 255)); // 高光稍微明显一点
         
-        // 设置轮廓画笔
+        // 设置轮廓画笔 - 轮廓略微明显以保持形状可见
         outlinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         outlinePaint.setColor(darkerColor);
         outlinePaint.setStyle(Paint.Style.STROKE);
-        outlinePaint.setStrokeWidth(2f);
-        outlinePaint.setAlpha(alpha);
+        outlinePaint.setStrokeWidth(1.5f); // 稍微细一点的线条
+        outlinePaint.setAlpha(Math.min(alpha + 30, 255)); // 轮廓稍微明显一点
         
         // 创建爪印路径
         pawPath = new Path();
@@ -145,10 +145,10 @@ public class CatPawView extends View {
                 highlightPaint
         );
         
-        // 添加肉球纹理 - 用细线条表示
+        // 添加肉球纹理 - 用更透明的细线条表示
         Paint texturePaint = new Paint(outlinePaint);
         texturePaint.setStrokeWidth(1f);
-        texturePaint.setAlpha(alpha / 2); // 现在可以正确访问alpha
+        texturePaint.setAlpha(alpha / 3); // 纹理线条更透明（原来是alpha/2）
         
         // 添加几条简单的弧线作为纹理
         for (int i = 0; i < 3; i++) {

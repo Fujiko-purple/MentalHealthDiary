@@ -207,7 +207,7 @@ public class AIAnimationManager {
             int pawColor = pawColors[random.nextInt(pawColors.length)];
             
             // 创建猫爪视图
-            CatPawView pawView = new CatPawView(context, pawColor, isLeftPaw, 150);
+            CatPawView pawView = new CatPawView(context, pawColor, isLeftPaw, 100);
             ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(PAWPRINT_SIZE, PAWPRINT_SIZE);
             containerView.addView(pawView, params);
             
@@ -768,8 +768,4 @@ public class AIAnimationManager {
         view.setX(x);
         view.setY(y);
     }
-
-    /**
-     * 公共测试方法，用于手动触发猫爪动画测试
-     */
 }
