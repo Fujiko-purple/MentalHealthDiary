@@ -65,7 +65,8 @@
             android:name=".AIChatActivity"
             android:label="AI 心理助手"
             android:theme="@style/Theme.MentalHealthDiary.NoActionBar"
-            android:parentActivityName=".MainActivity">
+            android:parentActivityName=".MainActivity"
+            android:windowSoftInputMode="adjustResize">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />

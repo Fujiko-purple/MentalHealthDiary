@@ -1,11 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- 底层使用实际图片，保持原始比例 -->
+    <!-- 底层白色背景，确保没有透明区域 -->
     <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFF" />
+        </shape>
+    </item>
+    
+    <!-- 甘雨背景图片，为顶部添加间距 -->
+    <item android:top="56dp"> <!-- 56dp约等于actionBarSize -->
         <bitmap
             android:src="@drawable/ganyu_bg"
-            android:gravity="center"
+            android:gravity="center_horizontal|top"
             android:tileMode="disabled" />
+    </item>
+    
+    <!-- 添加顶部渐变，使Toolbar区域更清晰 -->
+    <item android:height="56dp">
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#7096c5"
+                android:endColor="#00ffffff"
+                android:angle="270" />
+        </shape>
     </item>
     
     <!-- 进一步降低透明度的叠加层，更好地展示背景图片 -->
