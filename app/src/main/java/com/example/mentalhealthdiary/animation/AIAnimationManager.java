@@ -31,6 +31,16 @@ public class AIAnimationManager {
     
     private Runnable animationRunnable;
     
+    // 添加成员变量，用于保存当前使用的圆心位置
+    private float currentCircleCenterX;
+    private float currentCircleCenterY;
+    
+    // 添加成员变量记录圆形行走方向
+    private boolean currentCircleClockwise;
+    
+    // 添加成员变量保存每个点的角度
+    private float[] currentPointAngles;
+    
     public AIAnimationManager(Context context, ViewGroup containerView) {
         this.context = context;
         this.containerView = containerView;
@@ -72,7 +82,7 @@ public class AIAnimationManager {
     }
     
     /**
-     * 播放猫爪印序列动画 - 修改主方法，添加爱心路径
+     * 播放猫爪印序列动画 - 优化所有路径的显示逻辑
      */
     private void playPawprintSequence() {
         if (!isAnimationEnabled) return;
@@ -148,11 +158,11 @@ public class AIAnimationManager {
                 break;
             
             case 2: // 弧形路径
-                generateArcPath(xPositions, yPositions, containerWidth, containerHeight, 
+                generateArcPath(xPositions, yPositions, containerWidth, containerHeight,
                               fromLeft, fromTopToBottom, pawprintCount);
                 break;
             
-            case 3: // 圆形/椭圆路径
+            case 3: // 圆形路径
                 generateCircularPath(xPositions, yPositions, containerWidth, containerHeight, 
                                    fromLeft, pawprintCount);
                 break;
@@ -212,21 +222,27 @@ public class AIAnimationManager {
             float finalRotation;
             
             if (pathType == 3) { // 圆形路径特殊处理
-                // 计算每个爪印指向圆心的角度
-                float dx = x - containerWidth / 2; // 需要在循环前记录当前使用的圆心
-                float dy = y - containerHeight / 2;
-                float angleToCenter = (float) Math.toDegrees(Math.atan2(dy, dx));
+                // 获取当前点的角度 - 使用保存的角度数组
+                float pointAngle = currentPointAngles[i];
                 
-                // 如果是顺时针，爪印应该垂直于圆的切线
-                finalRotation = angleToCenter + 90;
-                
-                // 根据爪印朝向调整角度
-                if (!pawsFacingDown) {
-                    finalRotation += 180; // 如果朝上，翻转180度
+                // 计算切线方向 - 垂直于半径方向
+                float tangentAngle;
+                if (currentCircleClockwise) {
+                    tangentAngle = pointAngle - 90; // 顺时针方向的切线
+                } else {
+                    tangentAngle = pointAngle + 90; // 逆时针方向的切线
                 }
                 
-                // 左右爪的微调
-                finalRotation += isLeftPaw ? -10 : 10;
+                // 最终旋转角度 - 根据猫爪朝向进一步调整
+                finalRotation = tangentAngle;
+                
+                // 左右爪的差异
+                finalRotation += isLeftPaw ? -15 : 15;
+                
+                // 调整爪印向前的方向
+                if (!pawsFacingDown) {
+                    finalRotation += 180;
+                }
             } else if (pathType == 5) { // 爱心路径特殊处理
                 // 计算爪印沿爱心曲线的切线方向
                 float tangentAngle;
@@ -267,14 +283,16 @@ public class AIAnimationManager {
             // 设置Z轴高度确保爪印在最上层
             pawView.setZ(1000f);
             
-            // 延迟显示每个爪印
+            // 为所有路径类型使用相同的序列化显示逻辑
             int finalI = i;
+            
+            // 应用相同的"按序出现"动画，让所有路径类型都符合猫行走的逻辑
             pawView.animate()
-                .alpha(0.8f) // 更高的不透明度
-                .setStartDelay(200 * i) // 增大时间间隔，让"画爱心"效果更明显
+                .alpha(0.8f)
+                .setStartDelay(150 * i) // 所有爪印类型都按顺序出现
                 .setDuration(200)
                 .withEndAction(() -> {
-                    // 爱心路径的爪印持续时间更长
+                    // 延迟淡出，让整个爪印序列更容易看清
                     Handler handler = new Handler();
                     handler.postDelayed(() -> {
                         pawView.animate()
@@ -282,7 +300,7 @@ public class AIAnimationManager {
                             .setDuration(800)
                             .withEndAction(() -> containerView.removeView(pawView))
                             .start();
-                    }, 2500); // 所有爪印都停留较长时间
+                    }, 2000 + (pawprintCount - finalI) * 100); // 第一个出现的最后消失
                 })
                 .start();
         }
@@ -363,125 +381,144 @@ public class AIAnimationManager {
         }
     }
 
-    // 生成弧形路径坐标
+    /**
+     * 生成弧形路径 - 模拟真实猫咪转弯路径
+     */
     private void generateArcPath(float[] xPositions, float[] yPositions, 
-                              int width, int height, boolean fromLeft, 
-                              boolean fromTop, int count) {
-        // 弧的中心
-        float centerX = width / 2;
-        float centerY = fromTop ? -height * 0.3f : height * 1.3f; // 减小偏移
+                             int width, int height, boolean fromLeft, boolean fromTop, int count) {
+        // 弧形路径应该像猫在转弯，不是机械的弧线
         
-        // 弧的半径
-        float radiusX = width * 0.3f; // 减小半径，使爪印更紧凑
-        float radiusY = height * 0.4f; // 减小半径，使爪印更紧凑
-        
-        // 起始角度和角度范围
-        float startAngle, sweepAngle;
-        
+        // 设置起点
+        float startX, startY;
         if (fromLeft) {
-            startAngle = fromTop ? 180 : 0;
-            sweepAngle = 90; // 增大角度范围，使弧更完整
+            startX = width * 0.1f;
         } else {
-            startAngle = fromTop ? 0 : 180;
-            sweepAngle = -90; // 增大角度范围，使弧更完整
+            startX = width * 0.9f;
+        }
+        startY = height * (0.3f + random.nextFloat() * 0.3f);
+        
+        // 设置终点 - 猫转弯后的方向
+        float endX, endY;
+        if (fromLeft) {
+            // 从左向右转弯，转向上或下
+            endX = width * (0.6f + random.nextFloat() * 0.3f);
+            if (fromTop) {
+                endY = startY + height * (0.1f + random.nextFloat() * 0.1f); // 向下转
+            } else {
+                endY = startY - height * (0.1f + random.nextFloat() * 0.1f); // 向上转
+            }
+        } else {
+            // 从右向左转弯，转向上或下
+            endX = width * (0.1f + random.nextFloat() * 0.3f);
+            if (fromTop) {
+                endY = startY + height * (0.1f + random.nextFloat() * 0.1f); // 向下转
+            } else {
+                endY = startY - height * (0.1f + random.nextFloat() * 0.1f); // 向上转
+            }
         }
         
-        // 生成坐标 - 确保间隔均匀
+        // 设置控制点 - 确定弧度
+        float controlX = (startX + endX) / 2;
+        float controlY;
+        
+        if (fromTop) {
+            controlY = Math.min(startY, endY) - height * 0.1f; // 弧向上凸
+        } else {
+            controlY = Math.max(startY, endY) + height * 0.1f; // 弧向下凸
+        }
+        
+        // 步幅变化 - 猫走路不会步幅完全一致
+        float[] stepVariation = new float[count];
         for (int i = 0; i < count; i++) {
-            float angle = (float) Math.toRadians(startAngle + sweepAngle * i / (count - 1));
-            xPositions[i] = centerX + radiusX * (float) Math.cos(angle);
-            yPositions[i] = centerY + radiusY * (float) Math.sin(angle);
+            // 微小的步幅变化
+            stepVariation[i] = random.nextFloat() * 5 - 2.5f;
+        }
+        
+        // 左右摇摆 - 猫走路时身体有轻微摇摆
+        float[] sideOffset = new float[count];
+        for (int i = 0; i < count; i++) {
+            // 左右交替的小偏移
+            sideOffset[i] = ((i % 2) * 2 - 1) * (3 + random.nextFloat() * 3);
+        }
+        
+        // 生成二次贝塞尔曲线，带自然变化
+        for (int i = 0; i < count; i++) {
+            // 参数t从0到1，表示沿曲线的进度
+            float t = (float) i / (count - 1);
+            
+            // 二次贝塞尔曲线公式
+            float mt = 1 - t;
+            float baseX = mt*mt * startX + 2*mt*t * controlX + t*t * endX;
+            float baseY = mt*mt * startY + 2*mt*t * controlY + t*t * endY;
+            
+            // 应用自然变化
+            xPositions[i] = baseX + sideOffset[i];
+            yPositions[i] = baseY + stepVariation[i];
         }
     }
 
-    // 进一步优化圆形路径
+    /**
+     * 生成圆形路径 - 完全重新设计猫爪朝向逻辑
+     */
     private void generateCircularPath(float[] xPositions, float[] yPositions, 
-                                   int width, int height, boolean clockwise, int count) {
-        // 更多样化的圆形位置
-        float centerX, centerY;
+                               int width, int height, boolean fromLeft, int count) {
+        // 设置圆心位置
+        float centerX = width * (0.3f + random.nextFloat() * 0.4f);
+        float centerY = height * (0.3f + random.nextFloat() * 0.3f);
         
-        // 随机选择圆形模式 - 0=边缘小圆, 1=中央大圆, 2=椭圆形
-        int circleMode = random.nextInt(3);
+        // 保存圆心位置
+        this.currentCircleCenterX = centerX;
+        this.currentCircleCenterY = centerY;
         
-        // 根据模式设置圆的参数
-        float radiusX, radiusY;
-        float sweepAngle;
+        // 使用适中的半径
+        float radius = Math.min(width, height) * 0.15f;
         
-        switch (circleMode) {
-            case 0: // 边缘小圆 - 更小、更紧凑的圆形
-                // 在左侧或右侧
-                if (random.nextBoolean()) {
-                    centerX = width * 0.15f; // 左侧
-                } else {
-                    centerX = width * 0.85f; // 右侧
-                }
-                centerY = height * (0.3f + random.nextFloat() * 0.4f);
-                
-                // 小半径
-                radiusX = width * 0.08f;
-                radiusY = width * 0.08f; // 保持圆形
-                
-                // 完整圆形
-                sweepAngle = 360;
-                break;
-                
-            case 1: // 中央大圆 - 在屏幕中央的较大圆形
-                centerX = width * 0.5f;
-                centerY = height * 0.45f;
-                
-                // 中等半径
-                radiusX = width * 0.2f;
-                radiusY = width * 0.2f * ((float)height/width); // 调整纵横比
-                
-                // 部分圆弧
-                sweepAngle = 180 + random.nextFloat() * 90; // 180-270度的弧
-                break;
-                
-            case 2: // 椭圆形 - 扁平椭圆
-            default:
-                // 随机水平位置
-                centerX = width * (0.3f + random.nextFloat() * 0.4f);
-                centerY = height * (0.25f + random.nextFloat() * 0.5f);
-                
-                // 扁平椭圆
-                radiusX = width * 0.25f;
-                radiusY = height * 0.1f;
-                
-                // 部分椭圆
-                sweepAngle = 270; // 270度的弧
-                break;
+        // 根据起点决定行走方向 - 确保从左/右出现
+        boolean clockwise;
+        if (fromLeft) {
+            clockwise = true;  // 从左侧开始是顺时针方向
+        } else {
+            clockwise = false; // 从右侧开始是逆时针方向
         }
         
-        // 确定是顺时针还是逆时针
-        boolean isClockwise = random.nextBoolean();
+        // 记录行走方向
+        this.currentCircleClockwise = clockwise;
         
-        // 调整爪印数量以适应圆形大小
-        int effectiveCount = Math.min(count, (int)(sweepAngle / 45) + 3); // 避免过于密集
+        // 记录每个点的角度，用于后续计算切线角度
+        float[] pointAngles = new float[count];
         
-        // 起始角度 - 随机选择
-        float startAngle = random.nextFloat() * 360;
+        // 根据起点决定第一个爪印的位置
+        float startAngle;
+        if (fromLeft) {
+            startAngle = 180; // 从左侧开始
+        } else {
+            startAngle = 0;   // 从右侧开始
+        }
         
-        // 生成圆形路径 - 均匀分布
-        for (int i = 0; i < effectiveCount; i++) {
-            float angleStep = sweepAngle / (effectiveCount - 1);
-            float currentAngle = startAngle;
-            
-            if (isClockwise) {
-                currentAngle += i * angleStep;
+        // 生成点序列
+        float sweepAngle = 270; // 不是完整圆
+        float angleStep = sweepAngle / (count - 1);
+        
+        for (int i = 0; i < count; i++) {
+            // 计算当前角度
+            float currentAngle;
+            if (clockwise) {
+                currentAngle = startAngle + angleStep * i;
             } else {
-                currentAngle -= i * angleStep;
+                currentAngle = startAngle - angleStep * i;
             }
             
-            float angle = (float) Math.toRadians(currentAngle);
-            xPositions[i] = centerX + radiusX * (float) Math.cos(angle);
-            yPositions[i] = centerY + radiusY * (float) Math.sin(angle);
+            // 保存每个点的角度，用于后续计算旋转角度
+            pointAngles[i] = currentAngle;
+            
+            // 转换为弧度计算坐标
+            float angleRad = (float) Math.toRadians(currentAngle);
+            xPositions[i] = centerX + radius * (float) Math.cos(angleRad);
+            yPositions[i] = centerY + radius * (float) Math.sin(angleRad);
         }
         
-        // 如果实际使用的爪印少于数组大小，将剩余位置设为可见区域之外
-        for (int i = effectiveCount; i < count; i++) {
-            xPositions[i] = -100;
-            yPositions[i] = -100;
-        }
+        // 保存点角度数组
+        this.currentPointAngles = pointAngles;
     }
 
     // 生成S形路径坐标
