@@ -1,36 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- 底层渐变背景 - 优雅蓝色渐变 -->
+    <!-- 底层使用实际图片，保持原始比例 -->
+    <item>
+        <bitmap
+            android:src="@drawable/ganyu_bg"
+            android:gravity="center"
+            android:tileMode="disabled" />
+    </item>
+    
+    <!-- 进一步降低透明度的叠加层，更好地展示背景图片 -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#90FFFFFF" />
+        </shape>
+    </item>
+    
+    <!-- 右上角淡蓝色光晕 - 更加柔和 -->
+    <item android:right="-50dp" android:top="-50dp">
+        <shape android:shape="oval">
+            <size android:width="250dp" android:height="250dp" />
+            <gradient
+                android:type="radial"
+                android:gradientRadius="125dp"
+                android:startColor="#155BC0EB"
+                android:centerColor="#0A5BC0EB"
+                android:endColor="#00FFFFFF" />
+        </shape>
+    </item>
+    
+    <!-- 左下角淡蓝色光晕 - 更加柔和 -->
+    <item android:left="-70dp" android:bottom="-70dp">
+        <shape android:shape="oval">
+            <size android:width="220dp" android:height="220dp" />
+            <gradient
+                android:type="radial"
+                android:gradientRadius="110dp"
+                android:startColor="#159FD3F4"
+                android:centerColor="#089FD3F4"
+                android:endColor="#00FFFFFF" />
+        </shape>
+    </item>
+    
+    <!-- 中央淡淡的冰霜效果 - 非常柔和 -->
     <item>
         <shape android:shape="rectangle">
             <gradient
-                android:startColor="#E3F2FD"
-                android:centerColor="#F5FBFF"
-                android:endColor="#E0F7FA"
+                android:startColor="#03CAEBFF"
+                android:centerColor="#00FFFFFF"
+                android:endColor="#03CAEBFF"
                 android:angle="135"
                 android:type="linear"/>
         </shape>
     </item>
     
-    <!-- 右上角蓝色光晕渐变 -->
-    <item android:right="-50dp" android:top="-50dp">
-        <shape android:shape="oval">
-            <size android:width="200dp" android:height="200dp" />
-            <gradient
-                android:type="radial"
-                android:gradientRadius="100dp"
-                android:startColor="#255BC0EB"
-                android:centerColor="#155BC0EB"
-                android:endColor="#00FFFFFF" />
-        </shape>
-    </item>
-    
-    <!-- 雪花图案装饰 -->
-    <item>
-        <bitmap
-            android:src="@drawable/ic_ganyu_counselor"
-            android:gravity="center"
-            android:tileMode="disabled"
-            android:alpha="0.1" />
-    </item>
+    <!-- 移除额外的装饰，专注于显示背景图片 -->
 </layer-list> 

@@ -81,17 +81,51 @@ public class GanyuStyle implements AIPersonalityStyle {
         return context.getString(R.string.ganyu_send_button);
     }
     
+
     @Override
     public String transformText(String originalText) {
-        // 甘雨特有的文本转换逻辑
         if (originalText == null || originalText.isEmpty()) {
             return originalText;
         }
-        
-        // 这里可以添加甘雨特有的语言风格转换
-        // 比如添加一些璃月特色的词汇、口吻等
-        
-        return originalText;
+
+        if (originalText.startsWith("璃月之约·") || originalText.contains("霜华矢") ||
+                originalText.contains("循仙之仪")) {
+            return originalText;
+        }
+
+        String[] qilinTones = {
+                "喏～", "呀～", "唷～", "...（垂眸）", "（理鬓）"
+        };
+
+        String tone = qilinTones[(int)(Math.random() * qilinTones.length)];
+
+        originalText = originalText.replaceAll("(?i)我", "甘雨");
+        originalText = originalText.replaceAll("(?i)认为", "以为");
+        originalText = originalText.replaceAll("(?i)工作", "契约之责");
+        originalText = originalText.replaceAll("(?i)休息", "暂离尘嚣");
+
+        if (originalText.endsWith("。") || originalText.endsWith(".")) {
+            originalText = originalText.substring(0, originalText.length()-1)
+                    + "· " + tone;
+        } else if (originalText.endsWith("!") || originalText.endsWith("！")) {
+            originalText = originalText.substring(0, originalText.length()-1)
+                    + "（寒天冰棱乍现）" + tone;
+        } else if (!originalText.matches(".*[～）]$")) {
+            originalText = originalText + " " + tone;
+        }
+
+        String[] paragraphs = originalText.split("\n\n");
+        if (paragraphs.length > 1) {
+            for (int i = 0; i < paragraphs.length - 1; i++) {
+                if (!paragraphs[i].matches(".*[～）]$")) {
+                    String newTone = qilinTones[(int)(Math.random() * qilinTones.length)];
+                    paragraphs[i] = paragraphs[i] + " " + newTone;
+                }
+            }
+            originalText = String.join("\n\n", paragraphs);
+        }
+
+        return "璃月之约·" + originalText;
     }
     
     @Override
