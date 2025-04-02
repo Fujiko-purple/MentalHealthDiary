@@ -6,15 +6,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
+import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -59,9 +59,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import android.graphics.Typeface;
-import android.content.SharedPreferences;
 
 public class AIChatActivity extends AppCompatActivity {
     private RecyclerView chatRecyclerView;
@@ -309,6 +306,49 @@ public class AIChatActivity extends AppCompatActivity {
         SharedPreferences prefs = getSharedPreferences("app_settings", MODE_PRIVATE);
         boolean animationsEnabled = prefs.getBoolean("enable_animations", true);
         animationManager.setAnimationEnabled(animationsEnabled);
+
+        // 设置当前风格
+        if (currentPersonality != null) {
+            AIPersonalityStyle style = AIStyleFactory.getStyle(currentPersonality.getId(), this);
+            animationManager.setAIStyle(style);
+            Log.d("AIChatActivity", "为动画管理器设置风格: " + currentPersonality.getId());
+        }
+
+        // 添加一个测试按钮，暂时放在右下角
+        android.widget.Button testButton = new android.widget.Button(this);
+        testButton.setText("测试猫爪");
+        testButton.setOnClickListener(v -> {
+            if (animationManager != null) {
+                Log.d("AIChatActivity", "手动触发猫爪动画");
+                try {
+                    // 通过反射直接调用私有方法playPawprintSequence
+                    java.lang.reflect.Method method = AIAnimationManager.class.getDeclaredMethod("playPawprintSequence");
+                    method.setAccessible(true);
+                    method.invoke(animationManager);
+                } catch (Exception e) {
+                    Log.e("AIChatActivity", "无法调用猫爪动画: " + e.getMessage());
+                }
+            }
+        });
+        
+        // 设置按钮位置
+        android.widget.FrameLayout.LayoutParams params = new android.widget.FrameLayout.LayoutParams(
+            android.widget.FrameLayout.LayoutParams.WRAP_CONTENT,
+            android.widget.FrameLayout.LayoutParams.WRAP_CONTENT
+        );
+        params.gravity = android.view.Gravity.BOTTOM | android.view.Gravity.END;
+        params.bottomMargin = 50;
+        params.rightMargin = 50;
+        
+        // 将测试按钮添加到布局中
+        rootLayout.addView(testButton, params);
+
+        // 确保根布局可以绘制超出边界的子视图（对于动画很重要）
+        if (rootLayout instanceof ViewGroup) {
+            ViewGroup rootViewGroup = (ViewGroup) rootLayout;
+            rootViewGroup.setClipChildren(false);
+            rootViewGroup.setClipToPadding(false);
+        }
     }
 
     private void loadCurrentPersonality() {
@@ -1259,6 +1299,13 @@ public class AIChatActivity extends AppCompatActivity {
                 adapter.setCatGirlFont("cat_girl".equals(personalityId) ? typeface : null);
                 adapter.notifyDataSetChanged();
             }
+        }
+
+        // 确保根布局可以绘制超出边界的子视图（对于动画很重要）
+        if (rootView instanceof ViewGroup) {
+            ViewGroup rootViewGroup = (ViewGroup) rootView;
+            rootViewGroup.setClipChildren(false);
+            rootViewGroup.setClipToPadding(false);
         }
     }
 

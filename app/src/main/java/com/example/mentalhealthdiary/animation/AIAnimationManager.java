@@ -1,7 +1,7 @@
 package com.example.mentalhealthdiary.animation;
 
 import android.content.Context;
-import android.media.MediaPlayer;
+import android.graphics.Color;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -44,12 +44,10 @@ public class AIAnimationManager {
         this.currentStyle = style;
         stopAnimations();
         
-        if (style == null || style.getAnimationResources().length == 0) {
-            Log.d(TAG, "此AI风格没有动画资源");
-            return;
+        if (style != null) {
+            Log.d(TAG, "设置AI风格: " + style.getClass().getSimpleName());
+            scheduleNextAnimation();
         }
-        
-        scheduleNextAnimation();
     }
     
     /**
@@ -74,7 +72,395 @@ public class AIAnimationManager {
     }
     
     /**
-     * 安排下一个动画
+     * 播放猫爪印序列动画 - 优化路径间距
+     */
+    private void playPawprintSequence() {
+        if (!isAnimationEnabled) return;
+        
+        Log.d(TAG, "播放猫爪序列动画");
+        
+        // 确定容器尺寸
+        int containerWidth = containerView.getWidth();
+        int containerHeight = containerView.getHeight();
+        
+        if (containerWidth <= 0 || containerHeight <= 0) {
+            Log.e(TAG, "容器尺寸无效，无法显示动画");
+            return;
+        }
+        
+        // 猫爪印设置 - 根据路径类型调整数量
+        final int BASIC_PAWPRINT_COUNT = 6;  // 基本爪印数量
+        int pawprintCount;    // 实际使用的爪印数量
+        final int PAWPRINT_SIZE = 45;     // 爪印尺寸
+        final int STEP_DISTANCE = 60;     // 基本步距
+        
+        // 随机选择路径类型
+        int pathType = random.nextInt(5); // 0=直线, 1=斜线, 2=弧形, 3=圆形, 4=S形
+        Log.d(TAG, "选择路径类型: " + pathType);
+        
+        // 根据路径类型调整爪印数量
+        switch (pathType) {
+            case 0: // 直线路径
+            case 1: // 斜线路径
+                pawprintCount = BASIC_PAWPRINT_COUNT;
+                break;
+            case 2: // 弧形路径
+                pawprintCount = BASIC_PAWPRINT_COUNT + 3; // 增加爪印
+                break;
+            case 3: // 圆形/椭圆路径
+                pawprintCount = BASIC_PAWPRINT_COUNT + 6; // 更多爪印以形成完整圆形
+                break;
+            case 4: // S形路径
+                pawprintCount = BASIC_PAWPRINT_COUNT + 4; // 增加爪印使S形更流畅
+                break;
+            default:
+                pawprintCount = BASIC_PAWPRINT_COUNT;
+        }
+        
+        // 随机决定是从左侧还是右侧、是否朝下
+        boolean fromLeft = random.nextBoolean();
+        boolean pawsFacingDown = random.nextBoolean();
+        boolean fromTopToBottom = pawsFacingDown;
+        
+        // 准备爪印位置坐标数组
+        float[] xPositions = new float[pawprintCount];
+        float[] yPositions = new float[pawprintCount];
+        
+        // 根据路径类型计算坐标
+        switch (pathType) {
+            case 0: // 直线路径
+                generateStraightPath(xPositions, yPositions, containerWidth, containerHeight, 
+                                    fromLeft, fromTopToBottom, pawprintCount, STEP_DISTANCE);
+                break;
+            
+            case 1: // 斜线路径
+                generateDiagonalPath(xPositions, yPositions, containerWidth, containerHeight, 
+                                   fromLeft, fromTopToBottom, pawprintCount, STEP_DISTANCE);
+                break;
+            
+            case 2: // 弧形路径
+                generateArcPath(xPositions, yPositions, containerWidth, containerHeight, 
+                              fromLeft, fromTopToBottom, pawprintCount);
+                break;
+            
+            case 3: // 圆形/椭圆路径
+                generateCircularPath(xPositions, yPositions, containerWidth, containerHeight, 
+                                   fromLeft, pawprintCount);
+                break;
+            
+            case 4: // S形路径
+                generateSPath(xPositions, yPositions, containerWidth, containerHeight, 
+                            fromLeft, fromTopToBottom, pawprintCount);
+                break;
+        }
+        
+        // 猫爪颜色
+        final int[] pawColors = new int[] {
+            Color.parseColor("#FF80AB"),  // 淡粉色
+            Color.parseColor("#F48FB1"),  // 粉红色
+            Color.parseColor("#F06292")   // 中粉色
+        };
+        
+        // 创建多个猫爪印，交替左右爪
+        for (int i = 0; i < pawprintCount; i++) {
+            boolean isLeftPaw = i % 2 == 0; // 奇偶交替
+            
+            // 如果是从右侧开始，则翻转左右爪逻辑
+            if (!fromLeft) {
+                isLeftPaw = !isLeftPaw;
+            }
+            
+            // 从坐标数组获取位置
+            float x = xPositions[i];
+            float y = yPositions[i];
+            
+            // 计算当前爪印的旋转角度 - 基于路径方向
+            float pathAngle = 0;
+            
+            // 如果不是第一个爪印，计算与前一个爪印的角度
+            if (i > 0) {
+                float dx = x - xPositions[i-1];
+                float dy = y - yPositions[i-1];
+                pathAngle = (float) Math.toDegrees(Math.atan2(dy, dx));
+            }
+            
+            // 随机选择猫爪颜色
+            int pawColor = pawColors[random.nextInt(pawColors.length)];
+            
+            // 创建猫爪视图
+            CatPawView pawView = new CatPawView(context, pawColor, isLeftPaw, 150);
+            ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(PAWPRINT_SIZE, PAWPRINT_SIZE);
+            containerView.addView(pawView, params);
+            
+            // 设置位置
+            pawView.setX(x);
+            pawView.setY(y);
+            
+            // 设置旋转 - 综合考虑路径方向和猫爪朝向
+            float baseRotation = pawsFacingDown ? 180 : 0;
+            
+            // 计算最终旋转角度 - 调整爪印使其沿着路径方向
+            float finalRotation;
+            
+            if (pathType == 3) { // 圆形路径特殊处理
+                // 沿着圆轨迹方向
+                finalRotation = pathAngle + (pawsFacingDown ? 90 : -90); 
+                // 左右爪的微调
+                finalRotation += isLeftPaw ? -15 : 15;
+            } else if (pathType == 4) { // S形路径特殊处理
+                // S形路径垂直部分朝向调整
+                finalRotation = pawsFacingDown ? 180 : 0;
+                // 左右爪微调
+                finalRotation += isLeftPaw ? -15 : 15;
+                // 添加一些随机变化
+                finalRotation += (random.nextFloat() * 10 - 5);
+            } else {
+                // 直线、斜线和弧形路径
+                float directionRotation = fromLeft ? -20 : 20; // 减小角度
+                float pawRotation = isLeftPaw ? -10 : 10;
+                finalRotation = baseRotation + directionRotation + pawRotation;
+                // 添加少量随机性
+                finalRotation += (random.nextFloat() * 6 - 3); // 减小随机范围
+            }
+            
+            pawView.setRotation(finalRotation);
+            
+            // 初始透明
+            pawView.setAlpha(0f);
+            
+            // 设置Z轴高度确保爪印在最上层
+            pawView.setZ(1000f);
+            
+            // 延迟显示每个爪印
+            int finalI = i;
+            pawView.animate()
+                .alpha(0.7f)
+                .setStartDelay(150 * i)
+                .setDuration(300)
+                .withEndAction(() -> {
+                    // 延迟淡出
+                    Handler handler = new Handler();
+                    handler.postDelayed(() -> {
+                        pawView.animate()
+                            .alpha(0f)
+                            .setDuration(1200)
+                            .withEndAction(() -> containerView.removeView(pawView))
+                            .start();
+                    }, 2000 + (pawprintCount - finalI) * 150);
+                })
+                .start();
+        }
+    }
+
+    // 生成直线路径坐标
+    private void generateStraightPath(float[] xPositions, float[] yPositions, 
+                                    int width, int height, boolean fromLeft, 
+                                    boolean fromTop, int count, int stepDistance) {
+        float insetFromEdge = width * 0.15f;
+        float startX = fromLeft ? insetFromEdge : width - insetFromEdge;
+        
+        // 随机选择起始Y位置
+        float startY = height * (0.1f + random.nextFloat() * 0.7f);
+        
+        // 如果是从下到上，调整起始点为序列末端
+        if (!fromTop) {
+            startY = startY + stepDistance * (count - 1);
+        }
+        
+        for (int i = 0; i < count; i++) {
+            // X轴上微小的左右摆动
+            xPositions[i] = startX + (fromLeft ? 1 : -1) * (i % 2) * (stepDistance * 0.35f);
+            
+            // Y轴上的移动
+            if (fromTop) {
+                yPositions[i] = startY + i * stepDistance;
+            } else {
+                yPositions[i] = startY - i * stepDistance;
+            }
+        }
+    }
+
+    // 生成斜线路径坐标
+    private void generateDiagonalPath(float[] xPositions, float[] yPositions, 
+                                   int width, int height, boolean fromLeft, 
+                                   boolean fromTop, int count, int stepDistance) {
+        // 基准路径点 - 起点和终点
+        float startX, startY;
+        float endX, endY;
+        
+        // 确保起点非常靠近边缘
+        if (fromLeft) {
+            startX = width * 0.02f; 
+            endX = width * 0.2f;   // 缩短路径长度，使爪印更紧凑
+        } else {
+            startX = width * 0.98f; 
+            endX = width * 0.8f;   // 缩短路径长度，使爪印更紧凑
+        }
+        
+        if (fromTop) {
+            startY = height * 0.05f;
+            endY = height * 0.4f;   // 缩短纵向距离
+        } else {
+            startY = height * 0.65f;
+            endY = height * 0.3f;   // 缩短纵向距离
+        }
+        
+        // 计算主路径 - 缩短步长使爪印更紧凑
+        float xStep = (endX - startX) / (count - 1);
+        float yStep = (endY - startY) / (count - 1);
+        
+        // 生成爪印坐标 - 一左一右交替但间距更小
+        for (int i = 0; i < count; i++) {
+            float baseX = startX + i * xStep;
+            float baseY = startY + i * yStep;
+            
+            // 增加左右交替的偏移 - 但减小偏移量
+            float sideOffset = (i % 2 == 0) ? -1 : 1;
+            if (!fromLeft) sideOffset *= -1;
+            
+            // 减小横向偏移量，让爪印更紧凑
+            float xOffset = sideOffset * stepDistance * 0.1f; // 减小为原来的一半
+            
+            // 应用坐标，减小随机性
+            xPositions[i] = baseX + xOffset + (random.nextFloat() * 3 - 1.5f);
+            yPositions[i] = baseY + (random.nextFloat() * 3 - 1.5f);
+        }
+    }
+
+    // 生成弧形路径坐标
+    private void generateArcPath(float[] xPositions, float[] yPositions, 
+                              int width, int height, boolean fromLeft, 
+                              boolean fromTop, int count) {
+        // 弧的中心
+        float centerX = width / 2;
+        float centerY = fromTop ? -height * 0.3f : height * 1.3f; // 减小偏移
+        
+        // 弧的半径
+        float radiusX = width * 0.3f; // 减小半径，使爪印更紧凑
+        float radiusY = height * 0.4f; // 减小半径，使爪印更紧凑
+        
+        // 起始角度和角度范围
+        float startAngle, sweepAngle;
+        
+        if (fromLeft) {
+            startAngle = fromTop ? 180 : 0;
+            sweepAngle = 90; // 增大角度范围，使弧更完整
+        } else {
+            startAngle = fromTop ? 0 : 180;
+            sweepAngle = -90; // 增大角度范围，使弧更完整
+        }
+        
+        // 生成坐标 - 确保间隔均匀
+        for (int i = 0; i < count; i++) {
+            float angle = (float) Math.toRadians(startAngle + sweepAngle * i / (count - 1));
+            xPositions[i] = centerX + radiusX * (float) Math.cos(angle);
+            yPositions[i] = centerY + radiusY * (float) Math.sin(angle);
+        }
+    }
+
+    // 修改圆形路径生成，使其位置更随机
+    private void generateCircularPath(float[] xPositions, float[] yPositions, 
+                                   int width, int height, boolean clockwise, int count) {
+        // 圆/椭圆的中心 - 随机位置，不限于屏幕两侧
+        float centerX; 
+        
+        // 随机决定圆的位置 - 可能在左侧、中间或右侧
+        int positionType = random.nextInt(3); // 0=左侧, 1=中间, 2=右侧
+        
+        switch (positionType) {
+            case 0: // 左侧区域
+                centerX = width * (0.1f + random.nextFloat() * 0.15f);
+                break;
+            case 1: // 中间区域
+                centerX = width * (0.4f + random.nextFloat() * 0.2f);
+                break;
+            case 2: // 右侧区域
+            default:
+                centerX = width * (0.75f + random.nextFloat() * 0.15f);
+                break;
+        }
+        
+        // 垂直位置随机
+        float centerY = height * (0.2f + random.nextFloat() * 0.5f);
+        
+        // 保持小圆圈，保证紧凑
+        float radiusX = width * 0.05f;
+        float radiusY = height * 0.07f;
+        
+        // 起始角度 - 随机选择
+        float startAngle = random.nextFloat() * 360;
+        float sweepAngle = 360; // 完整圆形
+        
+        // 生成圆形/椭圆路径 - 确保间隔均匀
+        for (int i = 0; i < count; i++) {
+            float angle = (float) Math.toRadians(startAngle + sweepAngle * i / count);
+            xPositions[i] = centerX + radiusX * (float) Math.cos(angle);
+            yPositions[i] = centerY + radiusY * (float) Math.sin(angle);
+        }
+    }
+
+    // 生成S形路径坐标
+    private void generateSPath(float[] xPositions, float[] yPositions, 
+                            int width, int height, boolean fromLeft, 
+                            boolean fromTop, int count) {
+        // 压缩S形，使其更紧凑且左右交替
+        // S形曲线控制点
+        float x1, x2, x3, x4;
+        
+        // 更靠近屏幕边缘
+        if (fromLeft) {
+            // 左侧S形
+            x1 = width * 0.02f;
+            x2 = width * 0.10f;
+            x3 = width * 0.02f;
+            x4 = width * 0.10f;
+        } else {
+            // 右侧S形
+            x1 = width * 0.98f;
+            x2 = width * 0.90f;
+            x3 = width * 0.98f;
+            x4 = width * 0.90f;
+        }
+        
+        // 垂直分布 - 让S形更短
+        float topY = height * 0.1f;
+        float bottomY = height * 0.5f; // 减小纵向范围
+        float range = bottomY - topY;
+        
+        float y1, y2, y3, y4;
+        
+        if (fromTop) {
+            y1 = topY;
+            y2 = topY + range * 0.3f;
+            y3 = topY + range * 0.7f;
+            y4 = bottomY;
+        } else {
+            y1 = bottomY;
+            y2 = bottomY - range * 0.3f;
+            y3 = bottomY - range * 0.7f;
+            y4 = topY;
+        }
+        
+        // 使用贝塞尔曲线生成S形路径
+        for (int i = 0; i < count; i++) {
+            float t = (float) i / (count - 1);
+            
+            // 三次贝塞尔曲线公式
+            float mt = 1 - t;
+            float baseX = mt*mt*mt * x1 + 3*mt*mt*t * x2 + 3*mt*t*t * x3 + t*t*t * x4;
+            float baseY = mt*mt*mt * y1 + 3*mt*mt*t * y2 + 3*mt*t*t * y3 + t*t*t * y4;
+            
+            // 增加左右交替的偏移
+            float sideOffset = (i % 2 == 0) ? -1 : 1;
+            float xOffset = sideOffset * 5.0f; // 小偏移，模拟猫步交替
+            
+            xPositions[i] = baseX + xOffset;
+            yPositions[i] = baseY;
+        }
+    }
+    
+    /**
+     * 修改scheduleNextAnimation方法，支持猫爪动画
      */
     private void scheduleNextAnimation() {
         if (!isAnimationEnabled || currentStyle == null) return;
@@ -85,13 +471,22 @@ public class AIAnimationManager {
         // 添加随机性，让动画出现时间不那么规律
         delayMillis = (long) (delayMillis * (0.8 + random.nextFloat() * 0.4));
         
+        Log.d(TAG, "安排下一次动画，延迟: " + delayMillis + "ms");
+        
         animationRunnable = () -> {
-            playRandomAnimation();
+            // 根据风格选择动画类型
+            if (currentStyle != null && 
+                currentStyle.getClass().getSimpleName().contains("CatGirl")) {
+                Log.d(TAG, "执行猫爪动画序列");
+                playPawprintSequence();
+            } else {
+                Log.d(TAG, "执行普通随机动画");
+                playRandomAnimation();
+            }
             scheduleNextAnimation(); // 递归安排下一个动画
         };
         
         animationHandler.postDelayed(animationRunnable, delayMillis);
-        Log.d(TAG, "下一个动画将在 " + delayMillis/1000 + " 秒后播放");
     }
     
     /**
@@ -202,5 +597,25 @@ public class AIAnimationManager {
         
         view.setX(x);
         view.setY(y);
+    }
+
+    /**
+     * 公共测试方法，用于手动触发猫爪动画测试
+     */
+    public void testPlayAnimation() {
+        if (currentStyle != null && 
+            currentStyle.getClass().getSimpleName().contains("CatGirl")) {
+            try {
+                java.lang.reflect.Method method = this.getClass().getDeclaredMethod("playPawprintSequence");
+                method.setAccessible(true);
+                method.invoke(this);
+            } catch (Exception e) {
+                Log.e(TAG, "无法调用猫爪动画: " + e.getMessage());
+                // 如果反射失败，尝试播放随机动画
+                playRandomAnimation();
+            }
+        } else {
+            playRandomAnimation();
+        }
     }
 }

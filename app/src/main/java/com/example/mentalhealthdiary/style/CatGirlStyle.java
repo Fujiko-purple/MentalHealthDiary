@@ -143,14 +143,13 @@ public class CatGirlStyle implements AIPersonalityStyle {
 
     @Override
     public int[] getAnimationResources() {
-        // 临时返回空数组，等资源准备好后再更新
-        return new int[0];
+        return new int[0]; // 我们使用自定义猫爪视图，不需要资源ID
     }
 
     @Override
     public float getAnimationFrequency() {
-        // 每分钟显示3次
-        return 3.0f;
+        // 每分钟显示2-3次猫爪序列
+        return 10f;
     }
 
     @Override
