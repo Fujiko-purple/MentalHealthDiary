@@ -72,7 +72,7 @@ public class AIAnimationManager {
     }
     
     /**
-     * 播放猫爪印序列动画 - 优化路径间距
+     * 播放猫爪印序列动画 - 修改主方法，添加爱心路径
      */
     private void playPawprintSequence() {
         if (!isAnimationEnabled) return;
@@ -88,30 +88,39 @@ public class AIAnimationManager {
             return;
         }
         
-        // 猫爪印设置 - 根据路径类型调整数量
-        final int BASIC_PAWPRINT_COUNT = 6;  // 基本爪印数量
-        int pawprintCount;    // 实际使用的爪印数量
-        final int PAWPRINT_SIZE = 45;     // 爪印尺寸
-        final int STEP_DISTANCE = 60;     // 基本步距
+        // 猫爪印设置
+        final int BASIC_PAWPRINT_COUNT = 6;
+        int pawprintCount;
+        final int PAWPRINT_SIZE = 45;
+        final int STEP_DISTANCE = 60;
         
-        // 随机选择路径类型
-        int pathType = random.nextInt(5); // 0=直线, 1=斜线, 2=弧形, 3=圆形, 4=S形
+        // 修改路径选择逻辑，减少爱心出现频率
+        int pathType;
+        
+        // 只有10%的概率出现爱心路径
+        if (random.nextInt(10) == 0) {
+            pathType = 5; // 爱心路径 (原S形索引5)
+        } else {
+            // 其他90%的情况随机选择其他4种路径
+            pathType = random.nextInt(4); // 0-3之间的路径
+        }
+        
         Log.d(TAG, "选择路径类型: " + pathType);
         
-        // 根据路径类型调整爪印数量
+        // 根据路径类型调整爪印数量，确保完整性
         switch (pathType) {
             case 0: // 直线路径
             case 1: // 斜线路径
                 pawprintCount = BASIC_PAWPRINT_COUNT;
                 break;
             case 2: // 弧形路径
-                pawprintCount = BASIC_PAWPRINT_COUNT + 3; // 增加爪印
+                pawprintCount = BASIC_PAWPRINT_COUNT + 3;
                 break;
-            case 3: // 圆形/椭圆路径
-                pawprintCount = BASIC_PAWPRINT_COUNT + 6; // 更多爪印以形成完整圆形
+            case 3: // 圆形路径
+                pawprintCount = BASIC_PAWPRINT_COUNT + 6;
                 break;
-            case 4: // S形路径
-                pawprintCount = BASIC_PAWPRINT_COUNT + 4; // 增加爪印使S形更流畅
+            case 5: // 爱心路径
+                pawprintCount = BASIC_PAWPRINT_COUNT + 8;
                 break;
             default:
                 pawprintCount = BASIC_PAWPRINT_COUNT;
@@ -148,9 +157,9 @@ public class AIAnimationManager {
                                    fromLeft, pawprintCount);
                 break;
             
-            case 4: // S形路径
-                generateSPath(xPositions, yPositions, containerWidth, containerHeight, 
-                            fromLeft, fromTopToBottom, pawprintCount);
+            case 5: // 爱心路径
+                generateHeartPath(xPositions, yPositions, containerWidth, containerHeight, 
+                                pawprintCount);
                 break;
         }
         
@@ -203,24 +212,51 @@ public class AIAnimationManager {
             float finalRotation;
             
             if (pathType == 3) { // 圆形路径特殊处理
-                // 沿着圆轨迹方向
-                finalRotation = pathAngle + (pawsFacingDown ? 90 : -90); 
+                // 计算每个爪印指向圆心的角度
+                float dx = x - containerWidth / 2; // 需要在循环前记录当前使用的圆心
+                float dy = y - containerHeight / 2;
+                float angleToCenter = (float) Math.toDegrees(Math.atan2(dy, dx));
+                
+                // 如果是顺时针，爪印应该垂直于圆的切线
+                finalRotation = angleToCenter + 90;
+                
+                // 根据爪印朝向调整角度
+                if (!pawsFacingDown) {
+                    finalRotation += 180; // 如果朝上，翻转180度
+                }
+                
                 // 左右爪的微调
-                finalRotation += isLeftPaw ? -15 : 15;
-            } else if (pathType == 4) { // S形路径特殊处理
-                // S形路径垂直部分朝向调整
-                finalRotation = pawsFacingDown ? 180 : 0;
-                // 左右爪微调
-                finalRotation += isLeftPaw ? -15 : 15;
-                // 添加一些随机变化
-                finalRotation += (random.nextFloat() * 10 - 5);
+                finalRotation += isLeftPaw ? -10 : 10;
+            } else if (pathType == 5) { // 爱心路径特殊处理
+                // 计算爪印沿爱心曲线的切线方向
+                float tangentAngle;
+                
+                if (i > 0) {
+                    // 计算当前点与前一个点的连线角度
+                    float dx = x - xPositions[i-1];
+                    float dy = y - yPositions[i-1];
+                    tangentAngle = (float) Math.toDegrees(Math.atan2(dy, dx));
+                } else if (i < pawprintCount - 1) {
+                    // 对第一个点，使用第一个点与第二个点的连线角度
+                    float dx = xPositions[i+1] - x;
+                    float dy = yPositions[i+1] - y;
+                    tangentAngle = (float) Math.toDegrees(Math.atan2(dy, dx)) + 180;
+                } else {
+                    tangentAngle = 0;
+                }
+                
+                // 设置爪印沿切线方向
+                finalRotation = tangentAngle + 90;
+                
+                // 左右爪的微调
+                finalRotation += isLeftPaw ? -10 : 10;
             } else {
                 // 直线、斜线和弧形路径
-                float directionRotation = fromLeft ? -20 : 20; // 减小角度
+                float directionRotation = fromLeft ? -20 : 20;
                 float pawRotation = isLeftPaw ? -10 : 10;
                 finalRotation = baseRotation + directionRotation + pawRotation;
                 // 添加少量随机性
-                finalRotation += (random.nextFloat() * 6 - 3); // 减小随机范围
+                finalRotation += (random.nextFloat() * 6 - 3);
             }
             
             pawView.setRotation(finalRotation);
@@ -234,19 +270,19 @@ public class AIAnimationManager {
             // 延迟显示每个爪印
             int finalI = i;
             pawView.animate()
-                .alpha(0.7f)
-                .setStartDelay(150 * i)
-                .setDuration(300)
+                .alpha(0.8f) // 更高的不透明度
+                .setStartDelay(200 * i) // 增大时间间隔，让"画爱心"效果更明显
+                .setDuration(200)
                 .withEndAction(() -> {
-                    // 延迟淡出
+                    // 爱心路径的爪印持续时间更长
                     Handler handler = new Handler();
                     handler.postDelayed(() -> {
                         pawView.animate()
                             .alpha(0f)
-                            .setDuration(1200)
+                            .setDuration(800)
                             .withEndAction(() -> containerView.removeView(pawView))
                             .start();
-                    }, 2000 + (pawprintCount - finalI) * 150);
+                    }, 2500); // 所有爪印都停留较长时间
                 })
                 .start();
         }
@@ -358,44 +394,93 @@ public class AIAnimationManager {
         }
     }
 
-    // 修改圆形路径生成，使其位置更随机
+    // 进一步优化圆形路径
     private void generateCircularPath(float[] xPositions, float[] yPositions, 
                                    int width, int height, boolean clockwise, int count) {
-        // 圆/椭圆的中心 - 随机位置，不限于屏幕两侧
-        float centerX; 
+        // 更多样化的圆形位置
+        float centerX, centerY;
         
-        // 随机决定圆的位置 - 可能在左侧、中间或右侧
-        int positionType = random.nextInt(3); // 0=左侧, 1=中间, 2=右侧
+        // 随机选择圆形模式 - 0=边缘小圆, 1=中央大圆, 2=椭圆形
+        int circleMode = random.nextInt(3);
         
-        switch (positionType) {
-            case 0: // 左侧区域
-                centerX = width * (0.1f + random.nextFloat() * 0.15f);
+        // 根据模式设置圆的参数
+        float radiusX, radiusY;
+        float sweepAngle;
+        
+        switch (circleMode) {
+            case 0: // 边缘小圆 - 更小、更紧凑的圆形
+                // 在左侧或右侧
+                if (random.nextBoolean()) {
+                    centerX = width * 0.15f; // 左侧
+                } else {
+                    centerX = width * 0.85f; // 右侧
+                }
+                centerY = height * (0.3f + random.nextFloat() * 0.4f);
+                
+                // 小半径
+                radiusX = width * 0.08f;
+                radiusY = width * 0.08f; // 保持圆形
+                
+                // 完整圆形
+                sweepAngle = 360;
                 break;
-            case 1: // 中间区域
-                centerX = width * (0.4f + random.nextFloat() * 0.2f);
+                
+            case 1: // 中央大圆 - 在屏幕中央的较大圆形
+                centerX = width * 0.5f;
+                centerY = height * 0.45f;
+                
+                // 中等半径
+                radiusX = width * 0.2f;
+                radiusY = width * 0.2f * ((float)height/width); // 调整纵横比
+                
+                // 部分圆弧
+                sweepAngle = 180 + random.nextFloat() * 90; // 180-270度的弧
                 break;
-            case 2: // 右侧区域
+                
+            case 2: // 椭圆形 - 扁平椭圆
             default:
-                centerX = width * (0.75f + random.nextFloat() * 0.15f);
+                // 随机水平位置
+                centerX = width * (0.3f + random.nextFloat() * 0.4f);
+                centerY = height * (0.25f + random.nextFloat() * 0.5f);
+                
+                // 扁平椭圆
+                radiusX = width * 0.25f;
+                radiusY = height * 0.1f;
+                
+                // 部分椭圆
+                sweepAngle = 270; // 270度的弧
                 break;
         }
         
-        // 垂直位置随机
-        float centerY = height * (0.2f + random.nextFloat() * 0.5f);
+        // 确定是顺时针还是逆时针
+        boolean isClockwise = random.nextBoolean();
         
-        // 保持小圆圈，保证紧凑
-        float radiusX = width * 0.05f;
-        float radiusY = height * 0.07f;
+        // 调整爪印数量以适应圆形大小
+        int effectiveCount = Math.min(count, (int)(sweepAngle / 45) + 3); // 避免过于密集
         
         // 起始角度 - 随机选择
         float startAngle = random.nextFloat() * 360;
-        float sweepAngle = 360; // 完整圆形
         
-        // 生成圆形/椭圆路径 - 确保间隔均匀
-        for (int i = 0; i < count; i++) {
-            float angle = (float) Math.toRadians(startAngle + sweepAngle * i / count);
+        // 生成圆形路径 - 均匀分布
+        for (int i = 0; i < effectiveCount; i++) {
+            float angleStep = sweepAngle / (effectiveCount - 1);
+            float currentAngle = startAngle;
+            
+            if (isClockwise) {
+                currentAngle += i * angleStep;
+            } else {
+                currentAngle -= i * angleStep;
+            }
+            
+            float angle = (float) Math.toRadians(currentAngle);
             xPositions[i] = centerX + radiusX * (float) Math.cos(angle);
             yPositions[i] = centerY + radiusY * (float) Math.sin(angle);
+        }
+        
+        // 如果实际使用的爪印少于数组大小，将剩余位置设为可见区域之外
+        for (int i = effectiveCount; i < count; i++) {
+            xPositions[i] = -100;
+            yPositions[i] = -100;
         }
     }
 
@@ -456,6 +541,54 @@ public class AIAnimationManager {
             
             xPositions[i] = baseX + xOffset;
             yPositions[i] = baseY;
+        }
+    }
+    
+    /**
+     * 生成顺序出现的爱心形状猫爪路径 - 从底部开始画爱心
+     */
+    private void generateHeartPath(float[] xPositions, float[] yPositions, 
+                               int width, int height, int count) {
+        // 爱心中心位置
+        float centerX = width / 2;
+        float centerY = height * 0.4f;
+        
+        // 爱心大小 - 适中大小更明显
+        float scale = Math.min(width, height) * 0.22f;
+        
+        // 确保有足够多的爪印
+        int effectiveCount = Math.min(count, 18); // 更多爪印形成平滑爱心
+        
+        // 设置起始点 - 从底部的V形顶点开始
+        int startPointIndex = 0; // 从爱心底部中间开始
+        
+        // 生成爱心路径 - 从底部开始，顺时针方向绘制
+        for (int i = 0; i < effectiveCount; i++) {
+            // 调整参数范围使轨迹从底部开始
+            // 参数t控制在爱心曲线上的位置
+            // 我们将起始点设在底部，然后顺时针移动
+            float t = (float) (Math.PI + Math.PI * 2 * i / effectiveCount);
+            
+            float x, y;
+            
+            // 爱心公式 - 极坐标方程更适合顺序绘制
+            float r = (float) (Math.sin(t) * Math.sqrt(Math.abs(Math.cos(t))) / 
+                      (Math.sin(t) + 1.4) - 2 * Math.sin(t) + 2);
+                      
+            // 转换为笛卡尔坐标
+            x = (float) (r * Math.cos(t));
+            y = (float) (r * Math.sin(t));
+            
+            // 缩放并平移到屏幕中央
+            // 翻转和旋转以获得正确朝向的爱心
+            xPositions[i] = centerX - scale * x;
+            yPositions[i] = centerY - scale * y;
+        }
+        
+        // 如果有剩余位置，填充到屏幕外
+        for (int i = effectiveCount; i < count; i++) {
+            xPositions[i] = -100;
+            yPositions[i] = -100;
         }
     }
     
@@ -602,20 +735,4 @@ public class AIAnimationManager {
     /**
      * 公共测试方法，用于手动触发猫爪动画测试
      */
-    public void testPlayAnimation() {
-        if (currentStyle != null && 
-            currentStyle.getClass().getSimpleName().contains("CatGirl")) {
-            try {
-                java.lang.reflect.Method method = this.getClass().getDeclaredMethod("playPawprintSequence");
-                method.setAccessible(true);
-                method.invoke(this);
-            } catch (Exception e) {
-                Log.e(TAG, "无法调用猫爪动画: " + e.getMessage());
-                // 如果反射失败，尝试播放随机动画
-                playRandomAnimation();
-            }
-        } else {
-            playRandomAnimation();
-        }
-    }
 }
