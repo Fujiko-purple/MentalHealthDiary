@@ -58,6 +58,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import android.graphics.Typeface;
+import android.content.SharedPreferences;
 
 public class AIChatActivity extends AppCompatActivity {
     private RecyclerView chatRecyclerView;
@@ -760,6 +761,25 @@ public class AIChatActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         
+        // 从Intent或SharedPreferences获取当前人格ID
+        String currentPersonalityId = getIntent().getStringExtra("personality_id");
+        
+        // 如果Intent中没有，则从SharedPreferences获取
+        if (currentPersonalityId == null) {
+            SharedPreferences prefs = getSharedPreferences("chat_prefs", MODE_PRIVATE);
+            currentPersonalityId = prefs.getString("current_personality_id", null);
+            Log.d("AIChatActivity", "从SharedPreferences获取人格ID: " + currentPersonalityId);
+        }
+        
+        // 如果有保存的人格ID，重新应用风格
+        if (currentPersonalityId != null) {
+            AIPersonality personality = AIPersonalityConfig.getPersonalityById(currentPersonalityId);
+            if (personality != null) {
+                Log.d("AIChatActivity", "onResume中应用风格: " + personality.getName());
+                applyPersonalityStyle(personality);
+            }
+        }
+        
         // 检查服务状态并重新绑定
         if (!serviceBound) {
             Intent serviceIntent = new Intent(this, ChatService.class);
@@ -776,6 +796,60 @@ public class AIChatActivity extends AppCompatActivity {
         // 根据对话ID的使用状态决定是否显示预备消息
         if (!PreferenceManager.isQuickMessageUsed(this, currentHistoryId)) {
             setupQuickMessages();
+        }
+    }
+
+    private void applyPersonalityStyle(AIPersonality personality) {
+        try {
+            if (personality == null) return;
+            
+            // 获取对应的风格
+            AIPersonalityStyle style = AIStyleFactory.getStyle(personality.getId(), this);
+            
+            // 应用背景 - 使用正确的ID
+            View rootView = findViewById(R.id.chat_root_layout); // 正确的根布局ID
+            if (rootView != null) {
+                rootView.setBackgroundResource(style.getBackgroundDrawable());
+                Log.d("AIChatActivity", "背景应用成功: " + style.getBackgroundDrawable());
+            } else {
+                Log.e("AIChatActivity", "未找到背景视图");
+            }
+            
+            // 应用输入框背景 - 使用正确的ID
+            View inputContainer = findViewById(R.id.inputContainer); // 正确的输入容器ID
+            if (inputContainer != null) {
+                inputContainer.setBackgroundResource(style.getInputBackgroundDrawable());
+                Log.d("AIChatActivity", "输入框背景应用成功: " + style.getInputBackgroundDrawable());
+            } else {
+                Log.e("AIChatActivity", "未找到输入框视图");
+            }
+            
+            // 应用其他风格元素
+            EditText messageInput = findViewById(R.id.messageInput);
+            if (messageInput != null) {
+                messageInput.setBackgroundResource(style.getInputBackgroundDrawable());
+                messageInput.setHintTextColor(style.getHintTextColor());
+                messageInput.setHint(style.getInputHint());
+            }
+            
+            // 设置适配器的当前人格
+            if (adapter != null) {
+                adapter.setCurrentPersonality(personality);
+                Log.d("AIChatActivity", "适配器人格设置成功");
+            }
+            
+            Log.d("AIChatActivity", "风格应用成功: " + personality.getName());
+        } catch (Exception e) {
+            Log.e("AIChatActivity", "应用风格时出错: " + e.getMessage(), e);
+        }
+    }
+
+    // 确保在选择/更改人格时保存ID到SharedPreferences
+    private void saveCurrentPersonalityId(String personalityId) {
+        if (personalityId != null) {
+            SharedPreferences prefs = getSharedPreferences("chat_prefs", MODE_PRIVATE);
+            prefs.edit().putString("current_personality_id", personalityId).apply();
+            Log.d("AIChatActivity", "已保存当前人格ID: " + personalityId);
         }
     }
 
@@ -1129,6 +1203,16 @@ public class AIChatActivity extends AppCompatActivity {
                 adapter.setCatGirlFont("cat_girl".equals(personalityId) ? typeface : null);
                 adapter.notifyDataSetChanged();
             }
+        }
+    }
+
+    public void setPersonality(AIPersonality personality) {
+        // 您原有的代码...
+        
+        // 添加保存ID和应用风格的代码
+        if (personality != null) {
+            saveCurrentPersonalityId(personality.getId());
+            applyPersonalityStyle(personality); // 确保应用风格
         }
     }
 } 
