@@ -392,17 +392,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         mainHandler.removeCallbacksAndMessages(null);
     }
 
-    // 添加获取思考开始时间的方法
-    public long getThinkingStartTime() {
-        return messages.get(messages.size() - 1).getThinkingStartTime();
-    }
-
-    // 添加 setter 方法
-    public void setThinkingStartTime(long time) {
-        for (ChatMessage message : messages) {
-            message.setThinkingStartTime(time);
-        }
-    }
 
     // 添加设置等待状态的方法
     public void setWaitingResponse(boolean waiting) {
